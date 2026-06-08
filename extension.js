@@ -78,6 +78,11 @@ function SYSTEM() {
     "While working on the task the user gave you, you hunt: on a failure, read the error, form a new hypothesis, and try a different concrete approach instead of bailing mid-task. Do things yourself with tools rather than asking the user to run them.",
     "STOP-AND-WAIT (important): the moment the task the user asked for is COMPLETE — or you genuinely need a decision only they can make — STOP and wait for their next instruction. Do NOT invent extra work, start new tasks, or keep going on your own. One request → finish it → stop and report. When in doubt about scope, ask the user rather than charging ahead.",
     "",
+    "## How you work (like a senior engineer)",
+    "- For any MULTI-STEP task, FIRST call update_plan with a short checklist, then work through it — keep exactly one item in_progress, mark it completed, move to the next. Keep the plan current. Skip the plan for trivial one-step asks.",
+    "- Inspect before you change (read_file / list_dir). After changes, VERIFY by running the test/build/command; if it fails, fix and re-run until it passes.",
+    "- Narrate briefly what you're doing; keep prose short. Match the existing code's style.",
+    "",
     "## Skills — load on demand",
     "Skills are playbooks for specific jobs. Don't guess these workflows — call load_skill(name) to get the steps, then follow them:",
     skillList,
@@ -130,6 +135,7 @@ const TOOLS = [
   { type: "function", function: { name: "start_server", description: "Launch a long-running process (dev server) in the background; returns its initial output. User approves it.", parameters: { type: "object", properties: { command: { type: "string" }, name: { type: "string", description: "Friendly label, e.g. 'vite' or 'uvicorn'." } }, required: ["command"] } } },
   { type: "function", function: { name: "open_preview", description: "Open a URL in VS Code's built-in Simple Browser so the user can see the running UI.", parameters: { type: "object", properties: { url: { type: "string" } }, required: ["url"] } } },
   { type: "function", function: { name: "load_skill", description: "Load the full instructions for a named skill before doing that kind of task.", parameters: { type: "object", properties: { name: { type: "string" } }, required: ["name"] } } },
+  { type: "function", function: { name: "update_plan", description: "Show/update a step-by-step plan as a live checklist. Call FIRST on any multi-step task to outline steps, then call again to mark progress. Keep exactly one item in_progress.", parameters: { type: "object", properties: { todos: { type: "array", items: { type: "object", properties: { content: { type: "string" }, status: { type: "string", enum: ["pending", "in_progress", "completed"] } }, required: ["content", "status"] } } }, required: ["todos"] } } },
 ];
 
 // ---------- tool execution ----------
@@ -260,6 +266,10 @@ async function execTool(name, args) {
     if (name === "load_skill") {
       const s = SKILLS.find((x) => x.name === args.name);
       return s ? s.body : "No such skill. Available: " + SKILLS.map((x) => x.name).join(", ");
+    }
+    if (name === "update_plan") {
+      if (postToWebview) postToWebview({ type: "plan", todos: Array.isArray(args.todos) ? args.todos : [] });
+      return "Plan updated.";
     }
     return "ERROR: unknown tool " + name;
   } catch (e) {
@@ -533,6 +543,11 @@ class ChatProvider {
         post({ type: "done" });
       }
     });
+    // On view disposal: clear stale refs (restores the modal fallback) and settle any pending approvals as denied.
+    view.onDidDispose(() => {
+      if (this.view === view) { this.view = null; postToWebview = null; }
+      for (const id of Object.keys(pendingApprovals)) pendingApprovals[id](false);
+    });
   }
 }
 
@@ -558,7 +573,13 @@ function getHtml() {
   .approw{display:flex;gap:8px;margin-top:8px;}
   .okbtn{background:var(--vscode-button-background);color:var(--vscode-button-foreground);font-weight:600;}
   .adone{opacity:.75;font-size:12.5px;font-weight:600;}
+  #plan{display:none;padding:10px 12px;border-bottom:1px solid var(--vscode-panel-border);background:var(--vscode-editor-background);}
+  .planhd{font-weight:700;opacity:.6;font-size:10.5px;text-transform:uppercase;letter-spacing:.6px;margin-bottom:4px;}
+  .pstep{font-size:13px;padding:2px 0;color:var(--vscode-editor-foreground);}
+  .pstep.pdone{opacity:.5;text-decoration:line-through;}
+  .pstep.pcur{font-weight:600;color:var(--vscode-charts-blue);}
 </style></head><body>
+<div id="plan"></div>
 <div id="log"></div>
 <div id="bar">
   <textarea id="inp" rows="2" placeholder="Ask Qwen to build, fix, run… (Enter to send, Shift+Enter newline)"></textarea>
@@ -583,7 +604,8 @@ window.addEventListener('message',ev=>{const m=ev.data;
   else if(m.type==='error'){clearStatus();add('assistant err','⚠ '+esc(m.text));}
   else if(m.type==='model'){clearStatus();add('status','model → '+esc(m.name));}
   else if(m.type==='restore'){log.innerHTML='';m.items.forEach(it=>add(it.role==='user'?'user':'assistant','<span class="label">'+(it.role==='user'?'you':'sre')+'</span>\\n'+esc(it.text)));}
-  else if(m.type==='cleared'){log.innerHTML='';}
+  else if(m.type==='plan'){var p=document.getElementById('plan');if(!m.todos||!m.todos.length){p.innerHTML='';p.style.display='none';}else{p.style.display='block';p.innerHTML='<div class="planhd">plan</div>'+m.todos.map(function(t){var i=t.status==='completed'?'✓':(t.status==='in_progress'?'▸':'○');var c=t.status==='completed'?'pdone':(t.status==='in_progress'?'pcur':'');return '<div class="pstep '+c+'">'+i+' '+esc(t.content)+'</div>';}).join('');}}
+  else if(m.type==='cleared'){log.innerHTML='';var pl=document.getElementById('plan');pl.innerHTML='';pl.style.display='none';}
   else if(m.type==='approve'){clearStatus();
     const d=document.createElement('div');d.className='msg approve';
     d.innerHTML='<div class="label">approve · '+esc(m.what)+'</div><pre class="cmd">'+esc(m.command)+'</pre>';
