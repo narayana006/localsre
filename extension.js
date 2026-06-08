@@ -273,8 +273,8 @@ async function listModels() {
     for (const m of cps) items.push({ label: "$(copilot) " + (m.name || m.family), description: "GitHub Copilot", _p: "copilot", _m: m.family || m.id });
   } catch (_) {}
   // Claude via Anthropic key — only shown if a key is in the keychain/settings
-  const akey = await getSecret("qwenCoder.anthropicApiKey", cfg().anthropicApiKey);
-  if (akey) for (const m of ["claude-opus-4-8", "claude-sonnet-4-6", "claude-haiku-4-5"]) items.push({ label: "$(sparkle) " + m, description: "Claude (Anthropic key)", _p: "anthropic", _m: m });
+  const akey = await getAnthropicKey();
+  if (akey) for (const m of ["claude-opus-4-8", "claude-sonnet-4-6", "claude-haiku-4-5"]) items.push({ label: "$(sparkle) " + m, description: "Claude (Anthropic API)", _p: "anthropic", _m: m });
   return items;
 }
 async function selectModel() {
@@ -290,6 +290,10 @@ let SECRETS = null;
 async function getSecret(key, fallback) {
   try { const v = SECRETS && (await SECRETS.get(key)); if (v) return v; } catch (_) {}
   return fallback || "";
+}
+// Claude key resolution: keychain → settings → ANTHROPIC_API_KEY env (same var Claude Code uses).
+async function getAnthropicKey() {
+  return (await getSecret("qwenCoder.anthropicApiKey", cfg().anthropicApiKey)) || process.env.ANTHROPIC_API_KEY || "";
 }
 
 // ---------- model call (dispatches to local HTTP / Copilot / Claude) ----------
@@ -408,8 +412,8 @@ async function runAgent(userText, messages, post) {
 
 // Optional: Claude directly via an Anthropic API key (stored in the OS keychain, not settings).
 async function callModelAnthropic(messages) {
-  const key = await getSecret("qwenCoder.anthropicApiKey", cfg().anthropicApiKey);
-  if (!key) throw new Error("No Claude key set. Run 'Qwen Coder: Set Claude API Key' — or just pick Claude under the Copilot provider (no key needed).");
+  const key = await getAnthropicKey();
+  if (!key) throw new Error("No Claude key. Set ANTHROPIC_API_KEY in your shell (same as Claude Code), run 'Qwen Coder: Set Claude API Key', or pick Claude under the Copilot provider.");
   let model = curModel();
   if (!/claude/i.test(model)) model = "claude-sonnet-4-6";
   const system = messages.filter((m) => m.role === "system").map((m) => m.content).filter(Boolean).join("\n\n");

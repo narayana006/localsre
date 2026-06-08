@@ -2,7 +2,7 @@
   "name": "qwen-coder",
   "displayName": "Qwen Coder (Local Agent)",
   "description": "Lightweight agentic coding assistant powered by your local Qwen3-Coder via llama.cpp. Like Claude Code / Copilot, but 100% local.",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "publisher": "narayana006",
   "engines": { "vscode": "^1.85.0" },
   "categories": ["Other", "Machine Learning", "Programming Languages"],
@@ -70,7 +70,7 @@
           "type": "string",
           "default": "",
           "scope": "machine",
-          "description": "Optional Claude API key. Prefer the 'Set Claude API Key' command (stores it in the OS keychain). Tip: Claude is also available free via the 'copilot' provider if your plan includes it."
+          "description": "Optional Claude API key. Resolution order: keychain ('Set Claude API Key' command) → this setting → ANTHROPIC_API_KEY env var (same one Claude Code uses; requires launching VS Code from a terminal via `code .`). Tip: Claude is also free via the 'copilot' provider if your plan includes it."
         }
       }
     }
