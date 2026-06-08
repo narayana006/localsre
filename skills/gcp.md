@@ -4,8 +4,15 @@ description: Deploy to and troubleshoot Google Cloud across all major services �
 ---
 # Google Cloud — deploy & troubleshoot
 
+You have the FULL `gcloud`, `gsutil`/`gcloud storage`, `bq`, and `kubectl` CLIs — not just the commands below.
 ALWAYS confirm context before acting: `gcloud auth list`, `gcloud config get-value project`, `gcloud config set project <id>`, and check the `--region`/`--zone`. Investigate read-only first; never delete projects/clusters/datasets without explicit confirmation.
 ADC for SDKs: `gcloud auth application-default login`.
+
+## Discover any command (use when something isn't listed here)
+- `gcloud help`, `gcloud <group> --help` (e.g. `gcloud compute instances --help`), `gcloud <group> <cmd> --help`
+- `gcloud components list`; search: `gcloud <group> list` for any resource
+- Add `--format=json` / `--format="value(...)"` to script output, `--filter='...'` to narrow.
+Anything gcloud can do, you can do — look up the exact flags with `--help` rather than guessing.
 
 ## Logging (use for ANY service issue)
 - `gcloud logging read '<filter>' --limit 50 --freshness=1h --format json`
