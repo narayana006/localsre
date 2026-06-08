@@ -106,7 +106,13 @@ function projectMemory() {
   for (const f of [".qwen/memory.md", "AGENTS.md", "CLAUDE.md"]) {
     try {
       const p = path.join(wsRoot(), f);
-      if (fs.existsSync(p)) return "\n## Project memory (" + f + ")\n" + fs.readFileSync(p, "utf8").slice(0, 4000);
+      if (!fs.existsSync(p)) continue;
+      // read only the first 4000 bytes — never load a huge file into memory on the host thread
+      const fd = fs.openSync(p, "r");
+      const buf = Buffer.alloc(4000);
+      const n = fs.readSync(fd, buf, 0, 4000, 0);
+      fs.closeSync(fd);
+      return "\n## Project memory (" + f + ")\n" + buf.slice(0, n).toString("utf8");
     } catch (_) {}
   }
   return "";
@@ -145,6 +151,7 @@ function sh(command) {
 
 const servers = [];
 function killServer(entry) {
+  if (!entry.child.pid) { try { entry.child.kill(); } catch (_) {} return; }
   try { process.kill(-entry.child.pid); } // kill the whole process group (detached leader)
   catch (_) { try { entry.child.kill(); } catch (__) {} }
 }
@@ -199,7 +206,10 @@ async function readDocument(p) {
     if (r.so && r.so.trim()) return "[OCR text extracted from image — visual layout NOT available]\n\n" + clip(r.so);
     return "ERROR: OCR needs tesseract. Install it: `brew install tesseract`, then retry. (Reads TEXT in the image only; the model cannot see the actual picture.)";
   }
-  try { return clip(fs.readFileSync(p, "utf8")); } catch (_) { return "ERROR: unsupported type " + ext; }
+  try {
+    if (fs.statSync(p).size > 5 * 1024 * 1024) return "ERROR: file too large to read inline; use run_command with head/grep.";
+    return clip(fs.readFileSync(p, "utf8"));
+  } catch (_) { return "ERROR: unsupported type " + ext; }
 }
 
 async function approveCommand(command, what) {
@@ -340,7 +350,7 @@ function toLMMessages(messages) {
         try { input = JSON.parse(tc.function.arguments || "{}"); } catch (_) {}
         parts.push(new vscode.LanguageModelToolCallPart(tc.id, tc.function.name, input));
       }
-      out.push(vscode.LanguageModelChatMessage.Assistant(parts.length ? parts : ""));
+      if (parts.length) out.push(vscode.LanguageModelChatMessage.Assistant(parts));
     } else if (m.role === "tool") {
       out.push(vscode.LanguageModelChatMessage.User([new vscode.LanguageModelToolResultPart(m.tool_call_id, [new vscode.LanguageModelTextPart(String(m.content))])]));
     }
@@ -353,15 +363,33 @@ async function callModelLM(messages) {
   if (!models.length) models = (await vscode.lm.selectChatModels({ vendor: "copilot" })) || [];
   if (!models.length) throw new Error("No Copilot model available. Sign in to GitHub Copilot in VS Code.");
   const lmTools = TOOLS.map((t) => ({ name: t.function.name, description: t.function.description, inputSchema: t.function.parameters }));
-  const resp = await models[0].sendRequest(toLMMessages(messages), { tools: lmTools }, new vscode.CancellationTokenSource().token);
-  let content = "";
-  const toolCalls = [];
-  for await (const part of resp.stream) {
-    if (part instanceof vscode.LanguageModelTextPart) content += part.value;
-    else if (part instanceof vscode.LanguageModelToolCallPart)
-      toolCalls.push({ id: part.callId, function: { name: part.name, arguments: JSON.stringify(part.input || {}) } });
-  }
-  return { content, tool_calls: toolCalls.length ? toolCalls : undefined };
+  const cts = new vscode.CancellationTokenSource();
+  const to = setTimeout(() => cts.cancel(), 180000); // Copilot path must not hang forever
+  try {
+    const resp = await models[0].sendRequest(toLMMessages(messages), { tools: lmTools }, cts.token);
+    let content = "";
+    const toolCalls = [];
+    for await (const part of resp.stream) {
+      if (part instanceof vscode.LanguageModelTextPart) content += part.value;
+      else if (part instanceof vscode.LanguageModelToolCallPart)
+        toolCalls.push({ id: part.callId, function: { name: part.name, arguments: JSON.stringify(part.input || {}) } });
+    }
+    return { content, tool_calls: toolCalls.length ? toolCalls : undefined };
+  } catch (e) {
+    if (cts.token.isCancellationRequested) throw new Error("Copilot timed out (180s).");
+    throw e;
+  } finally { clearTimeout(to); cts.dispose(); }
+}
+
+// Bound the live context sent to the model — keeps prefill FLAT across a long session
+// (fixes the slow-down + context-overflow + token-inflation the validation found).
+const HISTORY_CAP = 40;
+function trimInPlace(messages) {
+  if (messages.length <= HISTORY_CAP + 1) return; // +1 for the system message
+  let start = messages.length - HISTORY_CAP;
+  // start the window at a 'user' boundary so we never orphan a tool_calls/tool pair
+  while (start < messages.length && messages[start].role !== "user") start++;
+  if (start > 1) messages.splice(1, start - 1); // keep messages[0] (system) + the window
 }
 
 // ---------- agent loop ----------
@@ -370,6 +398,7 @@ async function runAgent(userText, messages, post) {
   const c = cfg();
   let nudges = 0;
   for (let i = 0; i < c.maxIterations; i++) {
+    trimInPlace(messages); // bound prefill every iteration
     post({ type: "status", text: "thinking…" });
     let msg;
     try { msg = await callModel(messages); } catch (e) { post({ type: "error", text: String(e.message || e) }); return; }
