@@ -212,10 +212,23 @@ async function readDocument(p) {
   } catch (_) { return "ERROR: unsupported type " + ext; }
 }
 
+const pendingApprovals = {};
+let approvalSeq = 0;
+let postToWebview = null; // set when the chat view resolves
 async function approveCommand(command, what) {
   if (cfg().autoApprove) return true;
-  const pick = await vscode.window.showWarningMessage("LocalSRE wants to " + (what || "run a command") + ":", { modal: true, detail: command }, "Approve", "Deny");
-  return pick === "Approve";
+  if (!postToWebview) {
+    // no chat view available → fall back to a modal
+    const pick = await vscode.window.showWarningMessage("LocalSRE wants to " + (what || "run a command") + ":", { modal: true, detail: command }, "Approve", "Deny");
+    return pick === "Approve";
+  }
+  // inline Approve/Deny card in the chat panel
+  return new Promise((resolve) => {
+    const id = "appr" + ++approvalSeq;
+    const to = setTimeout(() => { if (pendingApprovals[id]) { delete pendingApprovals[id]; resolve(false); } }, 300000);
+    pendingApprovals[id] = (v) => { clearTimeout(to); delete pendingApprovals[id]; resolve(v); };
+    postToWebview({ type: "approve", id, command, what: what || "run a command" });
+  });
 }
 
 async function execTool(name, args) {
@@ -520,12 +533,14 @@ class ChatProvider {
     view.webview.options = { enableScripts: true };
     view.webview.html = getHtml();
     const post = (m) => view.webview.postMessage(m);
-    this._replay(); // re-render this repo's prior conversation
+    postToWebview = post; // enable inline approvals
     view.webview.onDidReceiveMessage(async (m) => {
       try {
-        if (m.type === "ask") { await runAgent(m.text, this.messages, post); this._save(); post({ type: "done" }); }
+        if (m.type === "ready") this._replay(); // webview is now listening → safe to restore history
+        else if (m.type === "ask") { await runAgent(m.text, this.messages, post); this._save(); post({ type: "done" }); }
         else if (m.type === "reset") this.reset();
         else if (m.type === "switchModel") await vscode.commands.executeCommand("localsre.selectModel");
+        else if (m.type === "approveResult") { const r = pendingApprovals[m.id]; if (r) r(!!m.approved); }
       } catch (e) {
         // Never let an error escape into the extension host.
         post({ type: "error", text: "internal: " + (e && e.message ? e.message : String(e)) });
@@ -552,6 +567,11 @@ function getHtml() {
   button{background:var(--vscode-button-background);color:var(--vscode-button-foreground);border:none;border-radius:6px;padding:7px 10px;cursor:pointer;font-size:13px;}
   button.sec{background:var(--vscode-button-secondaryBackground);color:var(--vscode-button-secondaryForeground);}
   .label{font-weight:700;opacity:.6;font-size:10.5px;text-transform:uppercase;letter-spacing:.6px;}
+  .approve{background:var(--vscode-inputValidation-warningBackground,rgba(255,180,0,.12));border:1px solid var(--vscode-inputValidation-warningBorder,#caa700);}
+  .approve .cmd{font-family:var(--vscode-editor-font-family);font-size:12.5px;background:var(--vscode-textCodeBlock-background);padding:6px 8px;border-radius:4px;margin:6px 0 0;white-space:pre-wrap;word-break:break-all;}
+  .approw{display:flex;gap:8px;margin-top:8px;}
+  .okbtn{background:var(--vscode-button-background);color:var(--vscode-button-foreground);font-weight:600;}
+  .adone{opacity:.75;font-size:12.5px;font-weight:600;}
 </style></head><body>
 <div id="log"></div>
 <div id="bar">
@@ -578,8 +598,19 @@ window.addEventListener('message',ev=>{const m=ev.data;
   else if(m.type==='model'){clearStatus();add('status','model → '+esc(m.name));}
   else if(m.type==='restore'){log.innerHTML='';m.items.forEach(it=>add(it.role==='user'?'user':'assistant','<span class="label">'+(it.role==='user'?'you':'sre')+'</span>\\n'+esc(it.text)));}
   else if(m.type==='cleared'){log.innerHTML='';}
+  else if(m.type==='approve'){clearStatus();
+    const d=document.createElement('div');d.className='msg approve';
+    d.innerHTML='<div class="label">approve · '+esc(m.what)+'</div><pre class="cmd">'+esc(m.command)+'</pre>';
+    const row=document.createElement('div');row.className='approw';
+    const ok=document.createElement('button');ok.textContent='✓ Approve';ok.className='okbtn';
+    const no=document.createElement('button');no.textContent='✗ Deny';no.className='sec';
+    ok.onclick=()=>{vscode.postMessage({type:'approveResult',id:m.id,approved:true});row.innerHTML='<span class="adone">✓ approved</span>';};
+    no.onclick=()=>{vscode.postMessage({type:'approveResult',id:m.id,approved:false});row.innerHTML='<span class="adone">✗ denied</span>';};
+    row.appendChild(ok);row.appendChild(no);d.appendChild(row);log.appendChild(d);log.scrollTop=log.scrollHeight;
+  }
   else if(m.type==='done'){clearStatus();}
 });
+vscode.postMessage({type:'ready'});
 </script></body></html>`;
 }
 
