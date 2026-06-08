@@ -1,0 +1,62 @@
+{
+  "name": "qwen-coder",
+  "displayName": "Qwen Coder (Local Agent)",
+  "description": "Lightweight agentic coding assistant powered by your local Qwen3-Coder via llama.cpp. Like Claude Code / Copilot, but 100% local.",
+  "version": "0.1.0",
+  "publisher": "narayana006",
+  "engines": { "vscode": "^1.85.0" },
+  "categories": ["Other", "Machine Learning", "Programming Languages"],
+  "activationEvents": ["onStartupFinished"],
+  "main": "./extension.js",
+  "contributes": {
+    "commands": [
+      { "command": "qwenCoder.openChat", "title": "Qwen Coder: Open Chat" },
+      { "command": "qwenCoder.reset", "title": "Qwen Coder: Reset Conversation" }
+    ],
+    "viewsContainers": {
+      "activitybar": [
+        { "id": "qwenCoderBar", "title": "Qwen Coder", "icon": "media/icon.svg" }
+      ]
+    },
+    "views": {
+      "qwenCoderBar": [
+        { "id": "qwenCoder.chat", "name": "Agent", "type": "webview" }
+      ]
+    },
+    "configuration": {
+      "title": "Qwen Coder",
+      "properties": {
+        "qwenCoder.endpoint": {
+          "type": "string",
+          "default": "http://localhost:8080/v1",
+          "description": "OpenAI-compatible base URL of your llama.cpp server (run with --jinja)."
+        },
+        "qwenCoder.model": {
+          "type": "string",
+          "default": "qwen3-coder",
+          "description": "Model name sent in the request (llama.cpp ignores it, but some servers require it)."
+        },
+        "qwenCoder.temperature": {
+          "type": "number",
+          "default": 0.2,
+          "description": "Lower = more decisive (good for agent/coding). 0.2 recommended."
+        },
+        "qwenCoder.maxIterations": {
+          "type": "number",
+          "default": 25,
+          "description": "Max tool-call iterations per request before the agent stops."
+        },
+        "qwenCoder.autoApproveCommands": {
+          "type": "boolean",
+          "default": false,
+          "description": "Run shell commands WITHOUT asking. Leave OFF for safety (assisted mode)."
+        },
+        "qwenCoder.apiKey": {
+          "type": "string",
+          "default": "",
+          "description": "Optional bearer token if your endpoint requires auth."
+        }
+      }
+    }
+  }
+}
