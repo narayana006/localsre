@@ -1,4 +1,4 @@
-# Qwen Coder — local agentic coding for VS Code
+# LocalSRE — local agentic coding for VS Code
 
 A lightweight VS Code extension that turns your **local** model (Qwen3-Coder, DeepSeek-Coder-V2-Lite, or DeepSeek-R1) into an agentic coding assistant — like Claude Code / Copilot, but 100% offline. No cloud, no tokens.
 
@@ -22,11 +22,11 @@ Add your own by dropping a `name`/`description` front-mattered `.md` file in `sk
    ```
    Swap the `-m` path to run DeepSeek-Coder-V2-Lite or DeepSeek-R1 instead — the extension talks to whatever is loaded.
 
-2. **Run the extension** (dev mode): open this folder in VS Code → press **F5** → a new window opens with the **Qwen Coder** icon in the activity bar.
+2. **Run the extension** (dev mode): open this folder in VS Code → press **F5** → a new window opens with the **LocalSRE** icon in the activity bar.
 
-   To install permanently, package it: `npx @vscode/vsce package` → `code --install-extension qwen-coder-0.1.0.vsix`.
+   To install permanently, package it: `npx @vscode/vsce package` → `code --install-extension localsre-0.5.0.vsix`.
 
-3. **Configure** (Settings → "Qwen Coder") if needed: `endpoint` (default `http://localhost:8080/v1`), `temperature`, `autoApproveCommands` (leave OFF for safety).
+3. **Configure** (Settings → "LocalSRE") if needed: `endpoint` (default `http://localhost:8080/v1`), `temperature`, `autoApproveCommands` (leave OFF for safety).
 
 ## Model notes
 - **Qwen3-Coder-30B-A3B** — best agent; needs recent llama.cpp + `--jinja` or it apologizes instead of acting.

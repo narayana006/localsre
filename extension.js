@@ -1,4 +1,4 @@
-// Qwen Coder — lightweight local agentic coding assistant for VS Code.
+// LocalSRE — lightweight local agentic coding assistant for VS Code.
 // Talks to a local OpenAI-compatible server (llama.cpp `llama-server --jinja`)
 // and drives a local model (Qwen3-Coder / DeepSeek-Coder-V2-Lite / DeepSeek-R1)
 // through a real tool-calling agent loop with a skills system.
@@ -10,7 +10,7 @@ const path = require("path");
 
 // ---------- config ----------
 function cfg() {
-  const c = vscode.workspace.getConfiguration("qwenCoder");
+  const c = vscode.workspace.getConfiguration("localsre");
   return {
     endpoint: (c.get("endpoint") || "http://localhost:8080/v1").replace(/\/+$/, ""),
     model: c.get("model") || "local",
@@ -31,7 +31,7 @@ function resolvePath(p) {
   return path.isAbsolute(p) ? p : path.join(wsRoot(), p || ".");
 }
 function cmdTimeoutMs() {
-  return (vscode.workspace.getConfiguration("qwenCoder").get("commandTimeoutSec") || 900) * 1000;
+  return (vscode.workspace.getConfiguration("localsre").get("commandTimeoutSec") || 900) * 1000;
 }
 // A spawned shell lacks the login PATH, so brew/pip/npm wouldn't be found. Add the usual bins.
 function execEnv() {
@@ -71,7 +71,7 @@ function loadSkills(extPath) {
 function SYSTEM() {
   const skillList = SKILLS.length ? SKILLS.map((s) => `- ${s.name}: ${s.description}`).join("\n") : "(none)";
   return [
-    "You are Qwen Coder, an autonomous coding agent inside the user's VS Code on macOS (M3 Pro).",
+    "You are LocalSRE, an autonomous coding agent inside the user's VS Code on macOS (M3 Pro).",
     "You build, fix, and run real software by USING TOOLS — never by guessing.",
     "",
     "## PERSISTENCE — your defining trait",
@@ -214,7 +214,7 @@ async function readDocument(p) {
 
 async function approveCommand(command, what) {
   if (cfg().autoApprove) return true;
-  const pick = await vscode.window.showWarningMessage("Qwen Coder wants to " + (what || "run a command") + ":", { modal: true, detail: command }, "Approve", "Deny");
+  const pick = await vscode.window.showWarningMessage("LocalSRE wants to " + (what || "run a command") + ":", { modal: true, detail: command }, "Approve", "Deny");
   return pick === "Approve";
 }
 
@@ -291,7 +291,7 @@ async function selectModel() {
   const items = await listModels();
   if (!items.length) { vscode.window.showWarningMessage("No models found. Start your local server (llama.cpp/Ollama) or sign in to GitHub Copilot."); return null; }
   const pick = await vscode.window.showQuickPick(items, { placeHolder: "Model — current: " + curProvider() + ":" + curModel() });
-  if (pick) { active.provider = pick._p; active.model = pick._m; vscode.window.showInformationMessage("Qwen Coder → " + pick._p + ": " + pick._m); }
+  if (pick) { active.provider = pick._p; active.model = pick._m; vscode.window.showInformationMessage("LocalSRE → " + pick._p + ": " + pick._m); }
   return pick;
 }
 
@@ -303,7 +303,7 @@ async function getSecret(key, fallback) {
 }
 // Claude key resolution: keychain → settings → ANTHROPIC_API_KEY env (same var Claude Code uses).
 async function getAnthropicKey() {
-  return (await getSecret("qwenCoder.anthropicApiKey", cfg().anthropicApiKey)) || process.env.ANTHROPIC_API_KEY || "";
+  return (await getSecret("localsre.anthropicApiKey", cfg().anthropicApiKey)) || process.env.ANTHROPIC_API_KEY || "";
 }
 
 // ---------- model call (dispatches to local HTTP / Copilot / Claude) ----------
@@ -316,7 +316,7 @@ async function callModel(messages) {
 
 async function callModelHTTP(messages) {
   const c = cfg();
-  if (!c.endpoint) throw new Error("No endpoint configured (qwenCoder.endpoint).");
+  if (!c.endpoint) throw new Error("No endpoint configured (localsre.endpoint).");
   const headers = { "Content-Type": "application/json" };
   if (c.apiKey) headers["Authorization"] = "Bearer " + c.apiKey;
   const ctrl = new AbortController();
@@ -442,7 +442,7 @@ async function runAgent(userText, messages, post) {
 // Optional: Claude directly via an Anthropic API key (stored in the OS keychain, not settings).
 async function callModelAnthropic(messages) {
   const key = await getAnthropicKey();
-  if (!key) throw new Error("No Claude key. Set ANTHROPIC_API_KEY in your shell (same as Claude Code), run 'Qwen Coder: Set Claude API Key', or pick Claude under the Copilot provider.");
+  if (!key) throw new Error("No Claude key. Set ANTHROPIC_API_KEY in your shell (same as Claude Code), run 'LocalSRE: Set Claude API Key', or pick Claude under the Copilot provider.");
   let model = curModel();
   if (!/claude/i.test(model)) model = "claude-sonnet-4-6";
   const system = messages.filter((m) => m.role === "system").map((m) => m.content).filter(Boolean).join("\n\n");
@@ -494,14 +494,14 @@ class ChatProvider {
     this.messages = this._load(); // per-workspace history (survives reloads + folder switches)
   }
   _load() {
-    const saved = this.context.workspaceState.get("qwenCoder.history");
+    const saved = this.context.workspaceState.get("localsre.history");
     if (Array.isArray(saved) && saved.length) { saved[0] = { role: "system", content: SYSTEM() }; return saved; }
     return [{ role: "system", content: SYSTEM() }];
   }
   _save() {
     // system + last 60 turns, scoped to THIS workspace by VS Code automatically
     const tail = this.messages.slice(1).slice(-60);
-    this.context.workspaceState.update("qwenCoder.history", [{ role: "system", content: SYSTEM() }, ...tail]);
+    this.context.workspaceState.update("localsre.history", [{ role: "system", content: SYSTEM() }, ...tail]);
   }
   reset() {
     this.messages = [{ role: "system", content: SYSTEM() }];
@@ -525,7 +525,7 @@ class ChatProvider {
       try {
         if (m.type === "ask") { await runAgent(m.text, this.messages, post); this._save(); post({ type: "done" }); }
         else if (m.type === "reset") this.reset();
-        else if (m.type === "switchModel") await vscode.commands.executeCommand("qwenCoder.selectModel");
+        else if (m.type === "switchModel") await vscode.commands.executeCommand("localsre.selectModel");
       } catch (e) {
         // Never let an error escape into the extension host.
         post({ type: "error", text: "internal: " + (e && e.message ? e.message : String(e)) });
@@ -571,12 +571,12 @@ document.getElementById('model').onclick=()=>vscode.postMessage({type:'switchMod
 inp.addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();send();}});
 window.addEventListener('message',ev=>{const m=ev.data;
   if(m.type==='status'){if(statusEl)statusEl.textContent=m.text;}
-  else if(m.type==='assistant'){clearStatus();add('assistant','<span class="label">qwen</span>\\n'+esc(m.text));}
+  else if(m.type==='assistant'){clearStatus();add('assistant','<span class="label">sre</span>\\n'+esc(m.text));}
   else if(m.type==='tool'){clearStatus();add('tool','▶ '+esc(m.name)+'('+esc(JSON.stringify(m.args))+')');statusEl=add('status','running…');}
   else if(m.type==='toolResult'){clearStatus();add('toolres',esc(m.result));}
   else if(m.type==='error'){clearStatus();add('assistant err','⚠ '+esc(m.text));}
   else if(m.type==='model'){clearStatus();add('status','model → '+esc(m.name));}
-  else if(m.type==='restore'){log.innerHTML='';m.items.forEach(it=>add(it.role==='user'?'user':'assistant','<span class="label">'+(it.role==='user'?'you':'qwen')+'</span>\\n'+esc(it.text)));}
+  else if(m.type==='restore'){log.innerHTML='';m.items.forEach(it=>add(it.role==='user'?'user':'assistant','<span class="label">'+(it.role==='user'?'you':'sre')+'</span>\\n'+esc(it.text)));}
   else if(m.type==='cleared'){log.innerHTML='';}
   else if(m.type==='done'){clearStatus();}
 });
@@ -589,16 +589,16 @@ function activate(context) {
   loadSkills(context.extensionPath);
   const provider = new ChatProvider(context);
   context.subscriptions.push(
-    vscode.window.registerWebviewViewProvider("qwenCoder.chat", provider, { webviewOptions: { retainContextWhenHidden: true } }),
-    vscode.commands.registerCommand("qwenCoder.openChat", () => vscode.commands.executeCommand("qwenCoder.chat.focus")),
-    vscode.commands.registerCommand("qwenCoder.reset", () => provider.reset()),
-    vscode.commands.registerCommand("qwenCoder.selectModel", async () => {
+    vscode.window.registerWebviewViewProvider("localsre.chat", provider, { webviewOptions: { retainContextWhenHidden: true } }),
+    vscode.commands.registerCommand("localsre.openChat", () => vscode.commands.executeCommand("localsre.chat.focus")),
+    vscode.commands.registerCommand("localsre.reset", () => provider.reset()),
+    vscode.commands.registerCommand("localsre.selectModel", async () => {
       await selectModel();
       if (provider.view) provider.view.webview.postMessage({ type: "model", name: curProvider() + ":" + curModel() });
     }),
-    vscode.commands.registerCommand("qwenCoder.setClaudeKey", async () => {
+    vscode.commands.registerCommand("localsre.setClaudeKey", async () => {
       const k = await vscode.window.showInputBox({ password: true, ignoreFocusOut: true, prompt: "Anthropic API key (stored in the OS keychain, not settings)" });
-      if (k) { await SECRETS.store("qwenCoder.anthropicApiKey", k.trim()); vscode.window.showInformationMessage("Claude key saved to keychain."); }
+      if (k) { await SECRETS.store("localsre.anthropicApiKey", k.trim()); vscode.window.showInformationMessage("Claude key saved to keychain."); }
     })
   );
 }
