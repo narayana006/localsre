@@ -2,7 +2,7 @@
   "name": "localsre",
   "displayName": "LocalSRE",
   "description": "Lightweight local AI coding + SRE agent for VS Code. Local models (Qwen3/DeepSeek), GitHub Copilot, or Claude. 23 SRE skills, per-repo memory, 100% private.",
-  "version": "0.9.0",
+  "version": "0.9.1",
   "publisher": "narayana006",
   "engines": {
     "vscode": "^1.85.0"
@@ -103,6 +103,11 @@
           "default": "",
           "scope": "machine",
           "description": "Optional Claude API key. Resolution order: keychain ('Set Claude API Key' command) → this setting → ANTHROPIC_API_KEY env var (same one Claude Code uses; requires launching VS Code from a terminal via `code .`). Tip: Claude is also free via the 'copilot' provider if your plan includes it."
+        },
+        "localsre.editorContext": {
+          "type": "boolean",
+          "default": false,
+          "description": "Prepend the active file/selection/open tabs to each message. OFF by default — it can distract local models and crowd out important context. Turn on only if you want IDE-aware \"fix this file\" behavior."
         }
       }
     }

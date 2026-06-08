@@ -20,6 +20,7 @@ function cfg() {
     apiKey: c.get("apiKey") || "",
     provider: c.get("provider") || "local",
     anthropicApiKey: c.get("anthropicApiKey") || "",
+    editorContext: !!c.get("editorContext"), // off by default — it can distract local models
   };
 }
 
@@ -53,6 +54,7 @@ function editorContext() {
   } catch (_) { return ""; }
 }
 function withEditorContext(text) {
+  if (!cfg().editorContext) return text; // opt-in — off by default (it can distract local models)
   const ctx = editorContext();
   return ctx ? ctx + "\n\n[User request]\n" + text : text;
 }
@@ -761,4 +763,4 @@ function deactivate() {
 }
 module.exports = { activate, deactivate };
 // Test-only surface (harmless in production; used by test/run.js).
-module.exports._test = { execTool, runAgent, callModel, loadSkills, getSkills: () => SKILLS };
+module.exports._test = { execTool, runAgent, callModel, loadSkills, getSkills: () => SKILLS, SYSTEM };
