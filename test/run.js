@@ -19,12 +19,16 @@ const vscodeStub = {
     getConfiguration: () => ({ get: (k) => CONFIG[k] }),
     workspaceFolders: [{ uri: { fsPath: WS } }],
     openTextDocument: async () => ({}),
+    asRelativePath: (u) => String((u && u.fsPath) || u),
   },
   window: {
     showTextDocument: async () => ({}),
     showWarningMessage: async () => { approvals++; return "Approve"; }, // auto-approve in tests
     registerWebviewViewProvider: () => ({ dispose() {} }),
+    activeTextEditor: undefined,
+    tabGroups: { all: [] },
   },
+  languages: { getDiagnostics: () => [] },
   commands: { registerCommand: () => ({ dispose() {} }), executeCommand: async () => {} },
 };
 const origLoad = Module._load;
@@ -72,6 +76,9 @@ const T = ext._test;
   ok("run_command runs (approved)", (await T.execTool("run_command", { command: "echo HELLO" })).includes("HELLO"));
   ok("read_document on .txt", (await T.execTool("read_document", { path: "a.txt" })) === "X");
   ok("load_skill returns body", (await T.execTool("load_skill", { name: "kubernetes" })).includes("kubectl"));
+  ok("search_code returns string", typeof (await T.execTool("search_code", { query: "hello" })) === "string");
+  ok("get_problems returns string", typeof (await T.execTool("get_problems", {})) === "string");
+  ok("update_plan returns ok", (await T.execTool("update_plan", { todos: [{ content: "x", status: "pending" }] })).includes("Plan"));
   ok("unknown tool handled", (await T.execTool("nope", {})).includes("unknown tool"));
   ok("read_file missing file → error not crash", (await T.execTool("read_file", { path: "ghost.txt" })).startsWith("ERROR"));
 

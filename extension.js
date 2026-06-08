@@ -30,6 +30,32 @@ function wsRoot() {
 function resolvePath(p) {
   return path.isAbsolute(p) ? p : path.join(wsRoot(), p || ".");
 }
+
+// What the user is currently looking at — active file, selection, open tabs — so "this/here" works.
+function editorContext() {
+  try {
+    const lines = [];
+    const ed = vscode.window.activeTextEditor;
+    if (ed && ed.document) {
+      lines.push("Active file: " + vscode.workspace.asRelativePath(ed.document.uri));
+      const sel = ed.selection;
+      if (sel && !sel.isEmpty) {
+        lines.push("Selected (lines " + (sel.start.line + 1) + "-" + (sel.end.line + 1) + "):\n" + ed.document.getText(sel).slice(0, 2000));
+      } else if (ed.selection) {
+        lines.push("Cursor at line " + (ed.selection.active.line + 1) + " (no selection).");
+      }
+    }
+    const tabs = [];
+    for (const g of vscode.window.tabGroups.all) for (const t of g.tabs) if (t.input && t.input.uri) tabs.push(vscode.workspace.asRelativePath(t.input.uri));
+    const uniq = Array.from(new Set(tabs)).slice(0, 15);
+    if (uniq.length) lines.push("Open tabs: " + uniq.join(", "));
+    return lines.length ? "[Editor context — what the user is currently looking at]\n" + lines.join("\n") : "";
+  } catch (_) { return ""; }
+}
+function withEditorContext(text) {
+  const ctx = editorContext();
+  return ctx ? ctx + "\n\n[User request]\n" + text : text;
+}
 function cmdTimeoutMs() {
   return (vscode.workspace.getConfiguration("localsre").get("commandTimeoutSec") || 900) * 1000;
 }
@@ -43,6 +69,47 @@ function execEnv() {
 }
 function clip(s, n = 30000) {
   return s.length > n ? s.slice(0, n) + "\n…[truncated]" : s;
+}
+
+// Reliable code search (ripgrep, falling back to grep) — argv array, no shell injection.
+function searchCode(query) {
+  if (!query) return Promise.resolve("ERROR: query required.");
+  const opt = { cwd: wsRoot(), env: execEnv(), maxBuffer: 5 * 1024 * 1024, timeout: 30000 };
+  return new Promise((resolve) => {
+    cp.execFile("rg", ["-n", "--no-heading", "-S", "--max-count", "50", "--", query, "."], opt, (e, so, se) => {
+      if (!(e && e.code === "ENOENT")) {
+        // rg is installed and ran: matches, clean "no matches" (exit 1), or a real error.
+        if (so && so.trim()) return resolve(clip(so, 8000));
+        if (e && e.code !== 1) return resolve("search error: " + String(se || e.message || "").slice(0, 300));
+        return resolve("No matches for: " + query);
+      }
+      // rg not installed → fall back to grep
+      cp.execFile("grep", ["-rnI", "-e", query, "."], opt, (e2, so2, se2) => {
+        if (so2 && so2.trim()) return resolve(clip(so2, 8000));
+        if (e2 && e2.code !== 1) return resolve("search error: " + String(se2 || e2.message || "").slice(0, 300));
+        resolve("No matches for: " + query);
+      });
+    });
+  });
+}
+
+// Current errors/warnings from VS Code's diagnostics (Problems panel).
+function getProblems() {
+  try {
+    const out = [];
+    for (const [uri, diags] of vscode.languages.getDiagnostics()) {
+      for (const d of diags) {
+        if (d.severity <= 1) {
+          out.push(vscode.workspace.asRelativePath(uri) + ":" + (d.range.start.line + 1) + " [" + (d.severity === 0 ? "error" : "warning") + "] " + String(d.message || "").split("\n")[0]);
+          if (out.length >= 100) break;
+        }
+      }
+      if (out.length >= 100) break;
+    }
+    return out.length ? clip(out.slice(0, 100).join("\n"), 8000) : "No errors or warnings in the Problems panel.";
+  } catch (e) {
+    return "ERROR: " + (e.message || e);
+  }
 }
 
 // ---------- skills ----------
@@ -89,10 +156,15 @@ function SYSTEM() {
     "",
     "## Tools",
     "- read_file / write_file / list_dir — code.",
-    "- read_document — PDF/DOCX/etc.",
+    "- search_code — find where things are defined/used across the repo (prefer this over guessing paths or hand-writing grep).",
+    "- get_problems — read VS Code's current errors/warnings; check before AND after edits and fix them.",
+    "- read_document — PDF/DOCX/images (OCR).",
     "- run_command — git, gh, kubectl, pip, brew, npm, tests (user approves each).",
     "- start_server — launch a long-running dev server in the BACKGROUND (don't use run_command for servers, it would block).",
     "- open_preview — open a URL in VS Code's built-in browser so the user can see the UI.",
+    "- update_plan — show a live checklist for multi-step work.",
+    "",
+    "The user's ACTIVE FILE, selection, and open tabs are included at the top of each request. When they say 'this', 'here', 'this file/function', they mean that — act on it (read the active file for full contents if needed).",
     "",
     "## Building UIs / apps end-to-end",
     "Scaffold → install deps → write REAL code → start_server → open_preview → check build/console output → fix errors → iterate.",
@@ -136,6 +208,8 @@ const TOOLS = [
   { type: "function", function: { name: "open_preview", description: "Open a URL in VS Code's built-in Simple Browser so the user can see the running UI.", parameters: { type: "object", properties: { url: { type: "string" } }, required: ["url"] } } },
   { type: "function", function: { name: "load_skill", description: "Load the full instructions for a named skill before doing that kind of task.", parameters: { type: "object", properties: { name: { type: "string" } }, required: ["name"] } } },
   { type: "function", function: { name: "update_plan", description: "Show/update a step-by-step plan as a live checklist. Call FIRST on any multi-step task to outline steps, then call again to mark progress. Keep exactly one item in_progress.", parameters: { type: "object", properties: { todos: { type: "array", items: { type: "object", properties: { content: { type: "string" }, status: { type: "string", enum: ["pending", "in_progress", "completed"] } }, required: ["content", "status"] } } }, required: ["todos"] } } },
+  { type: "function", function: { name: "search_code", description: "Search the codebase for a string/regex and return matching file:line results. Use this to find where things are defined/used instead of guessing.", parameters: { type: "object", properties: { query: { type: "string" } }, required: ["query"] } } },
+  { type: "function", function: { name: "get_problems", description: "Return the current errors and warnings from VS Code's Problems panel (diagnostics) across the workspace. Use before/after edits to see and fix compile/lint errors.", parameters: { type: "object", properties: {} } } },
 ];
 
 // ---------- tool execution ----------
@@ -271,6 +345,8 @@ async function execTool(name, args) {
       if (postToWebview) postToWebview({ type: "plan", todos: Array.isArray(args.todos) ? args.todos : [] });
       return "Plan updated.";
     }
+    if (name === "search_code") return await searchCode(args.query || "");
+    if (name === "get_problems") return getProblems();
     return "ERROR: unknown tool " + name;
   } catch (e) {
     return "ERROR: " + (e.message || String(e));
@@ -572,7 +648,7 @@ class ChatProvider {
     view.webview.onDidReceiveMessage(async (m) => {
       try {
         if (m.type === "ready") this._replay(); // webview is now listening → safe to restore history
-        else if (m.type === "ask") { this.queue.push(m.text); this._drain(post); }
+        else if (m.type === "ask") { this.queue.push(withEditorContext(m.text)); this._drain(post); }
         else if (m.type === "reset") this.reset();
         else if (m.type === "switchModel") await vscode.commands.executeCommand("localsre.selectModel");
         else if (m.type === "approveResult") { const r = pendingApprovals[m.id]; if (r) r(!!m.approved); }
