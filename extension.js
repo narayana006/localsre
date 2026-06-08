@@ -15,7 +15,7 @@ function cfg() {
     endpoint: (c.get("endpoint") || "http://localhost:8080/v1").replace(/\/+$/, ""),
     model: c.get("model") || "local",
     temperature: Number.isFinite(c.get("temperature")) ? c.get("temperature") : 0.2,
-    maxIterations: Number(c.get("maxIterations")) > 0 ? Number(c.get("maxIterations")) : 25,
+    maxIterations: Number(c.get("maxIterations")) > 0 ? Number(c.get("maxIterations")) : 50,
     autoApprove: !!c.get("autoApproveCommands"),
     apiKey: c.get("apiKey") || "",
     provider: c.get("provider") || "local",
@@ -413,6 +413,7 @@ function trimInPlace(messages) {
 async function runAgent(userText, messages, post) {
   messages.push({ role: "user", content: userText });
   const c = cfg();
+  const callLog = {}; // detect repeated identical tool calls (local models tend to loop)
   for (let i = 0; i < c.maxIterations; i++) {
     trimInPlace(messages); // bound prefill every iteration
     post({ type: "status", text: "thinking…" });
@@ -433,7 +434,15 @@ async function runAgent(userText, messages, post) {
         let args = {};
         try { args = JSON.parse(tc.function.arguments || "{}"); } catch (_) {}
         post({ type: "tool", name: tname, args });
-        const result = await execTool(tname, args);
+        // Loop guard: if the model repeats the EXACT same call, stop re-running it and tell it to change course.
+        const sig = tname + "::" + (tc.function.arguments || "");
+        callLog[sig] = (callLog[sig] || 0) + 1;
+        let result;
+        if (callLog[sig] >= 3) {
+          result = "LOOP DETECTED: you already made this exact call " + callLog[sig] + " times — the result will not change. STOP repeating it; try a different approach or give your final answer now.";
+        } else {
+          result = await execTool(tname, args);
+        }
         post({ type: "toolResult", name: tname, result: String(result).slice(0, 4000) });
         // Cap what goes back into context — keeps prefill fast on local hardware over long sessions.
         messages.push({ role: "tool", tool_call_id: tc.id, content: String(result).slice(0, 6000) });
@@ -445,7 +454,7 @@ async function runAgent(userText, messages, post) {
     post({ type: "assistant", text: content || "(no content)" });
     return;
   }
-  post({ type: "assistant", text: "⚠️ Stopped after " + c.maxIterations + " iterations." });
+  post({ type: "assistant", text: "⚠️ Reached the step limit (" + c.maxIterations + " tool rounds). Paused here — reply 'continue' to keep going, or raise localsre.maxIterations in Settings for longer tasks." });
 }
 
 // Optional: Claude directly via an Anthropic API key (stored in the OS keychain, not settings).
