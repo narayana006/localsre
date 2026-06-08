@@ -180,8 +180,11 @@ async function approveCommand(command, what) {
 async function execTool(name, args) {
   try {
     if (name === "read_file") {
-      const c = fs.readFileSync(resolvePath(args.path), "utf8");
-      return clip(c, 20000);
+      const fp = resolvePath(args.path);
+      const st = fs.statSync(fp);
+      if (st.size > 5 * 1024 * 1024)
+        return "ERROR: file too large (" + Math.round(st.size / 1e6) + " MB). Use run_command with grep/sed/head to inspect it.";
+      return clip(fs.readFileSync(fp, "utf8"), 20000);
     }
     if (name === "write_file") {
       const p = resolvePath(args.path);
@@ -253,7 +256,8 @@ async function runAgent(userText, messages, post) {
         post({ type: "tool", name: tname, args });
         const result = await execTool(tname, args);
         post({ type: "toolResult", name: tname, result: String(result).slice(0, 4000) });
-        messages.push({ role: "tool", tool_call_id: tc.id || tname, content: String(result) });
+        // Cap what goes back into context — keeps prefill fast on local hardware over long sessions.
+        messages.push({ role: "tool", tool_call_id: tc.id || tname, content: String(result).slice(0, 6000) });
       }
       continue;
     }
@@ -282,8 +286,14 @@ class ChatProvider {
     view.webview.html = getHtml();
     const post = (m) => view.webview.postMessage(m);
     view.webview.onDidReceiveMessage(async (m) => {
-      if (m.type === "ask") { await runAgent(m.text, this.messages, post); post({ type: "done" }); }
-      else if (m.type === "reset") this.reset();
+      try {
+        if (m.type === "ask") { await runAgent(m.text, this.messages, post); post({ type: "done" }); }
+        else if (m.type === "reset") this.reset();
+      } catch (e) {
+        // Never let an error escape into the extension host.
+        post({ type: "error", text: "internal: " + (e && e.message ? e.message : String(e)) });
+        post({ type: "done" });
+      }
     });
   }
 }
@@ -347,3 +357,5 @@ function deactivate() {
   for (const s of servers) { try { s.child.kill(); } catch (_) {} }
 }
 module.exports = { activate, deactivate };
+// Test-only surface (harmless in production; used by test/run.js).
+module.exports._test = { execTool, runAgent, callModel, loadSkills, getSkills: () => SKILLS };
