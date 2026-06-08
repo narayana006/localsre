@@ -538,20 +538,20 @@ class ChatProvider {
 function getHtml() {
   return `<!DOCTYPE html><html><head><meta charset="utf-8"/>
 <style>
-  body{font-family:var(--vscode-font-family);font-size:13px;color:var(--vscode-foreground);margin:0;display:flex;flex-direction:column;height:100vh;}
-  #log{flex:1;overflow-y:auto;padding:10px;}
-  .msg{margin:8px 0;padding:8px 10px;border-radius:6px;white-space:pre-wrap;word-wrap:break-word;}
-  .user{background:var(--vscode-input-background);border:1px solid var(--vscode-input-border,transparent);}
-  .assistant{background:var(--vscode-editor-inactiveSelectionBackground);}
-  .tool{font-family:var(--vscode-editor-font-family);font-size:12px;background:var(--vscode-textCodeBlock-background);border-left:3px solid var(--vscode-charts-blue);padding:6px 8px;margin:4px 0;}
-  .toolres{font-family:var(--vscode-editor-font-family);font-size:12px;color:var(--vscode-descriptionForeground);background:var(--vscode-textCodeBlock-background);padding:6px 8px;margin:2px 0 8px;max-height:160px;overflow:auto;border-left:3px solid var(--vscode-charts-green);}
+  body{font-family:var(--vscode-font-family);font-size:14px;line-height:1.6;color:var(--vscode-editor-foreground);background:var(--vscode-editor-background);margin:0;display:flex;flex-direction:column;height:100vh;}
+  #log{flex:1;overflow-y:auto;padding:12px;}
+  .msg{margin:10px 0;padding:10px 12px;border-radius:8px;white-space:pre-wrap;word-wrap:break-word;color:var(--vscode-editor-foreground);}
+  .user{background:var(--vscode-input-background);border:1px solid var(--vscode-focusBorder,#0a84ff);}
+  .assistant{background:var(--vscode-textBlockQuote-background,rgba(128,128,128,0.14));border-left:3px solid var(--vscode-focusBorder,#0a84ff);}
+  .tool{font-family:var(--vscode-editor-font-family);font-size:12.5px;background:var(--vscode-textCodeBlock-background);border-left:3px solid var(--vscode-charts-blue);padding:6px 8px;margin:4px 0;color:var(--vscode-editor-foreground);}
+  .toolres{font-family:var(--vscode-editor-font-family);font-size:12.5px;color:var(--vscode-editor-foreground);opacity:.85;background:var(--vscode-textCodeBlock-background);padding:6px 8px;margin:2px 0 8px;max-height:180px;overflow:auto;border-left:3px solid var(--vscode-charts-green);}
   .err{color:var(--vscode-errorForeground);}
   .status{color:var(--vscode-descriptionForeground);font-style:italic;}
-  #bar{display:flex;gap:6px;padding:8px;border-top:1px solid var(--vscode-panel-border);}
-  #inp{flex:1;resize:none;background:var(--vscode-input-background);color:var(--vscode-input-foreground);border:1px solid var(--vscode-input-border,#555);border-radius:4px;padding:6px;font-family:inherit;}
-  button{background:var(--vscode-button-background);color:var(--vscode-button-foreground);border:none;border-radius:4px;padding:6px 10px;cursor:pointer;}
+  #bar{display:flex;gap:6px;padding:8px;border-top:1px solid var(--vscode-panel-border);background:var(--vscode-editor-background);}
+  #inp{flex:1;resize:none;background:var(--vscode-input-background);color:var(--vscode-input-foreground);border:1px solid var(--vscode-input-border,#888);border-radius:6px;padding:8px;font-family:inherit;font-size:14px;}
+  button{background:var(--vscode-button-background);color:var(--vscode-button-foreground);border:none;border-radius:6px;padding:7px 10px;cursor:pointer;font-size:13px;}
   button.sec{background:var(--vscode-button-secondaryBackground);color:var(--vscode-button-secondaryForeground);}
-  .label{font-weight:600;opacity:.7;font-size:11px;text-transform:uppercase;letter-spacing:.5px;}
+  .label{font-weight:700;opacity:.6;font-size:10.5px;text-transform:uppercase;letter-spacing:.6px;}
 </style></head><body>
 <div id="log"></div>
 <div id="bar">
