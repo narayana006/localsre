@@ -501,7 +501,19 @@ class ChatProvider {
   constructor(context) {
     this.context = context;
     this.messages = this._load(); // per-workspace history (survives reloads + folder switches)
-    this.busy = false; // one turn at a time — prevents concurrent runs corrupting history
+    this.busy = false; // a turn is in flight
+    this.queue = []; // you can keep typing/sending — asks queue and run in order (like Claude Code)
+  }
+  async _drain(post) {
+    if (this.busy) return;
+    this.busy = true;
+    try {
+      while (this.queue.length) {
+        const text = this.queue.shift();
+        try { await runAgent(text, this.messages, post); this._save(); }
+        catch (e) { post({ type: "error", text: "internal: " + (e && e.message ? e.message : String(e)) }); }
+      }
+    } finally { this.busy = false; post({ type: "done" }); }
   }
   _load() {
     const saved = this.context.workspaceState.get("localsre.history");
@@ -534,12 +546,7 @@ class ChatProvider {
     view.webview.onDidReceiveMessage(async (m) => {
       try {
         if (m.type === "ready") this._replay(); // webview is now listening → safe to restore history
-        else if (m.type === "ask") {
-          if (this.busy) return; // one turn at a time — no concurrent runs / backlog
-          this.busy = true; post({ type: "busy", on: true });
-          try { await runAgent(m.text, this.messages, post); this._save(); post({ type: "done" }); }
-          finally { this.busy = false; post({ type: "busy", on: false }); }
-        }
+        else if (m.type === "ask") { this.queue.push(m.text); this._drain(post); }
         else if (m.type === "reset") this.reset();
         else if (m.type === "switchModel") await vscode.commands.executeCommand("localsre.selectModel");
         else if (m.type === "approveResult") { const r = pendingApprovals[m.id]; if (r) r(!!m.approved); }
@@ -593,11 +600,11 @@ function getHtml() {
 </div>
 <script>
 const vscode = acquireVsCodeApi();
-const log = document.getElementById('log'); const inp = document.getElementById('inp'); let statusEl=null; let busy=false;
+const log = document.getElementById('log'); const inp = document.getElementById('inp'); let statusEl=null;
 function esc(s){return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
 function add(cls,html){const d=document.createElement('div');d.className='msg '+cls;d.innerHTML=html;log.appendChild(d);log.scrollTop=log.scrollHeight;return d;}
 function clearStatus(){if(statusEl){statusEl.remove();statusEl=null;}}
-function send(){if(busy)return;const t=inp.value.trim();if(!t)return;add('user','<span class="label">you</span>\\n'+esc(t));inp.value='';vscode.postMessage({type:'ask',text:t});statusEl=add('status','…');}
+function send(){const t=inp.value.trim();if(!t)return;add('user','<span class="label">you</span>\\n'+esc(t));inp.value='';vscode.postMessage({type:'ask',text:t});statusEl=add('status','…');}
 document.getElementById('send').onclick=send;
 document.getElementById('reset').onclick=()=>vscode.postMessage({type:'reset'});
 document.getElementById('model').onclick=()=>vscode.postMessage({type:'switchModel'});
@@ -622,7 +629,6 @@ window.addEventListener('message',ev=>{const m=ev.data;
     no.onclick=()=>{vscode.postMessage({type:'approveResult',id:m.id,approved:false});row.innerHTML='<span class="adone">✗ denied</span>';};
     row.appendChild(ok);row.appendChild(no);d.appendChild(row);log.appendChild(d);log.scrollTop=log.scrollHeight;
   }
-  else if(m.type==='busy'){busy=m.on;document.getElementById('send').disabled=busy;inp.disabled=busy;inp.placeholder=busy?'working… wait for the reply':'Ask LocalSRE to build, fix, run… (Enter to send, Shift+Enter newline)';}
   else if(m.type==='done'){clearStatus();}
 });
 vscode.postMessage({type:'ready'});
