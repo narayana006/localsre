@@ -74,11 +74,9 @@ function SYSTEM() {
     "You are LocalSRE, an autonomous coding agent inside the user's VS Code on macOS (M3 Pro).",
     "You build, fix, and run real software by USING TOOLS — never by guessing.",
     "",
-    "## PERSISTENCE — your defining trait",
-    "You HUNT for the solution. You never give up, apologize, or hand the task back.",
-    "- On failure: read the error, form a NEW hypothesis, try a DIFFERENT concrete approach. Exhaust real options before concluding anything is impossible.",
-    "- Never ask the user to run something you could run yourself — do it.",
-    "- Keep iterating (hypothesis → tool → observe → adjust) until the task is COMPLETE and VERIFIED.",
+    "## PERSISTENCE — within the CURRENT task only",
+    "While working on the task the user gave you, you hunt: on a failure, read the error, form a new hypothesis, and try a different concrete approach instead of bailing mid-task. Do things yourself with tools rather than asking the user to run them.",
+    "STOP-AND-WAIT (important): the moment the task the user asked for is COMPLETE — or you genuinely need a decision only they can make — STOP and wait for their next instruction. Do NOT invent extra work, start new tasks, or keep going on your own. One request → finish it → stop and report. When in doubt about scope, ask the user rather than charging ahead.",
     "",
     "## Skills — load on demand",
     "Skills are playbooks for specific jobs. Don't guess these workflows — call load_skill(name) to get the steps, then follow them:",
@@ -122,10 +120,6 @@ function projectMemory() {
 function stripThink(t) {
   return (t || "").replace(/<think>[\s\S]*?<\/think>/gi, "").replace(/<think>[\s\S]*$/i, "").trim();
 }
-// Phrases that signal the model is bailing instead of solving → we nudge it to keep going.
-const GIVEUP_RE =
-  /\b(i'?m sorry|i apologize|i (can'?t|cannot|am unable|was unable)|would you like me to|let me know if you|you (can|could|should|may) (try|run|do|provide)|please (run|provide|try|let me)|i'?m not sure how|need more (info|information)|unable to (proceed|continue))\b/i;
-
 // ---------- tool schemas ----------
 const TOOLS = [
   { type: "function", function: { name: "read_file", description: "Read a UTF-8 text file. Returns contents (truncated if large).", parameters: { type: "object", properties: { path: { type: "string" } }, required: ["path"] } } },
@@ -409,7 +403,6 @@ function trimInPlace(messages) {
 async function runAgent(userText, messages, post) {
   messages.push({ role: "user", content: userText });
   const c = cfg();
-  let nudges = 0;
   for (let i = 0; i < c.maxIterations; i++) {
     trimInPlace(messages); // bound prefill every iteration
     post({ type: "status", text: "thinking…" });
@@ -438,14 +431,7 @@ async function runAgent(userText, messages, post) {
       continue;
     }
 
-    // No tool calls → either done, or trying to bail. If it's bailing, nudge it to keep hunting.
-    if (GIVEUP_RE.test(content) && nudges < 2) {
-      nudges++;
-      if (content) post({ type: "assistant", text: content });
-      post({ type: "status", text: "nudging the agent to keep going…" });
-      messages.push({ role: "user", content: "Do not stop or hand this back. Keep using tools to make concrete progress and finish the task yourself. If something failed, try a different approach." });
-      continue;
-    }
+    // No tool calls → the agent is done with THIS request. Stop and wait for the user.
     post({ type: "assistant", text: content || "(no content)" });
     return;
   }
