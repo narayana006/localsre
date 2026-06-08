@@ -13,7 +13,8 @@ Use `run_command`. Confirm the kube context first (see the **kubernetes** skill)
 ## Install / upgrade
 - Install: `helm install <release> <chart> -n <ns> --create-namespace -f values.yaml`
 - Upgrade (idempotent): `helm upgrade --install <release> <chart> -n <ns> -f values.yaml --set key=value`
-- Dry run / render: `helm upgrade --install <release> <chart> --dry-run --debug` or `helm template <release> <chart> -f values.yaml`
+- Dry run / render: `helm upgrade --install <release> <chart> --dry-run=server --debug` (server-side catches admission/validation errors; plain `--dry-run` only renders client-side) or `helm template <release> <chart> -f values.yaml`
+- ⚠️ `helm upgrade` resets values NOT in your `-f`/`--set` back to chart defaults — pass a COMPLETE values file or use `--reuse-values` to avoid silently dropping prod config.
 
 ## Inspect & roll back
 - `helm list -n <ns>`; `helm status <release> -n <ns>`

@@ -2,7 +2,7 @@
   "name": "qwen-coder",
   "displayName": "Qwen Coder (Local Agent)",
   "description": "Lightweight agentic coding assistant powered by your local Qwen3-Coder via llama.cpp. Like Claude Code / Copilot, but 100% local.",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "publisher": "narayana006",
   "engines": { "vscode": "^1.85.0" },
   "categories": ["Other", "Machine Learning", "Programming Languages"],
@@ -11,7 +11,9 @@
   "contributes": {
     "commands": [
       { "command": "qwenCoder.openChat", "title": "Qwen Coder: Open Chat" },
-      { "command": "qwenCoder.reset", "title": "Qwen Coder: Reset Conversation" }
+      { "command": "qwenCoder.reset", "title": "Qwen Coder: Reset Conversation" },
+      { "command": "qwenCoder.selectModel", "title": "Qwen Coder: Switch Model (local / Copilot / Claude)" },
+      { "command": "qwenCoder.setClaudeKey", "title": "Qwen Coder: Set Claude API Key" }
     ],
     "viewsContainers": {
       "activitybar": [
@@ -29,7 +31,8 @@
         "qwenCoder.endpoint": {
           "type": "string",
           "default": "http://localhost:8080/v1",
-          "description": "OpenAI-compatible base URL of your llama.cpp server (run with --jinja)."
+          "scope": "machine",
+          "description": "OpenAI-compatible base URL of your llama.cpp server (run with --jinja). Machine-scoped so a workspace cannot override it."
         },
         "qwenCoder.model": {
           "type": "string",
@@ -54,7 +57,20 @@
         "qwenCoder.apiKey": {
           "type": "string",
           "default": "",
-          "description": "Optional bearer token if your endpoint requires auth."
+          "scope": "machine",
+          "description": "Optional bearer token if your local endpoint requires auth. Machine-scoped."
+        },
+        "qwenCoder.provider": {
+          "type": "string",
+          "enum": ["local", "copilot", "anthropic"],
+          "default": "local",
+          "description": "Model backend: 'local' = your llama.cpp/Ollama endpoint; 'copilot' = GitHub Copilot models (includes Claude); 'anthropic' = Claude via API key. Use the 'Switch Model' command to pick interactively."
+        },
+        "qwenCoder.anthropicApiKey": {
+          "type": "string",
+          "default": "",
+          "scope": "machine",
+          "description": "Optional Claude API key. Prefer the 'Set Claude API Key' command (stores it in the OS keychain). Tip: Claude is also available free via the 'copilot' provider if your plan includes it."
         }
       }
     }

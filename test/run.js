@@ -57,7 +57,7 @@ const T = ext._test;
   console.log("\n[1] skills load");
   T.loadSkills(path.join(__dirname, ".."));
   const skills = T.getSkills();
-  ok("loaded 13 skills", skills.length === 13);
+  ok("skills load (>=15)", skills.length >= 15);
   ok("gcp skill has a body", !!skills.find((s) => s.name === "gcp" && s.body.length > 100));
 
   console.log("\n[2] individual tools");

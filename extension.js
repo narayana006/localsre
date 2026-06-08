@@ -12,12 +12,14 @@ const path = require("path");
 function cfg() {
   const c = vscode.workspace.getConfiguration("qwenCoder");
   return {
-    endpoint: (c.get("endpoint") || "").replace(/\/+$/, ""),
-    model: c.get("model"),
-    temperature: c.get("temperature"),
-    maxIterations: c.get("maxIterations"),
-    autoApprove: c.get("autoApproveCommands"),
-    apiKey: c.get("apiKey"),
+    endpoint: (c.get("endpoint") || "http://localhost:8080/v1").replace(/\/+$/, ""),
+    model: c.get("model") || "local",
+    temperature: Number.isFinite(c.get("temperature")) ? c.get("temperature") : 0.2,
+    maxIterations: Number(c.get("maxIterations")) > 0 ? Number(c.get("maxIterations")) : 25,
+    autoApprove: !!c.get("autoApproveCommands"),
+    apiKey: c.get("apiKey") || "",
+    provider: c.get("provider") || "local",
+    anthropicApiKey: c.get("anthropicApiKey") || "",
   };
 }
 
@@ -95,7 +97,19 @@ function SYSTEM() {
     "",
     "Be concise in prose; let tools do the work. Finish with a short summary + how to run it.",
     "Workspace root: " + wsRoot(),
-  ].join("\n");
+    projectMemory(),
+  ].filter(Boolean).join("\n");
+}
+
+// Durable per-repo memory: first of these files found is injected into every session.
+function projectMemory() {
+  for (const f of [".qwen/memory.md", "AGENTS.md", "CLAUDE.md"]) {
+    try {
+      const p = path.join(wsRoot(), f);
+      if (fs.existsSync(p)) return "\n## Project memory (" + f + ")\n" + fs.readFileSync(p, "utf8").slice(0, 4000);
+    } catch (_) {}
+  }
+  return "";
 }
 
 // DeepSeek-R1 emits chain-of-thought in <think>…</think>. Strip it for display + context.
@@ -130,43 +144,60 @@ function sh(command) {
 }
 
 const servers = [];
+function killServer(entry) {
+  try { process.kill(-entry.child.pid); } // kill the whole process group (detached leader)
+  catch (_) { try { entry.child.kill(); } catch (__) {} }
+}
 function startServer(command, label) {
   return new Promise((resolve) => {
-    const child = cp.spawn(command, { cwd: wsRoot(), env: execEnv(), shell: true });
-    servers.push({ child, label: label || command });
-    let buf = "";
-    const onData = (d) => { buf += d.toString(); };
+    const child = cp.spawn(command, { cwd: wsRoot(), env: execEnv(), shell: true, detached: true });
+    const entry = { child, label: label || command, pid: child.pid };
+    servers.push(entry);
+    child.on("exit", () => { const i = servers.indexOf(entry); if (i >= 0) servers.splice(i, 1); });
+    let buf = "", capped = false;
+    const onData = (d) => { if (!capped) { buf += d.toString(); if (buf.length > 8000) capped = true; } };
     child.stdout.on("data", onData);
     child.stderr.on("data", onData);
     child.on("error", (e) => { buf += "\n[spawn error] " + e.message; });
-    // give it a few seconds to print its startup banner / URL
-    setTimeout(() => resolve("[" + (label || "server") + " started, pid " + child.pid + "]\n" + (buf.slice(-3000) || "(no output yet)")), 5000);
+    setTimeout(() => {
+      // stop accumulating output → avoids unbounded memory growth from a chatty server
+      child.stdout.removeListener("data", onData);
+      child.stderr.removeListener("data", onData);
+      child.stdout.resume(); child.stderr.resume();
+      resolve("[" + (label || "server") + " started, pid " + child.pid + "]\n" + (buf.slice(-3000) || "(no output yet)"));
+    }, 5000);
   });
 }
 
 async function readDocument(p) {
   if (!fs.existsSync(p)) return "ERROR: file not found: " + p;
   const ext = path.extname(p).toLowerCase();
-  const q = '"' + p.replace(/"/g, '\\"') + '"';
-  const run = (cmd) => new Promise((res) => cp.exec(cmd, { env: execEnv(), maxBuffer: 50 * 1024 * 1024, timeout: 180000 }, (e, so, se) => res({ so: so || "", se: se || "", e })));
+  // execFile with an argv array — the path is NEVER parsed by a shell, so no command injection.
+  const runFile = (file, argv) =>
+    new Promise((res) =>
+      cp.execFile(file, argv, { env: execEnv(), maxBuffer: 50 * 1024 * 1024, timeout: 180000 }, (e, so, se) =>
+        res({ so: so || "", se: se || "", e })
+      )
+    );
   if ([".docx", ".doc", ".rtf", ".odt", ".html", ".htm", ".webarchive"].includes(ext)) {
-    const r = await run(`textutil -convert txt -stdout ${q}`);
+    const r = await runFile("textutil", ["-convert", "txt", "-stdout", p]);
     return r.so.trim() ? clip(r.so) : "ERROR(textutil): " + (r.se || "no text");
   }
   if (ext === ".pdf") {
-    let r = await run(`command -v pdftotext >/dev/null 2>&1 && pdftotext -layout ${q} -`);
-    if (r.so.trim()) return clip(r.so);
+    const r = await runFile("pdftotext", ["-layout", p, "-"]);
+    if (r.so && r.so.trim()) return clip(r.so);
+    // fallback: pypdf via python; path is argv[1], not shell-interpolated.
     const py =
-      "python3 - <<'PYEOF'\nimport sys\ntry:\n    from pypdf import PdfReader\nexcept Exception:\n    import subprocess; subprocess.run([sys.executable,'-m','pip','install','-q','pypdf'])\n    from pypdf import PdfReader\n" +
-      "r=PdfReader(" + JSON.stringify(p) + ")\nprint('\\n'.join((pg.extract_text() or '') for pg in r.pages))\nPYEOF";
-    r = await run(py);
-    return r.so.trim() ? clip(r.so) : "ERROR: PDF extraction failed. Try `brew install poppler`. " + (r.se || "").slice(0, 200);
+      "import sys\ntry:\n from pypdf import PdfReader\nexcept Exception:\n import subprocess; subprocess.run([sys.executable,'-m','pip','install','-q','pypdf']); from pypdf import PdfReader\n" +
+      "r=PdfReader(sys.argv[1]); print('\\n'.join((pg.extract_text() or '') for pg in r.pages))";
+    const r2 = await runFile("python3", ["-c", py, p]);
+    return r2.so && r2.so.trim() ? clip(r2.so) : "ERROR: PDF extraction failed. Try `brew install poppler`. " + (r2.se || "").slice(0, 200);
   }
-  // Screenshots / images → OCR the text (text-only models can't see layout, but can read the words).
+  // Screenshots / images → OCR (text-only models can't see layout, but can read the words).
   if ([".png", ".jpg", ".jpeg", ".tiff", ".tif", ".bmp", ".gif", ".webp"].includes(ext)) {
-    const r = await run(`command -v tesseract >/dev/null 2>&1 && tesseract ${q} - 2>/dev/null`);
-    if (r.so.trim()) return "[OCR text extracted from image — visual layout NOT available]\n\n" + clip(r.so);
-    return "ERROR: OCR needs tesseract. Install it: `brew install tesseract`, then retry. (Note: this reads TEXT in the image only; the model cannot see the actual picture.)";
+    const r = await runFile("tesseract", [p, "-"]);
+    if (r.so && r.so.trim()) return "[OCR text extracted from image — visual layout NOT available]\n\n" + clip(r.so);
+    return "ERROR: OCR needs tesseract. Install it: `brew install tesseract`, then retry. (Reads TEXT in the image only; the model cannot see the actual picture.)";
   }
   try { return clip(fs.readFileSync(p, "utf8")); } catch (_) { return "ERROR: unsupported type " + ext; }
 }
@@ -190,7 +221,7 @@ async function execTool(name, args) {
       const p = resolvePath(args.path);
       fs.mkdirSync(path.dirname(p), { recursive: true });
       fs.writeFileSync(p, args.content ?? "");
-      vscode.workspace.openTextDocument(p).then((d) => vscode.window.showTextDocument(d, { preview: false }));
+      vscode.workspace.openTextDocument(p).then((d) => vscode.window.showTextDocument(d, { preview: false }), () => {});
       return `wrote ${args.path} (${(args.content || "").length} bytes)`;
     }
     if (name === "list_dir") {
@@ -219,19 +250,114 @@ async function execTool(name, args) {
   }
 }
 
-// ---------- model call ----------
+// ---------- model selection (local endpoint + GitHub Copilot) ----------
+const active = { provider: null, model: null }; // null = fall back to settings
+function curProvider() { return active.provider || cfg().provider; }
+function curModel() { return active.model || cfg().model; }
+
+async function listModels() {
+  const items = [];
+  // local models from the OpenAI-compatible endpoint (Ollama lists all imported models; llama.cpp lists the loaded one)
+  try {
+    const c = cfg();
+    const res = await fetch(c.endpoint + "/models", { headers: c.apiKey ? { Authorization: "Bearer " + c.apiKey } : {} });
+    const data = await res.json();
+    for (const m of data.data || data.models || []) {
+      const id = m.id || m.name;
+      if (id) items.push({ label: "$(server) " + id, description: "local", _p: "local", _m: id });
+    }
+  } catch (_) {}
+  // GitHub Copilot subscription models via the VS Code Language Model API
+  try {
+    const cps = (await vscode.lm.selectChatModels({ vendor: "copilot" })) || [];
+    for (const m of cps) items.push({ label: "$(copilot) " + (m.name || m.family), description: "GitHub Copilot", _p: "copilot", _m: m.family || m.id });
+  } catch (_) {}
+  // Claude via Anthropic key — only shown if a key is in the keychain/settings
+  const akey = await getSecret("qwenCoder.anthropicApiKey", cfg().anthropicApiKey);
+  if (akey) for (const m of ["claude-opus-4-8", "claude-sonnet-4-6", "claude-haiku-4-5"]) items.push({ label: "$(sparkle) " + m, description: "Claude (Anthropic key)", _p: "anthropic", _m: m });
+  return items;
+}
+async function selectModel() {
+  const items = await listModels();
+  if (!items.length) { vscode.window.showWarningMessage("No models found. Start your local server (llama.cpp/Ollama) or sign in to GitHub Copilot."); return null; }
+  const pick = await vscode.window.showQuickPick(items, { placeHolder: "Model — current: " + curProvider() + ":" + curModel() });
+  if (pick) { active.provider = pick._p; active.model = pick._m; vscode.window.showInformationMessage("Qwen Coder → " + pick._p + ": " + pick._m); }
+  return pick;
+}
+
+// ---------- secrets (OS keychain via VS Code SecretStorage) ----------
+let SECRETS = null;
+async function getSecret(key, fallback) {
+  try { const v = SECRETS && (await SECRETS.get(key)); if (v) return v; } catch (_) {}
+  return fallback || "";
+}
+
+// ---------- model call (dispatches to local HTTP / Copilot / Claude) ----------
 async function callModel(messages) {
+  const p = curProvider();
+  if (p === "copilot") return callModelLM(messages);
+  if (p === "anthropic") return callModelAnthropic(messages);
+  return callModelHTTP(messages);
+}
+
+async function callModelHTTP(messages) {
   const c = cfg();
+  if (!c.endpoint) throw new Error("No endpoint configured (qwenCoder.endpoint).");
   const headers = { "Content-Type": "application/json" };
   if (c.apiKey) headers["Authorization"] = "Bearer " + c.apiKey;
-  const res = await fetch(c.endpoint + "/chat/completions", {
-    method: "POST", headers,
-    body: JSON.stringify({ model: c.model, messages, tools: TOOLS, tool_choice: "auto", temperature: c.temperature, stream: false }),
-  });
-  if (!res.ok) throw new Error("HTTP " + res.status + ": " + (await res.text()).slice(0, 300));
-  const data = await res.json();
-  if (!data.choices || !data.choices[0]) throw new Error("No choices in response");
-  return data.choices[0].message;
+  const ctrl = new AbortController();
+  const to = setTimeout(() => ctrl.abort(), 180000);
+  try {
+    const res = await fetch(c.endpoint + "/chat/completions", {
+      method: "POST", headers, signal: ctrl.signal,
+      body: JSON.stringify({ model: curModel(), messages, tools: TOOLS, tool_choice: "auto", temperature: c.temperature, stream: false }),
+    });
+    if (!res.ok) throw new Error("HTTP " + res.status + ": " + (await res.text()).slice(0, 300));
+    const data = await res.json();
+    if (!data.choices || !data.choices[0] || !data.choices[0].message) throw new Error("Malformed response (no message).");
+    return data.choices[0].message;
+  } catch (e) {
+    if (e.name === "AbortError") throw new Error("Model timed out (180s). Is the server running, or is the context too large?");
+    throw e;
+  } finally { clearTimeout(to); }
+}
+
+// Use the user's GitHub Copilot models through VS Code's Language Model API.
+function toLMMessages(messages) {
+  const out = [];
+  for (const m of messages) {
+    if (m.role === "system" || m.role === "user") {
+      out.push(vscode.LanguageModelChatMessage.User(typeof m.content === "string" ? m.content : ""));
+    } else if (m.role === "assistant") {
+      const parts = [];
+      if (m.content) parts.push(new vscode.LanguageModelTextPart(m.content));
+      for (const tc of m.tool_calls || []) {
+        let input = {};
+        try { input = JSON.parse(tc.function.arguments || "{}"); } catch (_) {}
+        parts.push(new vscode.LanguageModelToolCallPart(tc.id, tc.function.name, input));
+      }
+      out.push(vscode.LanguageModelChatMessage.Assistant(parts.length ? parts : ""));
+    } else if (m.role === "tool") {
+      out.push(vscode.LanguageModelChatMessage.User([new vscode.LanguageModelToolResultPart(m.tool_call_id, [new vscode.LanguageModelTextPart(String(m.content))])]));
+    }
+  }
+  return out;
+}
+async function callModelLM(messages) {
+  const fam = curModel();
+  let models = (await vscode.lm.selectChatModels({ vendor: "copilot", family: fam })) || [];
+  if (!models.length) models = (await vscode.lm.selectChatModels({ vendor: "copilot" })) || [];
+  if (!models.length) throw new Error("No Copilot model available. Sign in to GitHub Copilot in VS Code.");
+  const lmTools = TOOLS.map((t) => ({ name: t.function.name, description: t.function.description, inputSchema: t.function.parameters }));
+  const resp = await models[0].sendRequest(toLMMessages(messages), { tools: lmTools }, new vscode.CancellationTokenSource().token);
+  let content = "";
+  const toolCalls = [];
+  for await (const part of resp.stream) {
+    if (part instanceof vscode.LanguageModelTextPart) content += part.value;
+    else if (part instanceof vscode.LanguageModelToolCallPart)
+      toolCalls.push({ id: part.callId, function: { name: part.name, arguments: JSON.stringify(part.input || {}) } });
+  }
+  return { content, tool_calls: toolCalls.length ? toolCalls : undefined };
 }
 
 // ---------- agent loop ----------
@@ -245,11 +371,15 @@ async function runAgent(userText, messages, post) {
     try { msg = await callModel(messages); } catch (e) { post({ type: "error", text: String(e.message || e) }); return; }
 
     const content = stripThink(msg.content || "");
-    messages.push({ role: "assistant", content, tool_calls: msg.tool_calls || undefined });
+    // Keep only well-formed tool calls; give each a stable unique id reused in the tool result.
+    const toolCalls = (Array.isArray(msg.tool_calls) ? msg.tool_calls : []).filter((tc) => tc && tc.function && tc.function.name);
+    toolCalls.forEach((tc, idx) => { if (!tc.id) tc.id = "call_" + i + "_" + idx; });
+    // OpenAI protocol wants content:null (not "") when tool_calls are present.
+    messages.push({ role: "assistant", content: content || null, tool_calls: toolCalls.length ? toolCalls : undefined });
 
-    if (msg.tool_calls && msg.tool_calls.length) {
+    if (toolCalls.length) {
       if (content) post({ type: "assistant", text: content });
-      for (const tc of msg.tool_calls) {
+      for (const tc of toolCalls) {
         const tname = tc.function.name;
         let args = {};
         try { args = JSON.parse(tc.function.arguments || "{}"); } catch (_) {}
@@ -257,7 +387,7 @@ async function runAgent(userText, messages, post) {
         const result = await execTool(tname, args);
         post({ type: "toolResult", name: tname, result: String(result).slice(0, 4000) });
         // Cap what goes back into context — keeps prefill fast on local hardware over long sessions.
-        messages.push({ role: "tool", tool_call_id: tc.id || tname, content: String(result).slice(0, 6000) });
+        messages.push({ role: "tool", tool_call_id: tc.id, content: String(result).slice(0, 6000) });
       }
       continue;
     }
@@ -276,19 +406,93 @@ async function runAgent(userText, messages, post) {
   post({ type: "assistant", text: "⚠️ Stopped after " + c.maxIterations + " iterations." });
 }
 
+// Optional: Claude directly via an Anthropic API key (stored in the OS keychain, not settings).
+async function callModelAnthropic(messages) {
+  const key = await getSecret("qwenCoder.anthropicApiKey", cfg().anthropicApiKey);
+  if (!key) throw new Error("No Claude key set. Run 'Qwen Coder: Set Claude API Key' — or just pick Claude under the Copilot provider (no key needed).");
+  let model = curModel();
+  if (!/claude/i.test(model)) model = "claude-sonnet-4-6";
+  const system = messages.filter((m) => m.role === "system").map((m) => m.content).filter(Boolean).join("\n\n");
+  const conv = [];
+  for (const m of messages) {
+    if (m.role === "system") continue;
+    if (m.role === "user") conv.push({ role: "user", content: m.content });
+    else if (m.role === "assistant") {
+      const blocks = [];
+      if (m.content) blocks.push({ type: "text", text: m.content });
+      for (const tc of m.tool_calls || []) {
+        let input = {};
+        try { input = JSON.parse(tc.function.arguments || "{}"); } catch (_) {}
+        blocks.push({ type: "tool_use", id: tc.id, name: tc.function.name, input });
+      }
+      if (blocks.length) conv.push({ role: "assistant", content: blocks });
+    } else if (m.role === "tool") {
+      conv.push({ role: "user", content: [{ type: "tool_result", tool_use_id: m.tool_call_id, content: String(m.content) }] });
+    }
+  }
+  const tools = TOOLS.map((t) => ({ name: t.function.name, description: t.function.description, input_schema: t.function.parameters }));
+  const ctrl = new AbortController();
+  const to = setTimeout(() => ctrl.abort(), 180000);
+  try {
+    const res = await fetch("https://api.anthropic.com/v1/messages", {
+      method: "POST", signal: ctrl.signal,
+      headers: { "content-type": "application/json", "x-api-key": key, "anthropic-version": "2023-06-01" },
+      body: JSON.stringify({ model, max_tokens: 4096, system: system || undefined, messages: conv, tools }),
+    });
+    if (!res.ok) throw new Error("Anthropic HTTP " + res.status + ": " + (await res.text()).slice(0, 300));
+    const data = await res.json();
+    let content = "";
+    const toolCalls = [];
+    for (const b of data.content || []) {
+      if (b.type === "text") content += b.text;
+      else if (b.type === "tool_use") toolCalls.push({ id: b.id, function: { name: b.name, arguments: JSON.stringify(b.input || {}) } });
+    }
+    return { content, tool_calls: toolCalls.length ? toolCalls : undefined };
+  } catch (e) {
+    if (e.name === "AbortError") throw new Error("Claude timed out (180s).");
+    throw e;
+  } finally { clearTimeout(to); }
+}
+
 // ---------- webview ----------
 class ChatProvider {
-  constructor() { this.messages = [{ role: "system", content: SYSTEM() }]; }
-  reset() { this.messages = [{ role: "system", content: SYSTEM() }]; if (this.view) this.view.webview.postMessage({ type: "cleared" }); }
+  constructor(context) {
+    this.context = context;
+    this.messages = this._load(); // per-workspace history (survives reloads + folder switches)
+  }
+  _load() {
+    const saved = this.context.workspaceState.get("qwenCoder.history");
+    if (Array.isArray(saved) && saved.length) { saved[0] = { role: "system", content: SYSTEM() }; return saved; }
+    return [{ role: "system", content: SYSTEM() }];
+  }
+  _save() {
+    // system + last 60 turns, scoped to THIS workspace by VS Code automatically
+    const tail = this.messages.slice(1).slice(-60);
+    this.context.workspaceState.update("qwenCoder.history", [{ role: "system", content: SYSTEM() }, ...tail]);
+  }
+  reset() {
+    this.messages = [{ role: "system", content: SYSTEM() }];
+    this._save();
+    if (this.view) this.view.webview.postMessage({ type: "cleared" });
+  }
+  _replay() {
+    if (!this.view) return;
+    const items = this.messages
+      .filter((m) => (m.role === "user" || m.role === "assistant") && typeof m.content === "string" && m.content)
+      .map((m) => ({ role: m.role, text: m.content }));
+    if (items.length) this.view.webview.postMessage({ type: "restore", items });
+  }
   resolveWebviewView(view) {
     this.view = view;
     view.webview.options = { enableScripts: true };
     view.webview.html = getHtml();
     const post = (m) => view.webview.postMessage(m);
+    this._replay(); // re-render this repo's prior conversation
     view.webview.onDidReceiveMessage(async (m) => {
       try {
-        if (m.type === "ask") { await runAgent(m.text, this.messages, post); post({ type: "done" }); }
+        if (m.type === "ask") { await runAgent(m.text, this.messages, post); this._save(); post({ type: "done" }); }
         else if (m.type === "reset") this.reset();
+        else if (m.type === "switchModel") await vscode.commands.executeCommand("qwenCoder.selectModel");
       } catch (e) {
         // Never let an error escape into the extension host.
         post({ type: "error", text: "internal: " + (e && e.message ? e.message : String(e)) });
@@ -319,7 +523,7 @@ function getHtml() {
 <div id="log"></div>
 <div id="bar">
   <textarea id="inp" rows="2" placeholder="Ask Qwen to build, fix, run… (Enter to send, Shift+Enter newline)"></textarea>
-  <div style="display:flex;flex-direction:column;gap:4px;"><button id="send">Send</button><button id="reset" class="sec">Reset</button></div>
+  <div style="display:flex;flex-direction:column;gap:4px;"><button id="send">Send</button><button id="model" class="sec">Model</button><button id="reset" class="sec">Reset</button></div>
 </div>
 <script>
 const vscode = acquireVsCodeApi();
@@ -330,6 +534,7 @@ function clearStatus(){if(statusEl){statusEl.remove();statusEl=null;}}
 function send(){const t=inp.value.trim();if(!t)return;add('user','<span class="label">you</span>\\n'+esc(t));inp.value='';vscode.postMessage({type:'ask',text:t});statusEl=add('status','…');}
 document.getElementById('send').onclick=send;
 document.getElementById('reset').onclick=()=>vscode.postMessage({type:'reset'});
+document.getElementById('model').onclick=()=>vscode.postMessage({type:'switchModel'});
 inp.addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();send();}});
 window.addEventListener('message',ev=>{const m=ev.data;
   if(m.type==='status'){if(statusEl)statusEl.textContent=m.text;}
@@ -337,6 +542,8 @@ window.addEventListener('message',ev=>{const m=ev.data;
   else if(m.type==='tool'){clearStatus();add('tool','▶ '+esc(m.name)+'('+esc(JSON.stringify(m.args))+')');statusEl=add('status','running…');}
   else if(m.type==='toolResult'){clearStatus();add('toolres',esc(m.result));}
   else if(m.type==='error'){clearStatus();add('assistant err','⚠ '+esc(m.text));}
+  else if(m.type==='model'){clearStatus();add('status','model → '+esc(m.name));}
+  else if(m.type==='restore'){log.innerHTML='';m.items.forEach(it=>add(it.role==='user'?'user':'assistant','<span class="label">'+(it.role==='user'?'you':'qwen')+'</span>\\n'+esc(it.text)));}
   else if(m.type==='cleared'){log.innerHTML='';}
   else if(m.type==='done'){clearStatus();}
 });
@@ -345,16 +552,25 @@ window.addEventListener('message',ev=>{const m=ev.data;
 
 // ---------- activation ----------
 function activate(context) {
+  SECRETS = context.secrets;
   loadSkills(context.extensionPath);
-  const provider = new ChatProvider();
+  const provider = new ChatProvider(context);
   context.subscriptions.push(
     vscode.window.registerWebviewViewProvider("qwenCoder.chat", provider, { webviewOptions: { retainContextWhenHidden: true } }),
     vscode.commands.registerCommand("qwenCoder.openChat", () => vscode.commands.executeCommand("qwenCoder.chat.focus")),
-    vscode.commands.registerCommand("qwenCoder.reset", () => provider.reset())
+    vscode.commands.registerCommand("qwenCoder.reset", () => provider.reset()),
+    vscode.commands.registerCommand("qwenCoder.selectModel", async () => {
+      await selectModel();
+      if (provider.view) provider.view.webview.postMessage({ type: "model", name: curProvider() + ":" + curModel() });
+    }),
+    vscode.commands.registerCommand("qwenCoder.setClaudeKey", async () => {
+      const k = await vscode.window.showInputBox({ password: true, ignoreFocusOut: true, prompt: "Anthropic API key (stored in the OS keychain, not settings)" });
+      if (k) { await SECRETS.store("qwenCoder.anthropicApiKey", k.trim()); vscode.window.showInformationMessage("Claude key saved to keychain."); }
+    })
   );
 }
 function deactivate() {
-  for (const s of servers) { try { s.child.kill(); } catch (_) {} }
+  for (const s of servers.slice()) killServer(s);
 }
 module.exports = { activate, deactivate };
 // Test-only surface (harmless in production; used by test/run.js).

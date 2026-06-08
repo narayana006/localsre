@@ -11,7 +11,7 @@ Table API: `/api/now/table/<table>`. Always send `-H "Accept: application/json" 
 - List open: `GET /api/now/table/incident?sysparm_query=active=true^state!=6&sysparm_limit=25&sysparm_display_value=true`
 - Get one: `GET /api/now/table/incident?sysparm_query=number=INC0012345`
 - Create: `POST /api/now/table/incident` body `{"short_description":"...","description":"...","urgency":"2","impact":"2","assignment_group":"<sys_id or name>"}`
-- Update (by sys_id): `PATCH /api/now/table/incident/<sys_id>` body `{"state":"2","work_notes":"investigating"}`
+- Update (by sys_id): `PUT /api/now/table/incident/<sys_id>` body `{"state":"2","work_notes":"investigating"}` (Table API treats a partial PUT body as a field-level update; some instances reject PATCH with 405).
   - Common states: 1=New, 2=In Progress, 6=Resolved, 7=Closed. Resolving needs `close_code` + `close_notes`.
 
 ## Change Requests (table: `change_request`)

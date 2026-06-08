@@ -18,9 +18,10 @@ Anything kubectl can do, you can do — look it up with `--help` rather than gue
 ## Inspect (read-only, do these first)
 - `kubectl get pods -A` / `kubectl get deploy,svc -n <ns>`
 - `kubectl describe pod <pod> -n <ns>`
-- `kubectl logs <pod> -n <ns> [-c <container>] [--tail=200] [--previous]`
+- Logs: `kubectl logs <pod> -n <ns> [-c <container>] [--tail=200] [--previous]`; follow with `-f`; across all replicas of a deployment `kubectl logs -l app=<x> -n <ns> --all-containers --tail=200`; recent window `--since=15m`. (Multi-pod live tail: `stern <app> -n <ns>` if installed.)
 - `kubectl top pods -n <ns>` (needs metrics-server)
 - `kubectl get events -n <ns> --sort-by=.lastTimestamp`
+- Ingress: `kubectl get ingress -n <ns>`; `kubectl describe ingress <name> -n <ns>` — check rules/hosts, backend service+port, and TLS secret. 502/503 usually = backend has no ready endpoints: `kubectl get endpoints <svc> -n <ns>`. Also check the ingress-controller pod logs (e.g. `kubectl logs -n ingress-nginx -l app.kubernetes.io/name=ingress-nginx`).
 
 ## Operate (mutating)
 - Restart: `kubectl rollout restart deploy/<name> -n <ns>`

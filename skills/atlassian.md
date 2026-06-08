@@ -8,8 +8,8 @@ Auth: Basic auth with email + API token. `-u "$ATLASSIAN_EMAIL:$ATLASSIAN_API_TO
 Base: `https://<your-domain>.atlassian.net`. Use `run_command` with `curl` (+ `jq`).
 
 ## Jira
-- Search (JQL): `GET /rest/api/3/search?jql=<encoded jql>&maxResults=25`
-  - e.g. `project = SRE AND status != Done ORDER BY created DESC`
+- Search (JQL): `GET /rest/api/3/search/jql?jql=<encoded>&maxResults=25&fields=summary,status` — paginate with `nextPageToken`. (The old `/rest/api/3/search` is DEPRECATED and returns reduced/empty results.)
+  - e.g. jql `project = SRE AND status != Done ORDER BY created DESC`
 - Get issue: `GET /rest/api/3/issue/<KEY>`
 - Create: `POST /rest/api/3/issue` body `{"fields":{"project":{"key":"SRE"},"summary":"...","issuetype":{"name":"Task"},"description":{...ADF...}}}`
 - Comment: `POST /rest/api/3/issue/<KEY>/comment`

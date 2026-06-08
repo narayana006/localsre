@@ -10,18 +10,28 @@ const T = require("../extension.js")._test;
 // Each skill must exist and its body must contain ALL of these (case-insensitive).
 const EXPECT = {
   "github-ops": ["git ", "gh ", "workflow", "pr create"],
-  kubernetes: ["kubectl", "current-context", "rollout", "api-resources"],
-  gcp: ["gcloud", "vertex", "dataflow", "dataproc", "kubectl", "--help"],
+  kubernetes: ["kubectl", "current-context", "rollout", "api-resources", "ingress"],
+  gcp: ["gcloud", "vertex", "dataflow", "dataproc", "kubectl", "--help", "impersonate"],
   "python-env": ["pip install", "venv"],
   homebrew: ["brew install"],
   documents: ["read_document", "textutil", "tesseract"],
   scaffold: ["vite", "fastapi", "streamlit", "npm"],
-  datadog: ["DD_API_KEY", "monitor", "logs"],
-  pagerduty: ["PD_API_TOKEN", "incidents", "oncall"],
+  datadog: ["dd_api_key", "monitor", "logs"],
+  pagerduty: ["pd_api_token", "incidents", "oncall"],
   terraform: ["terraform plan", "terraform apply", "state"],
   helm: ["helm upgrade", "rollback", "repo add"],
   atlassian: ["jira", "confluence", "rest/api"],
   servicenow: ["service-now.com", "incident", "change_request", "table"],
+  bigquery: ["bq ", "use_legacy_sql", "information_schema", "dry_run", "maximum_bytes_billed"],
+  "office-docs": ["python-pptx", "python-docx", "pandoc"],
+  "paper-review": ["ieee", "abstract", "reproducib", "baseline"],
+  "github-actions": ["workflow", "runs-on", "oidc", "jenkins"],
+  "dataflow-dataproc": ["dataflow", "dataproc", "maxworkers", "spark"],
+  docker: ["docker build", "artifact registry", "platform linux/amd64"],
+  "incident-response": ["pagerduty", "datadog", "rollback", "triage"],
+  monitoring: ["alert", "policies", "timeseries", "logging read"],
+  ansible: ["ansible-playbook", "--check", "vault"],
+  shell: ["grep", "awk", "jq", "rsync"],
 };
 
 T.loadSkills(path.join(__dirname, ".."));

@@ -8,6 +8,15 @@ You have the FULL `gcloud`, `gsutil`/`gcloud storage`, `bq`, and `kubectl` CLIs 
 ALWAYS confirm context before acting: `gcloud auth list`, `gcloud config get-value project`, `gcloud config set project <id>`, and check the `--region`/`--zone`. Investigate read-only first; never delete projects/clusters/datasets without explicit confirmation.
 ADC for SDKs: `gcloud auth application-default login`.
 
+## Authentication — run these PROACTIVELY when you hit auth errors
+If any command fails with "credentials"/401/403/"reauth required"/"not logged in", fix auth first, then retry:
+- User login: `gcloud auth login` (interactive — opens a browser; tell the user to complete the browser flow, then retry).
+- App/SDK auth (BigQuery, Vertex, client libs): `gcloud auth application-default login`.
+- Service account (key file): `gcloud auth activate-service-account --key-file=<sa.json>`.
+- IMPERSONATE a service account (no key needed — preferred): add `--impersonate-service-account=<sa>@<proj>.iam.gserviceaccount.com` to ANY gcloud command, or get a token: `gcloud auth print-access-token --impersonate-service-account=<sa>`. Requires `roles/iam.serviceAccountTokenCreator` on the SA. For client libraries/SDKs: `export GOOGLE_IMPERSONATE_SERVICE_ACCOUNT=<sa>` (or configure ADC impersonation). Verify with `gcloud auth print-access-token --impersonate-service-account=<sa>`.
+- Verify: `gcloud auth list` (active account) and `gcloud auth print-access-token` (a token printing = authed).
+These are interactive — after the user finishes the browser flow, re-run the original command.
+
 ## Discover any command (use when something isn't listed here)
 - `gcloud help`, `gcloud <group> --help` (e.g. `gcloud compute instances --help`), `gcloud <group> <cmd> --help`
 - `gcloud components list`; search: `gcloud <group> list` for any resource
@@ -25,7 +34,7 @@ Anything gcloud can do, you can do — look up the exact flags with `--help` rat
 - Troubleshoot: pod CrashLoop/Pending → kubernetes skill (describe/logs/events); node pressure → `kubectl top nodes`; image pull → check Artifact Registry IAM.
 
 ## Cloud Run
-- Deploy: `gcloud run deploy <svc> --source . --region <r> --allow-unauthenticated`
+- Deploy: `gcloud run deploy <svc> --source . --region <r> --no-allow-unauthenticated` (ONLY add `--allow-unauthenticated` if the service is intentionally public — never by default; public endpoints on regulated infra are a security exposure)
 - Inspect: `gcloud run services describe <svc> --region <r>`; `gcloud run revisions list --service <svc> --region <r>`
 - Troubleshoot: 5xx/cold-start/timeouts → logs `resource.type=cloud_run_revision severity>=ERROR`; check memory/CPU limits, container port, and the startup probe.
 

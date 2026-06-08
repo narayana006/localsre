@@ -4,7 +4,7 @@ description: List, acknowledge, resolve PagerDuty incidents and check on-call sc
 ---
 # PagerDuty
 
-Auth: REST API token in `PD_API_TOKEN`. Header: `-H "Authorization: Token token=$PD_API_TOKEN" -H "Content-Type: application/json"`. Base: `https://api.pagerduty.com`. CLI alternative: `pd` (pagerduty-cli).
+Auth (use these headers on EVERY request): `-H "Authorization: Token token=$PD_API_TOKEN" -H "Accept: application/vnd.pagerduty+json;version=2" -H "Content-Type: application/json"`. Writes (acknowledge/resolve/notes) ALSO require `-H "From: $PD_FROM_EMAIL"` (a valid user email). Base: `https://api.pagerduty.com`. CLI alternative: `pd` (pagerduty-cli).
 
 ## Incidents
 - List open: `curl -s "https://api.pagerduty.com/incidents?statuses[]=triggered&statuses[]=acknowledged" -H ... | jq '.incidents[] | {id,title,status,urgency}'`
