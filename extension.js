@@ -12,8 +12,8 @@ const path = require("path");
 function cfg() {
   const c = vscode.workspace.getConfiguration("localsre");
   return {
-    endpoint: (c.get("endpoint") || "http://localhost:8080/v1").replace(/\/+$/, ""),
-    model: c.get("model") || "local",
+    endpoint: (c.get("endpoint") || "http://localhost:11434/v1").replace(/\/+$/, ""), // Ollama by default
+    model: c.get("model") || "qwen3-coder",
     temperature: Number.isFinite(c.get("temperature")) ? c.get("temperature") : 0.2,
     maxIterations: Number(c.get("maxIterations")) > 0 ? Number(c.get("maxIterations")) : 50,
     autoApprove: !!c.get("autoApproveCommands"),
@@ -281,6 +281,23 @@ async function execTool(name, args) {
 const active = { provider: null, model: null }; // null = fall back to settings
 function curProvider() { return active.provider || cfg().provider; }
 function curModel() { return active.model || cfg().model; }
+// Zero-config local model: if the user hasn't picked one, auto-detect from the endpoint (Ollama/llama.cpp).
+let autoLocalModel = null;
+async function localModelName() {
+  if (active.model) return active.model; // user explicitly chose a model
+  if (autoLocalModel) return autoLocalModel;
+  const c = cfg();
+  try {
+    const res = await fetch(c.endpoint + "/models", { headers: c.apiKey ? { Authorization: "Bearer " + c.apiKey } : {} });
+    const data = await res.json();
+    const ids = (data.data || data.models || []).map((m) => m.id || m.name).filter(Boolean);
+    if (ids.length) {
+      autoLocalModel = ids.find((x) => x === c.model) || ids.find((x) => /qwen.*coder/i.test(x)) || ids.find((x) => /qwen/i.test(x)) || ids[0];
+      return autoLocalModel;
+    }
+  } catch (_) {}
+  return c.model;
+}
 
 async function listModels() {
   const items = [];
@@ -341,7 +358,7 @@ async function callModelHTTP(messages) {
   try {
     const res = await fetch(c.endpoint + "/chat/completions", {
       method: "POST", headers, signal: ctrl.signal,
-      body: JSON.stringify({ model: curModel(), messages, tools: TOOLS, tool_choice: "auto", temperature: c.temperature, stream: false }),
+      body: JSON.stringify({ model: await localModelName(), messages, tools: TOOLS, tool_choice: "auto", temperature: c.temperature, stream: false }),
     });
     if (!res.ok) throw new Error("HTTP " + res.status + ": " + (await res.text()).slice(0, 300));
     const data = await res.json();

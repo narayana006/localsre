@@ -2,7 +2,7 @@
   "name": "localsre",
   "displayName": "LocalSRE",
   "description": "Lightweight local AI coding + SRE agent for VS Code. Local models (Qwen3/DeepSeek), GitHub Copilot, or Claude. 23 SRE skills, per-repo memory, 100% private.",
-  "version": "0.7.3",
+  "version": "0.8.0",
   "publisher": "narayana006",
   "engines": {
     "vscode": "^1.85.0"
@@ -58,14 +58,14 @@
       "properties": {
         "localsre.endpoint": {
           "type": "string",
-          "default": "http://localhost:8080/v1",
+          "default": "http://localhost:11434/v1",
           "scope": "machine",
-          "description": "OpenAI-compatible base URL of your llama.cpp server (run with --jinja). Machine-scoped so a workspace cannot override it."
+          "description": "OpenAI-compatible base URL. Defaults to Ollama (:11434). For llama.cpp use http://localhost:8080/v1."
         },
         "localsre.model": {
           "type": "string",
           "default": "qwen3-coder",
-          "description": "Model name sent in the request (llama.cpp ignores it, but some servers require it)."
+          "description": "Local model name. Auto-detected from the endpoint if not found (picks a Qwen model if present), so you usually do not need to set this."
         },
         "localsre.temperature": {
           "type": "number",
