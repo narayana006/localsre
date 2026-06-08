@@ -43,7 +43,11 @@ const SCRIPT = [
   { message: { role: "assistant", content: "Loading a skill.", tool_calls: [{ id: "t5", function: { name: "load_skill", arguments: '{"name":"gcp"}' } }] } },
   { message: { role: "assistant", content: "Done — created hello.txt, ran the command, and reviewed the gcp skill." } },
 ];
-global.fetch = async () => ({ ok: true, json: async () => ({ choices: [SCRIPT[turn++]] }), text: async () => "" });
+global.fetch = async (url) => {
+  // model auto-detect probe → return a model list (don't consume a scripted turn)
+  if (typeof url === "string" && url.endsWith("/models")) return { ok: true, json: async () => ({ data: [{ id: "qwen3-coder" }] }), text: async () => "" };
+  return { ok: true, json: async () => ({ choices: [SCRIPT[turn++]] }), text: async () => "" };
+};
 
 // --- run ---
 const ext = require("../extension.js");
