@@ -180,6 +180,7 @@ function SYSTEM() {
     "",
     "## Memory — never forget, never re-ask",
     "You have PERSISTENT repo-local memory (.localsre/memory.md), shown below when present. It survives across sessions and days.",
+    "The 'Saved memory' section below is ALREADY in your context — read it and ANSWER DIRECTLY from it. NEVER say 'I'll check the memory' or 'let me look it up' and never call a tool to retrieve it; the facts are right here — just use them.",
     "- When you learn something DURABLE — how to reach a cluster/service (proxy, kube-context, credentials location), a decision, a setup procedure, or anything the user tells you to remember — call the remember tool to save it immediately.",
     "- BEFORE asking the user a question, check your memory and the conversation above. NEVER ask for something you were already told or already worked out. Do not repeat questions or redo work across sessions.",
     "",
@@ -189,7 +190,9 @@ function SYSTEM() {
     activeBlock,
     "",
     "## Tools",
-    "- read_file / write_file / list_dir — code.",
+    "- read_file / list_dir — read code. write_file (NEW files ONLY) / edit_file (targeted exact old→new replace — PREFER for existing files; never rewrite a whole file).",
+    "- After ANY edit, VERIFY: call get_problems and run the relevant test/build; fix errors, then finish.",
+    "- consult_expert — ask Claude (cloud) a hard reasoning/review question when stuck or to review your plan/diff (needs a Claude key).",
     "- search_code — find where things are defined/used across the repo (prefer this over guessing paths or hand-writing grep).",
     "- get_problems — read VS Code's current errors/warnings; check before AND after edits and fix them.",
     "- read_document — PDF/DOCX/images (OCR).",
@@ -255,7 +258,8 @@ function stripThink(t) {
 // ---------- tool schemas ----------
 const TOOLS = [
   { type: "function", function: { name: "read_file", description: "Read a UTF-8 text file. Returns contents (truncated if large).", parameters: { type: "object", properties: { path: { type: "string" } }, required: ["path"] } } },
-  { type: "function", function: { name: "write_file", description: "Create or overwrite a text file. Parent dirs are created.", parameters: { type: "object", properties: { path: { type: "string" }, content: { type: "string" } }, required: ["path", "content"] } } },
+  { type: "function", function: { name: "write_file", description: "Create or overwrite a text file (use ONLY for brand-new files). Parent dirs are created.", parameters: { type: "object", properties: { path: { type: "string" }, content: { type: "string" } }, required: ["path", "content"] } } },
+  { type: "function", function: { name: "edit_file", description: "Make a TARGETED edit to an existing file: replace an exact, unique snippet with new text. PREFER this over write_file for existing files — never rewrite a whole file. Fails if old_string is missing or appears more than once (add surrounding context to make it unique).", parameters: { type: "object", properties: { path: { type: "string" }, old_string: { type: "string" }, new_string: { type: "string" } }, required: ["path", "old_string", "new_string"] } } },
   { type: "function", function: { name: "list_dir", description: "List directory entries (dirs end with /).", parameters: { type: "object", properties: { path: { type: "string" } } } } },
   { type: "function", function: { name: "run_command", description: "Run a shell command in the workspace and return stdout+stderr. User approves it. Do NOT use for long-running servers — use start_server.", parameters: { type: "object", properties: { command: { type: "string" } }, required: ["command"] } } },
   { type: "function", function: { name: "read_document", description: "Extract text from a PDF/DOCX/DOC/RTF/ODT/HTML document, OR OCR the text from a screenshot/image (.png/.jpg/etc). Use instead of read_file for non-text files.", parameters: { type: "object", properties: { path: { type: "string" } }, required: ["path"] } } },
@@ -266,6 +270,7 @@ const TOOLS = [
   { type: "function", function: { name: "search_code", description: "Search the codebase for a string/regex and return matching file:line results. Use this to find where things are defined/used instead of guessing.", parameters: { type: "object", properties: { query: { type: "string" } }, required: ["query"] } } },
   { type: "function", function: { name: "get_problems", description: "Return the current errors and warnings from VS Code's Problems panel (diagnostics) across the workspace. Use before/after edits to see and fix compile/lint errors.", parameters: { type: "object", properties: {} } } },
   { type: "function", function: { name: "remember", description: "Save a DURABLE fact to the repo's persistent memory (.localsre/memory.md) so it's available in EVERY future session, forever. Use for environment specifics (how to reach a cluster/service, proxies, kube-contexts, credential locations), decisions made, setup procedures, and anything the user tells you to remember. CHECK memory before asking the user something you may already know.", parameters: { type: "object", properties: { note: { type: "string" } }, required: ["note"] } } },
+  { type: "function", function: { name: "consult_expert", description: "Delegate a HARD reasoning/review question to a stronger cloud model (Claude) and get its answer. Use when stuck, for tricky design decisions, or to review your own plan/diff. Requires a Claude API key.", parameters: { type: "object", properties: { question: { type: "string" } }, required: ["question"] } } },
 ];
 
 // ---------- tool execution ----------
@@ -377,6 +382,19 @@ async function execTool(name, args) {
       vscode.workspace.openTextDocument(p).then((d) => vscode.window.showTextDocument(d, { preview: false }), () => {});
       return `wrote ${args.path} (${(args.content || "").length} bytes)`;
     }
+    if (name === "edit_file") {
+      const fp = resolvePath(args.path);
+      let src;
+      try { src = fs.readFileSync(fp, "utf8"); } catch (_) { return "ERROR: cannot read " + args.path + " (does it exist?)."; }
+      const oldS = String(args.old_string ?? ""), newS = String(args.new_string ?? "");
+      if (!oldS) return "ERROR: old_string is empty.";
+      const count = src.split(oldS).length - 1;
+      if (count === 0) return "ERROR: old_string not found in " + args.path + " — read the file and copy an EXACT snippet (including whitespace).";
+      if (count > 1) return "ERROR: old_string appears " + count + " times — add more surrounding context to make it unique.";
+      fs.writeFileSync(fp, src.replace(oldS, newS));
+      vscode.workspace.openTextDocument(fp).then((d) => vscode.window.showTextDocument(d, { preview: false }), () => {});
+      return "Edited " + args.path + " (−" + oldS.split("\n").length + " / +" + newS.split("\n").length + " lines).";
+    }
     if (name === "list_dir") {
       return fs.readdirSync(resolvePath(args.path || "."), { withFileTypes: true }).map((d) => (d.isDirectory() ? d.name + "/" : d.name)).join("\n");
     }
@@ -423,6 +441,19 @@ async function execTool(name, args) {
         }
       } catch (_) {}
       return "Saved to repo memory (.localsre/memory.md).";
+    }
+    if (name === "consult_expert") {
+      const key = await getAnthropicKey();
+      if (!key) return "No Claude key available — set ANTHROPIC_API_KEY or run 'LocalSRE: Set Claude API Key'. (Without it, rely on your own reasoning.)";
+      try {
+        const res = await fetch("https://api.anthropic.com/v1/messages", {
+          method: "POST", headers: { "content-type": "application/json", "x-api-key": key, "anthropic-version": "2023-06-01" },
+          body: JSON.stringify({ model: "claude-sonnet-4-6", max_tokens: 1500, messages: [{ role: "user", content: String(args.question || "") }] }),
+        });
+        if (!res.ok) return "consult error: " + (await res.text()).slice(0, 200);
+        const data = await res.json();
+        return (data.content || []).filter((b) => b.type === "text").map((b) => b.text).join("\n") || "(no answer)";
+      } catch (e) { return "consult error: " + (e.message || e); }
     }
     return "ERROR: unknown tool " + name;
   } catch (e) {
@@ -496,33 +527,74 @@ async function getAnthropicKey() {
 }
 
 // ---------- model call (dispatches to local HTTP / Copilot / Claude) ----------
-async function callModel(messages) {
+async function callModel(messages, onDelta) {
   const p = curProvider();
-  if (p === "copilot") return callModelLM(messages);
+  if (p === "copilot") return callModelLM(messages, onDelta);
   if (p === "anthropic") return callModelAnthropic(messages);
-  return callModelHTTP(messages);
+  return callModelHTTP(messages, onDelta);
 }
 
-async function callModelHTTP(messages) {
+let activeAbort = null;   // the in-flight model call's AbortController (for the Stop button)
+let stopRequested = false; // set by Stop; checked in the agent loop
+
+async function callModelHTTP(messages, onDelta) {
   const c = cfg();
   if (!c.endpoint) throw new Error("No endpoint configured (localsre.endpoint).");
   const headers = { "Content-Type": "application/json" };
   if (c.apiKey) headers["Authorization"] = "Bearer " + c.apiKey;
   const ctrl = new AbortController();
+  activeAbort = ctrl;
   const to = setTimeout(() => ctrl.abort(), 180000);
   try {
     const res = await fetch(c.endpoint + "/chat/completions", {
       method: "POST", headers, signal: ctrl.signal,
-      body: JSON.stringify({ model: await localModelName(), messages, tools: TOOLS, tool_choice: "auto", temperature: c.temperature, stream: false }),
+      body: JSON.stringify({ model: await localModelName(), messages, tools: TOOLS, tool_choice: "auto", temperature: c.temperature, stream: !!onDelta }),
     });
     if (!res.ok) throw new Error("HTTP " + res.status + ": " + (await res.text()).slice(0, 300));
+    // Stream when asked (real servers); fall back to JSON when there's no readable body (tests/non-stream).
+    if (onDelta && res.body && typeof res.body.getReader === "function") return await parseSSE(res.body, onDelta);
     const data = await res.json();
     if (!data.choices || !data.choices[0] || !data.choices[0].message) throw new Error("Malformed response (no message).");
     return data.choices[0].message;
   } catch (e) {
-    if (e.name === "AbortError") throw new Error("Model timed out (180s). Is the server running, or is the context too large?");
+    if (e.name === "AbortError") throw new Error(stopRequested ? "stopped" : "Model timed out (180s).");
     throw e;
-  } finally { clearTimeout(to); }
+  } finally { clearTimeout(to); activeAbort = null; }
+}
+
+// Parse an OpenAI-style SSE stream: emit text deltas live, assemble tool_calls by index.
+async function parseSSE(body, onDelta) {
+  const reader = body.getReader();
+  const dec = new TextDecoder();
+  let buf = "", content = "";
+  const toolMap = {};
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    buf += dec.decode(value, { stream: true });
+    let nl;
+    while ((nl = buf.indexOf("\n")) >= 0) {
+      const line = buf.slice(0, nl).trim();
+      buf = buf.slice(nl + 1);
+      if (!line.startsWith("data:")) continue;
+      const d = line.slice(5).trim();
+      if (d === "[DONE]") continue;
+      let j;
+      try { j = JSON.parse(d); } catch (_) { continue; }
+      const delta = j.choices && j.choices[0] && j.choices[0].delta;
+      if (!delta) continue;
+      if (delta.content) { content += delta.content; onDelta(delta.content); }
+      for (const tcd of delta.tool_calls || []) {
+        const idx = tcd.index || 0;
+        const e = toolMap[idx] || (toolMap[idx] = { id: tcd.id || "", function: { name: "", arguments: "" } });
+        if (tcd.id) e.id = tcd.id;
+        if (tcd.function && tcd.function.name) e.function.name += tcd.function.name;
+        if (tcd.function && tcd.function.arguments) e.function.arguments += tcd.function.arguments;
+      }
+    }
+  }
+  const tcs = Object.keys(toolMap).sort((a, b) => a - b).map((k) => toolMap[k]).filter((t) => t.function.name);
+  return { content, tool_calls: tcs.length ? tcs : undefined };
 }
 
 // Use the user's GitHub Copilot models through VS Code's Language Model API.
@@ -546,7 +618,7 @@ function toLMMessages(messages) {
   }
   return out;
 }
-async function callModelLM(messages) {
+async function callModelLM(messages, onDelta) {
   const fam = curModel();
   let models = (await vscode.lm.selectChatModels({ vendor: "copilot", family: fam })) || [];
   if (!models.length) models = (await vscode.lm.selectChatModels({ vendor: "copilot" })) || [];
@@ -559,7 +631,7 @@ async function callModelLM(messages) {
     let content = "";
     const toolCalls = [];
     for await (const part of resp.stream) {
-      if (part instanceof vscode.LanguageModelTextPart) content += part.value;
+      if (part instanceof vscode.LanguageModelTextPart) { content += part.value; if (onDelta) onDelta(part.value); }
       else if (part instanceof vscode.LanguageModelToolCallPart)
         toolCalls.push({ id: part.callId, function: { name: part.name, arguments: JSON.stringify(part.input || {}) } });
     }
@@ -594,11 +666,22 @@ async function runAgent(userText, messages, post) {
   messages.push({ role: "user", content: userText });
   const c = cfg();
   const callLog = {}; // detect repeated identical tool calls (local models tend to loop)
+  let edited = false, verified = false, verifyNudges = 0; // self-verify loop state
   for (let i = 0; i < c.maxIterations; i++) {
+    if (stopRequested) { post({ type: "assistant", text: "⏹ stopped." }); return; }
     trimInPlace(messages); // bound prefill every iteration
     post({ type: "status", text: "thinking…" });
     let msg;
-    try { msg = await callModel(messages); } catch (e) { post({ type: "error", text: String(e.message || e) }); return; }
+    let streamed = false;
+    const onDelta = (t) => { streamed = true; post({ type: "assistantDelta", text: t }); };
+    try { msg = await callModel(messages, onDelta); }
+    catch (e) {
+      if (streamed) post({ type: "assistantEnd" });
+      const em = String(e.message || e);
+      if (em === "stopped" || stopRequested) { post({ type: "assistant", text: "⏹ stopped." }); return; }
+      post({ type: "error", text: em }); return;
+    }
+    if (streamed) post({ type: "assistantEnd" }); // finalize the streamed bubble
 
     const content = stripThink(msg.content || "");
     // Keep only well-formed tool calls; give each a stable unique id reused in the tool result.
@@ -608,9 +691,12 @@ async function runAgent(userText, messages, post) {
     messages.push({ role: "assistant", content: content || null, tool_calls: toolCalls.length ? toolCalls : undefined });
 
     if (toolCalls.length) {
-      if (content) post({ type: "assistant", text: content });
+      if (content && !streamed) post({ type: "assistant", text: content });
       for (const tc of toolCalls) {
+        if (stopRequested) { post({ type: "assistant", text: "⏹ stopped." }); return; }
         const tname = tc.function.name;
+        if (tname === "write_file" || tname === "edit_file") edited = true;
+        if (tname === "get_problems" || tname === "run_command") verified = true;
         let args = {};
         try { args = JSON.parse(tc.function.arguments || "{}"); } catch (_) {}
         post({ type: "tool", name: tname, args });
@@ -631,8 +717,14 @@ async function runAgent(userText, messages, post) {
       continue;
     }
 
-    // No tool calls → the agent is done with THIS request. Stop and wait for the user.
-    post({ type: "assistant", text: content || "(no content)" });
+    // Self-verify: if we edited files but never checked them, run one verification pass first.
+    if (edited && !verified && verifyNudges < 1) {
+      verifyNudges++;
+      messages.push({ role: "user", content: "You edited files but didn't verify. Call get_problems and run the relevant test/build; fix any errors, then give your final summary." });
+      continue;
+    }
+    // No tool calls → done. (Already shown live if streamed.)
+    if (!streamed) post({ type: "assistant", text: content || "(no content)" });
     return;
   }
   post({ type: "assistant", text: "⚠️ Reached the step limit (" + c.maxIterations + " tool rounds). Paused here — reply 'continue' to keep going, or raise localsre.maxIterations in Settings for longer tasks." });
@@ -697,8 +789,9 @@ class ChatProvider {
   async _drain(post) {
     if (this.busy) return;
     this.busy = true;
+    stopRequested = false; // fresh run
     try {
-      while (this.queue.length) {
+      while (this.queue.length && !stopRequested) {
         const text = this.queue.shift();
         try { await runAgent(text, this.messages, post); this._save(); }
         catch (e) { post({ type: "error", text: "internal: " + (e && e.message ? e.message : String(e)) }); }
@@ -752,6 +845,7 @@ class ChatProvider {
         else if (m.type === "reset") this.reset();
         else if (m.type === "switchModel") await vscode.commands.executeCommand("localsre.selectModel");
         else if (m.type === "approveResult") { const r = pendingApprovals[m.id]; if (r) r(!!m.approved); }
+        else if (m.type === "stop") { stopRequested = true; this.queue.length = 0; if (activeAbort) { try { activeAbort.abort(); } catch (_) {} } post({ type: "status", text: "stopping…" }); }
       } catch (e) {
         // Never let an error escape into the extension host.
         post({ type: "error", text: "internal: " + (e && e.message ? e.message : String(e)) });
@@ -797,12 +891,12 @@ function getHtml() {
 <div id="plan"></div>
 <div id="log"></div>
 <div id="bar">
-  <textarea id="inp" rows="2" placeholder="Ask Qwen to build, fix, run… (Enter to send, Shift+Enter newline)"></textarea>
-  <div style="display:flex;flex-direction:column;gap:4px;"><button id="send">Send</button><button id="model" class="sec">Model</button><button id="reset" class="sec">Reset</button></div>
+  <textarea id="inp" rows="2" placeholder="Ask LocalSRE to build, fix, run… (Enter to send, Shift+Enter newline)"></textarea>
+  <div style="display:flex;flex-direction:column;gap:4px;"><button id="send">Send</button><button id="stop" class="sec">⏹ Stop</button><button id="model" class="sec">Model</button><button id="reset" class="sec">Reset</button></div>
 </div>
 <script>
 const vscode = acquireVsCodeApi();
-const log = document.getElementById('log'); const inp = document.getElementById('inp'); let statusEl=null;
+const log = document.getElementById('log'); const inp = document.getElementById('inp'); let statusEl=null; let streamEl=null;
 function esc(s){return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
 function add(cls,html){const d=document.createElement('div');d.className='msg '+cls;d.innerHTML=html;log.appendChild(d);log.scrollTop=log.scrollHeight;return d;}
 function clearStatus(){if(statusEl){statusEl.remove();statusEl=null;}}
@@ -810,10 +904,13 @@ function send(){const t=inp.value.trim();if(!t)return;add('user','<span class="l
 document.getElementById('send').onclick=send;
 document.getElementById('reset').onclick=()=>vscode.postMessage({type:'reset'});
 document.getElementById('model').onclick=()=>vscode.postMessage({type:'switchModel'});
+document.getElementById('stop').onclick=()=>vscode.postMessage({type:'stop'});
 inp.addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();send();}});
 window.addEventListener('message',ev=>{const m=ev.data;
   if(m.type==='status'){if(statusEl)statusEl.textContent=m.text;}
-  else if(m.type==='assistant'){clearStatus();add('assistant','<span class="label">sre</span>\\n'+esc(m.text));}
+  else if(m.type==='assistantDelta'){clearStatus();if(!streamEl){streamEl=add('assistant','<span class="label">sre</span>\\n');streamEl._raw='';}streamEl._raw+=m.text;streamEl.innerHTML='<span class="label">sre</span>\\n'+esc(streamEl._raw);log.scrollTop=log.scrollHeight;}
+  else if(m.type==='assistantEnd'){streamEl=null;}
+  else if(m.type==='assistant'){clearStatus();streamEl=null;add('assistant','<span class="label">sre</span>\\n'+esc(m.text));}
   else if(m.type==='tool'){clearStatus();add('tool','▶ '+esc(m.name)+'('+esc(JSON.stringify(m.args))+')');statusEl=add('status','running…');}
   else if(m.type==='toolResult'){clearStatus();add('toolres',esc(m.result));}
   else if(m.type==='error'){clearStatus();add('assistant err','⚠ '+esc(m.text));}

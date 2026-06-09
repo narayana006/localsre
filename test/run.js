@@ -82,6 +82,12 @@ const T = ext._test;
   ok("remember saves to memory", (await T.execTool("remember", { note: "always use the proxy for prod kubectl" })).includes("memory"));
   ok("memory file created", fs.existsSync(path.join(WS, ".localsre", "memory.md")));
   ok("remember dedups", (await T.execTool("remember", { note: "always use the proxy for prod kubectl" })).includes("Already"));
+  await T.execTool("write_file", { path: "edit.txt", content: "hello world\nsecond line\n" });
+  ok("edit_file targeted replace", (await T.execTool("edit_file", { path: "edit.txt", old_string: "world", new_string: "there" })).includes("Edited"));
+  ok("edit_file applied", fs.readFileSync(path.join(WS, "edit.txt"), "utf8").includes("hello there"));
+  ok("edit_file missing → error", (await T.execTool("edit_file", { path: "edit.txt", old_string: "NOPE", new_string: "x" })).startsWith("ERROR"));
+  ok("edit_file ambiguous → error", (await T.execTool("edit_file", { path: "edit.txt", old_string: "e", new_string: "E" })).startsWith("ERROR"));
+  ok("consult without key → graceful", (await T.execTool("consult_expert", { question: "hi" })).includes("Claude key"));
   ok("unknown tool handled", (await T.execTool("nope", {})).includes("unknown tool"));
 
   console.log("\n[2b] auto-skill-injection (no asking)");

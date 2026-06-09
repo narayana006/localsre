@@ -32,7 +32,9 @@ async function ask(messages, text) {
   try { await T.runAgent(text, messages, (m) => events.push(m)); } catch (e) { events.push({ type: "assistant", text: "ERR " + e.message }); }
   const toolNames = events.filter((e) => e.type === "tool").map((e) => e.name);
   const cmds = events.filter((e) => e.type === "tool" && e.name === "run_command").map((e) => (e.args && e.args.command) || "");
-  const finalText = (events.filter((e) => e.type === "assistant").pop() || {}).text || "";
+  const deltas = events.filter((e) => e.type === "assistantDelta").map((e) => e.text).join("");
+  const finalText = ((events.filter((e) => e.type === "assistant").pop() || {}).text || "") + " " + deltas;
+  const streamed = deltas.length > 0;
   const looped = events.some((e) => e.type === "toolResult" && /LOOP DETECTED/.test(e.result || ""));
   return { toolNames, cmds, finalText, looped, toolCount: toolNames.length };
 }
