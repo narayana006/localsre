@@ -83,6 +83,12 @@ const T = ext._test;
   ok("memory file created", fs.existsSync(path.join(WS, ".localsre", "memory.md")));
   ok("remember dedups", (await T.execTool("remember", { note: "always use the proxy for prod kubectl" })).includes("Already"));
   ok("unknown tool handled", (await T.execTool("nope", {})).includes("unknown tool"));
+
+  console.log("\n[2b] auto-skill-injection (no asking)");
+  ok("kubectl msg → kubernetes", T.relevantSkills("get the pods in the gke cluster using kubectl").some((s) => s.name === "kubernetes"));
+  ok("bigquery msg → bigquery", T.relevantSkills("run a bigquery sql query over the prod dataset").some((s) => s.name === "bigquery"));
+  ok("terraform msg → terraform", T.relevantSkills("run terraform plan and apply the infra change").some((s) => s.name === "terraform"));
+  ok("plain greeting → no skill", T.relevantSkills("hello how are you today").length === 0);
   ok("read_file missing file → error not crash", (await T.execTool("read_file", { path: "ghost.txt" })).startsWith("ERROR"));
 
   console.log("\n[3] full agent loop (mock model, 6 turns)");

@@ -122,23 +122,49 @@ function loadSkills(extPath) {
   let files = [];
   try { files = fs.readdirSync(dir).filter((f) => f.endsWith(".md")); } catch (_) {}
   for (const f of files) {
-    const raw = fs.readFileSync(path.join(dir, f), "utf8");
-    const m = raw.match(/^---\s*([\s\S]*?)\s*---\s*([\s\S]*)$/);
-    let name = f.replace(/\.md$/, ""), description = "", body = raw.trim();
-    if (m) {
-      body = m[2].trim();
-      const nm = m[1].match(/name:\s*(.+)/);
-      const dm = m[1].match(/description:\s*(.+)/);
-      if (nm) name = nm[1].trim();
-      if (dm) description = dm[1].trim();
-    }
-    SKILLS.push({ name, description, body });
+    try {
+      const raw = fs.readFileSync(path.join(dir, f), "utf8");
+      const m = raw.match(/^---\s*([\s\S]*?)\s*---\s*([\s\S]*)$/);
+      let name = f.replace(/\.md$/, ""), description = "", body = raw.trim();
+      if (m) {
+        body = m[2].trim();
+        const nm = m[1].match(/name:\s*(.+)/);
+        const dm = m[1].match(/description:\s*(.+)/);
+        if (nm) name = nm[1].trim();
+        if (dm) description = dm[1].trim();
+      }
+      SKILLS.push({ name, description, body });
+    } catch (_) {} // a single bad skill file must never break activation
   }
+}
+
+// Auto-skill-injection: skills relevant to the user's message get loaded into the system prompt
+// for the rest of the session — WITHOUT the model needing to call load_skill.
+const activeSkills = new Set();
+const SKILL_STOP = new Set("the and for use using via your you this that with run get set name code files file text data only not are can may all any into your need want help make build fix find read write".split(" "));
+function relevantSkills(text) {
+  const t = " " + String(text || "").toLowerCase() + " ";
+  const scored = [];
+  for (const s of SKILLS) {
+    const kw = (s.name.replace(/[-_]/g, " ") + " " + s.description).toLowerCase().match(/[a-z][a-z0-9.+/]{2,}/g) || [];
+    const seen = new Set();
+    let score = 0;
+    for (const k of kw) {
+      if (seen.has(k) || SKILL_STOP.has(k)) continue;
+      seen.add(k);
+      if (t.includes(" " + k + " ") || t.includes(" " + k + "s ") || t.includes("/" + k)) score++;
+    }
+    if (score >= 2) scored.push({ s, score });
+  }
+  scored.sort((a, b) => b.score - a.score);
+  return scored.slice(0, 2).map((x) => x.s);
 }
 
 // ---------- system prompt (lean; capabilities live in skills) ----------
 function SYSTEM() {
   const skillList = SKILLS.length ? SKILLS.map((s) => `- ${s.name}: ${s.description}`).join("\n") : "(none)";
+  const act = SKILLS.filter((s) => activeSkills.has(s.name));
+  const activeBlock = act.length ? "\n## Auto-loaded skills (relevant to this work — FOLLOW these now)\n" + act.map((s) => "### " + s.name + "\n" + s.body).join("\n\n") : "";
   return [
     "You are LocalSRE, an autonomous coding agent inside the user's VS Code on macOS (M3 Pro).",
     "You build, fix, and run real software by USING TOOLS — never by guessing.",
@@ -158,8 +184,9 @@ function SYSTEM() {
     "- BEFORE asking the user a question, check your memory and the conversation above. NEVER ask for something you were already told or already worked out. Do not repeat questions or redo work across sessions.",
     "",
     "## Skills — load on demand",
-    "Skills are playbooks for specific jobs. Don't guess these workflows — call load_skill(name) to get the steps, then follow them:",
+    "Skills are playbooks for specific jobs. Relevant ones are AUTO-LOADED below; otherwise call load_skill(name) to get the steps. Don't guess these workflows.",
     skillList,
+    activeBlock,
     "",
     "## Tools",
     "- read_file / write_file / list_dir — code.",
@@ -186,23 +213,36 @@ function SYSTEM() {
 // Durable per-repo memory: first of these files found is injected into every session.
 function readHead(p, n) {
   const fd = fs.openSync(p, "r");
-  const buf = Buffer.alloc(n);
-  const got = fs.readSync(fd, buf, 0, n, 0);
-  fs.closeSync(fd);
-  return buf.slice(0, got).toString("utf8");
+  try {
+    const buf = Buffer.alloc(n);
+    const got = fs.readSync(fd, buf, 0, n, 0);
+    return buf.slice(0, got).toString("utf8");
+  } finally { fs.closeSync(fd); }
+}
+// Read the LAST n bytes — for memory.md, the most RECENT facts (appended at the end) matter most.
+function readTail(p, n) {
+  const fd = fs.openSync(p, "r");
+  try {
+    const sz = fs.fstatSync(fd).size;
+    const start = Math.max(0, sz - n);
+    const len = sz - start;
+    const buf = Buffer.alloc(len);
+    fs.readSync(fd, buf, 0, len, start);
+    return (start > 0 ? "…\n" : "") + buf.toString("utf8");
+  } finally { fs.closeSync(fd); }
 }
 function projectMemory() {
   const parts = [];
   // auto-saved repo-local memory (written by the remember tool) — always loaded
   try {
     const p = path.join(wsRoot(), ".localsre", "memory.md");
-    if (fs.existsSync(p)) parts.push("## Saved memory (.localsre/memory.md)\n" + readHead(p, 4000));
+    if (fs.existsSync(p)) parts.push("## Saved memory (.localsre/memory.md)\n" + readTail(p, 8000));
   } catch (_) {}
   // user-authored project memory (first one found)
   for (const f of ["AGENTS.md", "CLAUDE.md", ".qwen/memory.md"]) {
     try {
       const p = path.join(wsRoot(), f);
-      if (fs.existsSync(p)) { parts.push("## Project memory (" + f + ")\n" + readHead(p, 4000)); break; }
+      if (fs.existsSync(p)) { parts.push("## Project memory (" + f + ")\n" + readHead(p, 6000)); break; }
     } catch (_) {}
   }
   return parts.length ? "\n" + parts.join("\n\n") : "";
@@ -369,10 +409,19 @@ async function execTool(name, args) {
       const dir = path.join(wsRoot(), ".localsre");
       fs.mkdirSync(dir, { recursive: true });
       const f = path.join(dir, "memory.md");
+      const fresh = !fs.existsSync(f);
       let existing = "";
       try { existing = fs.readFileSync(f, "utf8"); } catch (_) {}
-      if (existing.includes(note)) return "Already in memory.";
-      fs.appendFileSync(f, (existing ? "" : "# LocalSRE memory (persists every session)\n") + "- " + note + "\n");
+      const norm = (s) => s.replace(/^[-*]\s*/, "").trim();
+      if (existing.split("\n").some((l) => norm(l) === note)) return "Already in memory.";
+      fs.appendFileSync(f, (fresh ? "# LocalSRE memory (persists every session)\n" : "") + "- " + note + "\n");
+      try {
+        if (fs.statSync(f).size > 16000) { // keep it bounded → fast reads, recent facts
+          const lines = fs.readFileSync(f, "utf8").split("\n");
+          const header = lines[0].startsWith("#") ? lines.shift() : "# LocalSRE memory (persists every session)";
+          fs.writeFileSync(f, header + "\n" + lines.filter(Boolean).slice(-200).join("\n") + "\n");
+        }
+      } catch (_) {}
       return "Saved to repo memory (.localsre/memory.md).";
     }
     return "ERROR: unknown tool " + name;
@@ -391,15 +440,17 @@ async function localModelName() {
   if (active.model) return active.model; // user explicitly chose a model
   if (autoLocalModel) return autoLocalModel;
   const c = cfg();
+  const ctrl = new AbortController();
+  const to = setTimeout(() => ctrl.abort(), 8000);
   try {
-    const res = await fetch(c.endpoint + "/models", { headers: c.apiKey ? { Authorization: "Bearer " + c.apiKey } : {} });
+    const res = await fetch(c.endpoint + "/models", { signal: ctrl.signal, headers: c.apiKey ? { Authorization: "Bearer " + c.apiKey } : {} });
     const data = await res.json();
     const ids = (data.data || data.models || []).map((m) => m.id || m.name).filter(Boolean);
     if (ids.length) {
       autoLocalModel = ids.find((x) => x === c.model) || ids.find((x) => /qwen.*coder/i.test(x)) || ids.find((x) => /qwen/i.test(x)) || ids[0];
       return autoLocalModel;
     }
-  } catch (_) {}
+  } catch (_) {} finally { clearTimeout(to); }
   return c.model;
 }
 
@@ -522,13 +573,20 @@ async function callModelLM(messages) {
 // Bound the live context sent to the model — keeps prefill FLAT across a long session
 // (fixes the slow-down + context-overflow + token-inflation the validation found).
 const HISTORY_CAP = 40;
+let toolIdSeq = 0; // process-global so tool_call_ids never collide across turns
 function trimInPlace(messages) {
-  if (messages.length <= HISTORY_CAP + 1) return; // +1 for the system message
+  if (messages.length <= HISTORY_CAP + 1) return; // +1 for system
   let start = messages.length - HISTORY_CAP;
-  // start the window at a 'user' boundary so we never orphan a tool_calls/tool pair
-  while (start < messages.length && messages[start].role !== "user") start++;
-  // keep system (0) + the FIRST user turn (1, where session rules usually live) + the recent window
-  if (start > 2) messages.splice(2, start - 2);
+  // advance to a SAFE cut boundary: a user message, or an assistant WITHOUT tool_calls.
+  // Never start the kept window on a 'tool' or a dangling assistant→tool_calls (Ollama 400),
+  // and never run off the end (that would wipe the whole conversation).
+  while (start < messages.length) {
+    const m = messages[start];
+    if (m.role === "user") break;
+    if (m.role === "assistant" && !(m.tool_calls && m.tool_calls.length)) break;
+    start++;
+  }
+  if (start < messages.length && start > 2) messages.splice(2, start - 2); // keep system + first turn + window
 }
 
 // ---------- agent loop ----------
@@ -545,7 +603,7 @@ async function runAgent(userText, messages, post) {
     const content = stripThink(msg.content || "");
     // Keep only well-formed tool calls; give each a stable unique id reused in the tool result.
     const toolCalls = (Array.isArray(msg.tool_calls) ? msg.tool_calls : []).filter((tc) => tc && tc.function && tc.function.name);
-    toolCalls.forEach((tc, idx) => { if (!tc.id) tc.id = "call_" + i + "_" + idx; });
+    toolCalls.forEach((tc) => { if (!tc.id) tc.id = "call_" + ++toolIdSeq; });
     // OpenAI protocol wants content:null (not "") when tool_calls are present.
     messages.push({ role: "assistant", content: content || null, tool_calls: toolCalls.length ? toolCalls : undefined });
 
@@ -561,7 +619,8 @@ async function runAgent(userText, messages, post) {
         callLog[sig] = (callLog[sig] || 0) + 1;
         let result;
         if (callLog[sig] >= 3) {
-          result = "LOOP DETECTED: you already made this exact call " + callLog[sig] + " times — the result will not change. STOP repeating it; try a different approach or give your final answer now.";
+          result = "LOOP DETECTED: you already made this exact call 3 times in a row — the result won't change. STOP repeating it; try a different approach or give your final answer now.";
+          callLog[sig] = 0; // reset — a later genuine call (e.g. re-read after an edit) must still run
         } else {
           result = await execTool(tname, args);
         }
@@ -652,11 +711,14 @@ class ChatProvider {
     return [{ role: "system", content: SYSTEM() }];
   }
   _save() {
-    // system + last 60 turns, scoped to THIS workspace by VS Code automatically
-    const tail = this.messages.slice(1).slice(-60);
+    // system + last 60 turns; drop any leading tool / dangling assistant→tool_calls so the
+    // restored history never starts mid-pair (which Ollama/OpenAI reject with a 400).
+    let tail = this.messages.slice(1).slice(-60);
+    while (tail.length && (tail[0].role === "tool" || (tail[0].role === "assistant" && tail[0].tool_calls))) tail.shift();
     this.context.workspaceState.update("localsre.history", [{ role: "system", content: SYSTEM() }, ...tail]);
   }
   reset() {
+    activeSkills.clear();
     this.messages = [{ role: "system", content: SYSTEM() }];
     this._save();
     if (this.view) this.view.webview.postMessage({ type: "cleared" });
@@ -672,12 +734,21 @@ class ChatProvider {
     this.view = view;
     view.webview.options = { enableScripts: true };
     view.webview.html = getHtml();
-    const post = (m) => view.webview.postMessage(m);
+    const post = (m) => { try { view.webview.postMessage(m); } catch (_) {} };
     postToWebview = post; // enable inline approvals
     view.webview.onDidReceiveMessage(async (m) => {
       try {
         if (m.type === "ready") this._replay(); // webview is now listening → safe to restore history
-        else if (m.type === "ask") { this.queue.push(withEditorContext(m.text)); this._drain(post); }
+        else if (m.type === "ask") {
+          const newly = relevantSkills(m.text).filter((s) => !activeSkills.has(s.name));
+          if (newly.length) {
+            newly.forEach((s) => activeSkills.add(s.name));
+            this.messages[0] = { role: "system", content: SYSTEM() }; // refresh system prompt with the auto-loaded skills
+            post({ type: "status", text: "auto-loaded skill: " + newly.map((s) => s.name).join(", ") });
+          }
+          this.queue.push(withEditorContext(m.text));
+          this._drain(post);
+        }
         else if (m.type === "reset") this.reset();
         else if (m.type === "switchModel") await vscode.commands.executeCommand("localsre.selectModel");
         else if (m.type === "approveResult") { const r = pendingApprovals[m.id]; if (r) r(!!m.approved); }
@@ -790,4 +861,4 @@ function deactivate() {
 }
 module.exports = { activate, deactivate };
 // Test-only surface (harmless in production; used by test/run.js).
-module.exports._test = { execTool, runAgent, callModel, loadSkills, getSkills: () => SKILLS, SYSTEM };
+module.exports._test = { execTool, runAgent, callModel, loadSkills, getSkills: () => SKILLS, SYSTEM, relevantSkills };
