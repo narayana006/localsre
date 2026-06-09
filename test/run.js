@@ -79,6 +79,9 @@ const T = ext._test;
   ok("search_code returns string", typeof (await T.execTool("search_code", { query: "hello" })) === "string");
   ok("get_problems returns string", typeof (await T.execTool("get_problems", {})) === "string");
   ok("update_plan returns ok", (await T.execTool("update_plan", { todos: [{ content: "x", status: "pending" }] })).includes("Plan"));
+  ok("remember saves to memory", (await T.execTool("remember", { note: "always use the proxy for prod kubectl" })).includes("memory"));
+  ok("memory file created", fs.existsSync(path.join(WS, ".localsre", "memory.md")));
+  ok("remember dedups", (await T.execTool("remember", { note: "always use the proxy for prod kubectl" })).includes("Already"));
   ok("unknown tool handled", (await T.execTool("nope", {})).includes("unknown tool"));
   ok("read_file missing file → error not crash", (await T.execTool("read_file", { path: "ghost.txt" })).startsWith("ERROR"));
 

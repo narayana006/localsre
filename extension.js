@@ -152,6 +152,11 @@ function SYSTEM() {
     "- Inspect before you change (read_file / list_dir). After changes, VERIFY by running the test/build/command; if it fails, fix and re-run until it passes.",
     "- Narrate briefly what you're doing; keep prose short. Match the existing code's style.",
     "",
+    "## Memory — never forget, never re-ask",
+    "You have PERSISTENT repo-local memory (.localsre/memory.md), shown below when present. It survives across sessions and days.",
+    "- When you learn something DURABLE — how to reach a cluster/service (proxy, kube-context, credentials location), a decision, a setup procedure, or anything the user tells you to remember — call the remember tool to save it immediately.",
+    "- BEFORE asking the user a question, check your memory and the conversation above. NEVER ask for something you were already told or already worked out. Do not repeat questions or redo work across sessions.",
+    "",
     "## Skills — load on demand",
     "Skills are playbooks for specific jobs. Don't guess these workflows — call load_skill(name) to get the steps, then follow them:",
     skillList,
@@ -179,20 +184,28 @@ function SYSTEM() {
 }
 
 // Durable per-repo memory: first of these files found is injected into every session.
+function readHead(p, n) {
+  const fd = fs.openSync(p, "r");
+  const buf = Buffer.alloc(n);
+  const got = fs.readSync(fd, buf, 0, n, 0);
+  fs.closeSync(fd);
+  return buf.slice(0, got).toString("utf8");
+}
 function projectMemory() {
-  for (const f of [".qwen/memory.md", "AGENTS.md", "CLAUDE.md"]) {
+  const parts = [];
+  // auto-saved repo-local memory (written by the remember tool) — always loaded
+  try {
+    const p = path.join(wsRoot(), ".localsre", "memory.md");
+    if (fs.existsSync(p)) parts.push("## Saved memory (.localsre/memory.md)\n" + readHead(p, 4000));
+  } catch (_) {}
+  // user-authored project memory (first one found)
+  for (const f of ["AGENTS.md", "CLAUDE.md", ".qwen/memory.md"]) {
     try {
       const p = path.join(wsRoot(), f);
-      if (!fs.existsSync(p)) continue;
-      // read only the first 4000 bytes — never load a huge file into memory on the host thread
-      const fd = fs.openSync(p, "r");
-      const buf = Buffer.alloc(4000);
-      const n = fs.readSync(fd, buf, 0, 4000, 0);
-      fs.closeSync(fd);
-      return "\n## Project memory (" + f + ")\n" + buf.slice(0, n).toString("utf8");
+      if (fs.existsSync(p)) { parts.push("## Project memory (" + f + ")\n" + readHead(p, 4000)); break; }
     } catch (_) {}
   }
-  return "";
+  return parts.length ? "\n" + parts.join("\n\n") : "";
 }
 
 // DeepSeek-R1 emits chain-of-thought in <think>…</think>. Strip it for display + context.
@@ -212,6 +225,7 @@ const TOOLS = [
   { type: "function", function: { name: "update_plan", description: "Show/update a step-by-step plan as a live checklist. Call FIRST on any multi-step task to outline steps, then call again to mark progress. Keep exactly one item in_progress.", parameters: { type: "object", properties: { todos: { type: "array", items: { type: "object", properties: { content: { type: "string" }, status: { type: "string", enum: ["pending", "in_progress", "completed"] } }, required: ["content", "status"] } } }, required: ["todos"] } } },
   { type: "function", function: { name: "search_code", description: "Search the codebase for a string/regex and return matching file:line results. Use this to find where things are defined/used instead of guessing.", parameters: { type: "object", properties: { query: { type: "string" } }, required: ["query"] } } },
   { type: "function", function: { name: "get_problems", description: "Return the current errors and warnings from VS Code's Problems panel (diagnostics) across the workspace. Use before/after edits to see and fix compile/lint errors.", parameters: { type: "object", properties: {} } } },
+  { type: "function", function: { name: "remember", description: "Save a DURABLE fact to the repo's persistent memory (.localsre/memory.md) so it's available in EVERY future session, forever. Use for environment specifics (how to reach a cluster/service, proxies, kube-contexts, credential locations), decisions made, setup procedures, and anything the user tells you to remember. CHECK memory before asking the user something you may already know.", parameters: { type: "object", properties: { note: { type: "string" } }, required: ["note"] } } },
 ];
 
 // ---------- tool execution ----------
@@ -349,6 +363,18 @@ async function execTool(name, args) {
     }
     if (name === "search_code") return await searchCode(args.query || "");
     if (name === "get_problems") return getProblems();
+    if (name === "remember") {
+      const note = String(args.note || "").replace(/\s*\n\s*/g, " ").trim();
+      if (!note) return "ERROR: empty note.";
+      const dir = path.join(wsRoot(), ".localsre");
+      fs.mkdirSync(dir, { recursive: true });
+      const f = path.join(dir, "memory.md");
+      let existing = "";
+      try { existing = fs.readFileSync(f, "utf8"); } catch (_) {}
+      if (existing.includes(note)) return "Already in memory.";
+      fs.appendFileSync(f, (existing ? "" : "# LocalSRE memory (persists every session)\n") + "- " + note + "\n");
+      return "Saved to repo memory (.localsre/memory.md).";
+    }
     return "ERROR: unknown tool " + name;
   } catch (e) {
     return "ERROR: " + (e.message || String(e));
@@ -501,7 +527,8 @@ function trimInPlace(messages) {
   let start = messages.length - HISTORY_CAP;
   // start the window at a 'user' boundary so we never orphan a tool_calls/tool pair
   while (start < messages.length && messages[start].role !== "user") start++;
-  if (start > 1) messages.splice(1, start - 1); // keep messages[0] (system) + the window
+  // keep system (0) + the FIRST user turn (1, where session rules usually live) + the recent window
+  if (start > 2) messages.splice(2, start - 2);
 }
 
 // ---------- agent loop ----------
