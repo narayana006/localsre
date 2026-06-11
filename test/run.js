@@ -12,7 +12,7 @@ let approvals = 0;
 // --- stub the `vscode` module ---
 const CONFIG = {
   endpoint: "http://mock/v1", model: "test", temperature: 0.2,
-  maxIterations: 25, autoApprove: false, apiKey: "", commandTimeoutSec: 60,
+  maxIterations: 25, autoApproveCommands: true, apiKey: "", commandTimeoutSec: 60,
 };
 const vscodeStub = {
   workspace: {
@@ -108,7 +108,10 @@ const T = ext._test;
   ok("hello.txt was created by agent", fs.existsSync(path.join(WS, "hello.txt")));
   const last = events.filter((e) => e.type === "assistant").pop();
   ok("agent gave final answer", last && last.text.includes("Done"));
-  ok("command approval was requested", approvals >= 1);
+  // new safe behavior: with approval required but NO chat view available, commands are DENIED (not hung on a modal)
+  CONFIG.autoApproveCommands = false;
+  ok("denies command when approval needed but no chat view", (await T.execTool("run_command", { command: "echo X" })).includes("DENIED"));
+  CONFIG.autoApproveCommands = true;
 
   console.log("\n[4] crash-safety");
   ok("huge-path read doesn't throw", typeof (await T.execTool("read_file", { path: "/dev/null" })) === "string");

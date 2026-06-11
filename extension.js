@@ -32,6 +32,14 @@ function wsRoot() {
 function resolvePath(p) {
   return path.isAbsolute(p) ? p : path.join(wsRoot(), p || ".");
 }
+// Confine a path to the workspace (and never the secrets file). Returns null if it escapes.
+function safePath(p, { allowSecrets = false } = {}) {
+  const root = path.resolve(wsRoot());
+  const resolved = path.resolve(resolvePath(p));
+  if (resolved !== root && !resolved.startsWith(root + path.sep)) return null; // outside workspace
+  if (!allowSecrets && resolved.startsWith(path.join(root, ".localsre", "secrets"))) return null; // never expose secrets
+  return resolved;
+}
 
 // What the user is currently looking at — active file, selection, open tabs — so "this/here" works.
 function editorContext() {
@@ -381,6 +389,13 @@ function k8sView(args) {
   // Reject shell metacharacters outright — defense in depth even though we use execFile (no shell).
   if (/[;&|`$<>(){}\n\\!]/.test(raw) || raw.includes("$(")) return Promise.resolve("ERROR: k8s_view rejects shell metacharacters. Pass plain kubectl arguments only.");
   const argv = raw.split(/\s+/).filter(Boolean);
+  // Block kubectl flags that read/write local files, redirect auth, or hit the raw API (confused-deputy exfil).
+  const BAD = /^(--kubeconfig|--server|-s|--token|--as|--as-group|--user|--cluster|--insecure-skip-tls-verify|--certificate-authority|--client-certificate|--client-key|--profile|--profile-output|--raw|--log-file|--flags-file)(=|$)/;
+  for (const a of argv) {
+    if (BAD.test(a)) return Promise.resolve("ERROR: that flag is not allowed in k8s_view (auth/file/raw redirection). Use plain read commands.");
+    if (/^(-o|--output)$/.test(argv[argv.indexOf(a) - 1] || "") && /(file|template)/i.test(a)) return Promise.resolve("ERROR: file/template output formats are not allowed in k8s_view.");
+    if (/^(-o|--output)=.*(file|template)/i.test(a)) return Promise.resolve("ERROR: file/template output formats are not allowed in k8s_view.");
+  }
   const verb = argv[0] || "";
   if (!["get", "describe", "logs", "top", "events", "explain", "api-resources", "config", "version"].includes(verb))
     return Promise.resolve("ERROR: k8s_view is READ-ONLY (get/describe/logs/top/events/explain). For mutations use run_command (user approval).");
@@ -428,7 +443,11 @@ function mcpOnData(cli, chunk) {
 }
 async function mcpConnect(name, spec) {
   if (mcpClients[name]) return mcpClients[name];
-  const child = cp.spawn(spec.command, spec.args || [], { env: { ...loadSecrets(), ...(spec.env || {}) }, cwd: wsRoot() });
+  // Minimal env for third-party MCP subprocesses — do NOT forward the full secret set (ANTHROPIC/DD/SSO).
+  // The server gets a clean base + only what the user explicitly declared in spec.env.
+  const mcpEnv = {};
+  for (const k of ["PATH", "HOME", "USER", "SHELL", "LANG", "TMPDIR", "TERM", "NODE_PATH"]) if (process.env[k]) mcpEnv[k] = process.env[k];
+  const child = cp.spawn(spec.command, spec.args || [], { env: { ...mcpEnv, ...(spec.env || {}) }, cwd: wsRoot() });
   const cli = { child, buf: Buffer.alloc(0), pending: {}, seq: 0, tools: [] };
   child.stdout.on("data", (d) => mcpOnData(cli, d));
   child.on("error", (e) => { delete mcpClients[name]; mcpTools = mcpTools.filter((t) => t._mcp !== name); for (const id of Object.keys(cli.pending)) { try { cli.pending[id]({ error: { message: "MCP spawn error: " + e.message } }); } catch (_) {} } });
@@ -462,7 +481,24 @@ async function mcpCall(toolName, args) {
   const content = (resp.result && resp.result.content) || [];
   return distill(content.map((c) => c.text || JSON.stringify(c)).join("\n"), 7000) || "(empty result)";
 }
-function getTools() { return TOOLS.concat(mcpTools); }
+// Sanitize a tool's JSON-Schema so ONE malformed MCP schema can't 400 the whole request.
+function sanitizeSchema(s) {
+  if (!s || typeof s !== "object" || Array.isArray(s)) return { type: "object", properties: {} };
+  if (s.type !== "object" || !s.properties || typeof s.properties !== "object") return { type: "object", properties: {} };
+  // normalize union types (["string","null"]) → first non-null; drop $ref (providers reject it in tool schemas)
+  const props = {};
+  for (const [k, v] of Object.entries(s.properties)) {
+    if (!v || typeof v !== "object" || v.$ref) { props[k] = { type: "string" }; continue; }
+    const t = Array.isArray(v.type) ? v.type.find((x) => x !== "null") || "string" : v.type;
+    props[k] = { ...v, type: t || "string" };
+  }
+  const out = { type: "object", properties: props };
+  if (Array.isArray(s.required)) out.required = s.required.filter((r) => props[r]);
+  return out;
+}
+function getTools() {
+  return TOOLS.concat(mcpTools.map((t) => ({ ...t, function: { ...t.function, parameters: sanitizeSchema(t.function.parameters) } })));
+}
 
 // ---------- tool execution ----------
 function sh(command) {
@@ -543,11 +579,7 @@ let approvalSeq = 0;
 let postToWebview = null; // set when the chat view resolves
 async function approveCommand(command, what) {
   if (cfg().autoApprove) return true;
-  if (!postToWebview) {
-    // no chat view available → fall back to a modal
-    const pick = await vscode.window.showWarningMessage("LocalSRE wants to " + (what || "run a command") + ":", { modal: true, detail: command }, "Approve", "Deny");
-    return pick === "Approve";
-  }
+  if (!postToWebview) return false; // no chat view → DENY (don't hang the run on an uncancellable modal)
   // inline Approve/Deny card in the chat panel
   return new Promise((resolve) => {
     const id = "appr" + ++approvalSeq;
@@ -560,23 +592,27 @@ async function approveCommand(command, what) {
 async function execTool(name, args) {
   try {
     if (name === "read_file") {
-      const fp = resolvePath(args.path);
+      const fp = safePath(args.path);
+      if (!fp) return "ERROR: path is outside the workspace (or is a protected file). I can only access files in this project.";
       const st = fs.statSync(fp);
       if (st.size > 5 * 1024 * 1024)
         return "ERROR: file too large (" + Math.round(st.size / 1e6) + " MB). Use run_command with grep/sed/head to inspect it.";
       return clip(fs.readFileSync(fp, "utf8"), 20000);
     }
     if (name === "write_file") {
-      const p = resolvePath(args.path);
+      const p = safePath(args.path);
+      if (!p) return "ERROR: refusing to write outside the workspace.";
       fs.mkdirSync(path.dirname(p), { recursive: true });
       fs.writeFileSync(p, args.content ?? "");
       vscode.workspace.openTextDocument(p).then((d) => vscode.window.showTextDocument(d, { preview: false }), () => {});
       return `wrote ${args.path} (${(args.content || "").length} bytes)`;
     }
     if (name === "edit_file") {
-      const fp = resolvePath(args.path);
-      let src;
-      try { src = fs.readFileSync(fp, "utf8"); } catch (_) { return "ERROR: cannot read " + args.path + " (does it exist?)."; }
+      const fp = safePath(args.path);
+      if (!fp) return "ERROR: refusing to edit outside the workspace.";
+      let st; try { st = fs.statSync(fp); } catch (_) { return "ERROR: cannot read " + args.path + " (does it exist?)."; }
+      if (st.size > 5 * 1024 * 1024) return "ERROR: file too large to edit inline (" + Math.round(st.size / 1e6) + " MB). Use run_command (sed) instead.";
+      const src = fs.readFileSync(fp, "utf8");
       const oldS = String(args.old_string ?? ""), newS = String(args.new_string ?? "");
       if (!oldS) return "ERROR: old_string is empty.";
       const count = src.split(oldS).length - 1;
@@ -587,7 +623,9 @@ async function execTool(name, args) {
       return "Edited " + args.path + " (−" + oldS.split("\n").length + " / +" + newS.split("\n").length + " lines).";
     }
     if (name === "list_dir") {
-      return fs.readdirSync(resolvePath(args.path || "."), { withFileTypes: true }).map((d) => (d.isDirectory() ? d.name + "/" : d.name)).join("\n");
+      const dp = safePath(args.path || ".");
+      if (!dp) return "ERROR: path is outside the workspace.";
+      return fs.readdirSync(dp, { withFileTypes: true }).map((d) => (d.isDirectory() ? d.name + "/" : d.name)).join("\n");
     }
     if (name === "run_command") {
       if (!(await approveCommand(args.command))) return "DENIED by user.";
@@ -767,31 +805,37 @@ async function parseSSE(body, onDelta) {
   const dec = new TextDecoder();
   let buf = "", content = "";
   const toolMap = {};
+  let lastIdx = -1; // carry-forward for servers that omit index on continuation fragments
+  const handleLine = (line) => {
+    line = line.trim();
+    if (!line.startsWith("data:")) return;
+    const d = line.slice(5).trim();
+    if (d === "[DONE]" || !d) return;
+    let j; try { j = JSON.parse(d); } catch (_) { return; }
+    const ch = j.choices && j.choices[0];
+    if (!ch) return;
+    // some servers put the assembled tool call in `message` on the terminal frame, not in `delta`
+    const delta = ch.delta || ch.message;
+    if (!delta) return;
+    if (delta.content) { content += delta.content; onDelta(delta.content); }
+    for (const tcd of delta.tool_calls || []) {
+      const idx = tcd.index != null ? tcd.index : (tcd.id ? ++lastIdx : (lastIdx < 0 ? (lastIdx = 0) : lastIdx));
+      lastIdx = idx;
+      const e = toolMap[idx] || (toolMap[idx] = { id: tcd.id || "", function: { name: "", arguments: "" } });
+      if (tcd.id) e.id = tcd.id;
+      if (tcd.function && tcd.function.name) e.function.name += tcd.function.name;
+      if (tcd.function && tcd.function.arguments) e.function.arguments += tcd.function.arguments;
+    }
+  };
   while (true) {
     const { done, value } = await reader.read();
     if (done) break;
     buf += dec.decode(value, { stream: true });
     let nl;
-    while ((nl = buf.indexOf("\n")) >= 0) {
-      const line = buf.slice(0, nl).trim();
-      buf = buf.slice(nl + 1);
-      if (!line.startsWith("data:")) continue;
-      const d = line.slice(5).trim();
-      if (d === "[DONE]") continue;
-      let j;
-      try { j = JSON.parse(d); } catch (_) { continue; }
-      const delta = j.choices && j.choices[0] && j.choices[0].delta;
-      if (!delta) continue;
-      if (delta.content) { content += delta.content; onDelta(delta.content); }
-      for (const tcd of delta.tool_calls || []) {
-        const idx = tcd.index || 0;
-        const e = toolMap[idx] || (toolMap[idx] = { id: tcd.id || "", function: { name: "", arguments: "" } });
-        if (tcd.id) e.id = tcd.id;
-        if (tcd.function && tcd.function.name) e.function.name += tcd.function.name;
-        if (tcd.function && tcd.function.arguments) e.function.arguments += tcd.function.arguments;
-      }
-    }
+    while ((nl = buf.indexOf("\n")) >= 0) { handleLine(buf.slice(0, nl)); buf = buf.slice(nl + 1); }
   }
+  buf += dec.decode(); // flush decoder
+  if (buf.trim()) handleLine(buf); // process a final line that had no trailing newline
   const tcs = Object.keys(toolMap).sort((a, b) => a - b).map((k) => toolMap[k]).filter((t) => t.function.name);
   return { content, tool_calls: tcs.length ? tcs : undefined };
 }
@@ -848,13 +892,20 @@ let toolIdSeq = 0; // process-global so tool_call_ids never collide across turns
 function trimInPlace(messages) {
   if (messages.length <= HISTORY_CAP + 1) return; // +1 for system
   let start = messages.length - HISTORY_CAP;
-  // The kept window may START on a user OR an assistant (with or without tool_calls — its tool
-  // results follow it). It must NEVER start on a 'tool' (that orphans it from its assistant → 400).
-  // Walk back only past 'tool' messages — this ALWAYS finds a boundary (worst case the prior assistant),
-  // so a long unbroken tool-chain still gets trimmed (fixes the unbounded-prefill bug).
+  // Window must NOT start on a 'tool' (orphans it from its assistant → 400). Walk back past tool messages.
   while (start > 2 && messages[start].role === "tool") start--;
-  if (start <= 2) return;
+  // If walking back found no boundary (one huge unbroken tool-chain), walk FORWARD instead to a clean
+  // start — this guarantees we always trim something (fixes the still-unbounded ≥40-tool-call turn).
+  if (start <= 2) {
+    start = messages.length - HISTORY_CAP;
+    while (start < messages.length && messages[start].role === "tool") start++;
+    if (start >= messages.length) return; // genuinely nothing safe to cut this round
+  }
   messages.splice(2, start - 2); // keep system(0) + first turn(1) + safe window
+  // Guard: if first turn (index 1) is an assistant with tool_calls whose tool results we just cut,
+  // drop it too so we never send a dangling tool_calls turn (400 on every provider).
+  if (messages[1] && messages[1].role === "assistant" && messages[1].tool_calls && messages[1].tool_calls.length &&
+      !(messages[2] && messages[2].role === "tool")) messages.splice(1, 1);
 }
 
 // ---------- agent loop ----------
@@ -904,30 +955,36 @@ async function runAgent(userText, messages, post) {
 
     if (toolCalls.length) {
       if (content && !streamed) post({ type: "assistant", text: content });
+      // Tools that are idempotent VERIFICATION steps — legit to repeat (test re-runs, re-checking
+      // problems after a fix). Exempt from the loop-stop so we never kill a progressing task.
+      const VERIFY_TOOLS = new Set(["get_problems", "run_command", "read_file", "search_code", "list_dir", "datadog_query", "gcp_logs", "k8s_view"]);
       for (const tc of toolCalls) {
-        if (stopRequested) { post({ type: "assistant", text: "⏹ stopped." }); return; }
         const tname = tc.function.name;
         if (tname === "write_file" || tname === "edit_file") edited = true;
         if (tname === "get_problems" || tname === "run_command") verified = true;
-        let args = {};
-        try { args = JSON.parse(tc.function.arguments || "{}"); } catch (_) {}
+        let args = {}, parseErr = null;
+        try { args = JSON.parse(tc.function.arguments || "{}"); }
+        catch (e) { parseErr = "Your tool arguments were not valid JSON (" + e.message + "). Re-emit this call with valid JSON arguments."; }
         post({ type: "tool", name: tname, args });
-        // Loop guard: if the model repeats the EXACT same call, DON'T re-run it (and don't reset the
-        // counter — resetting let A,B,A,B oscillate forever). Escalate to a hard stop if it stays stuck.
         const sig = tname + "::" + (tc.function.arguments || "");
         callLog[sig] = (callLog[sig] || 0) + 1;
         let result;
-        if (callLog[sig] >= 3) {
+        if (stopRequested) {
+          result = "(stopped by user before this ran)";
+        } else if (parseErr) {
+          result = parseErr; // tell the model its JSON was bad instead of silently running defaults
+        } else if (callLog[sig] >= 3 && !VERIFY_TOOLS.has(tname)) {
           loopTrips++;
-          result = "LOOP DETECTED: you already made this exact call " + callLog[sig] + " times — the result will NOT change, so it was NOT run again. STOP repeating it. Re-read the goal (\"" + originalTask + "\") and take a FUNDAMENTALLY different approach (different tool/command) or ask the user one specific question.";
+          result = "LOOP DETECTED: you already made this exact call " + callLog[sig] + " times — the result will NOT change, so it was NOT run again. STOP repeating it. Re-read the goal (\"" + originalTask + "\") and take a FUNDAMENTALLY different approach or ask the user one specific question.";
         } else {
           try { result = await execTool(tname, args); }
           catch (e) { result = "TOOL ERROR (" + tname + "): " + (e && e.message ? e.message : String(e)); }
         }
         post({ type: "toolResult", name: tname, result: String(result).slice(0, 4000) });
-        // ALWAYS push a tool result for this tc.id — never leave a tool_calls turn unanswered (that 400s every future call).
+        // ALWAYS push a tool result for EVERY tc.id (even on stop/parse-error) — never leave a tool_calls turn unanswered (400s every future call).
         messages.push({ role: "tool", tool_call_id: tc.id, content: distill(result, 6000) });
       }
+      if (stopRequested) { post({ type: "assistant", text: "⏹ stopped." }); return; }
       if (loopTrips >= 3) { // stuck across multiple actions → stop instead of burning the whole budget
         post({ type: "assistant", text: "I'm stuck repeating actions without progress, so I've stopped. Here's the original goal: " + originalTask + ". Could you give me one concrete pointer, or should I try a different approach?" });
         return;
@@ -969,10 +1026,11 @@ async function callModelAnthropic(messages) {
       }
       if (blocks.length) conv.push({ role: "assistant", content: blocks });
     } else if (m.role === "tool") {
-      conv.push({ role: "user", content: [{ type: "tool_result", tool_use_id: m.tool_call_id, content: String(m.content) }] });
+      conv.push({ role: "user", content: [{ type: "tool_result", tool_use_id: m.tool_call_id, content: String(m.content) || "(empty)" }] }); // Anthropic rejects empty tool_result content
     }
   }
   const tools = getTools().map((t) => ({ name: t.function.name, description: t.function.description, input_schema: t.function.parameters }));
+  while (conv.length && conv[0].role !== "user") conv.shift(); // Anthropic requires the first message to be 'user'
   const ctrl = new AbortController();
   const to = setTimeout(() => ctrl.abort(), 180000);
   try {
@@ -1104,8 +1162,10 @@ class ChatProvider {
     });
     // On view disposal: clear stale refs (restores the modal fallback) and settle any pending approvals as denied.
     view.onDidDispose(() => {
-      if (this.view === view) { this.view = null; postToWebview = null; }
-      for (const id of Object.keys(pendingApprovals)) pendingApprovals[id](false);
+      try {
+        if (this.view === view) { this.view = null; postToWebview = null; }
+        for (const id of Object.keys(pendingApprovals)) { const r = pendingApprovals[id]; if (r) r(false); }
+      } catch (_) {}
     });
   }
 }
