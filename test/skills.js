@@ -22,6 +22,7 @@ const EXPECT = {
   helm: ["helm upgrade", "rollback", "repo add"],
   atlassian: ["jira", "confluence", "rest/api"],
   servicenow: ["service-now.com", "incident", "change_request", "table"],
+  investigate: ["datadog_query", "k8s_view", "gcp_logs", "hypothesis"],
   bigquery: ["bq ", "use_legacy_sql", "information_schema", "dry_run", "maximum_bytes_billed"],
   "office-docs": ["python-pptx", "python-docx", "pandoc"],
   "paper-review": ["ieee", "abstract", "reproducib", "baseline"],

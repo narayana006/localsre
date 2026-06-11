@@ -2,7 +2,7 @@
   "name": "localsre",
   "displayName": "LocalSRE",
   "description": "Lightweight local AI coding + SRE agent for VS Code. Local models (Qwen3/DeepSeek), GitHub Copilot, or Claude. 23 SRE skills, per-repo memory, 100% private.",
-  "version": "0.14.0",
+  "version": "0.15.0",
   "publisher": "narayana006",
   "engines": {
     "vscode": "^1.85.0"
@@ -108,6 +108,11 @@
           "type": "boolean",
           "default": false,
           "description": "Prepend the active file/selection/open tabs to each message. OFF by default — it can distract local models and crowd out important context. Turn on only if you want IDE-aware \"fix this file\" behavior."
+        },
+        "localsre.mcpServers": {
+          "type": "object",
+          "default": {},
+          "markdownDescription": "MCP servers to connect (stdio). Their tools become available to the agent as mcp_<name>_<tool>. Example: {\"datadog\": {\"command\": \"npx\", \"args\": [\"-y\", \"@winor30/mcp-server-datadog\"], \"env\": {\"DATADOG_API_KEY\": \"...\"}}}"
         }
       }
     }

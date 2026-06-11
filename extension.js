@@ -5,6 +5,7 @@
 
 const vscode = require("vscode");
 const cp = require("child_process");
+const os = require("os");
 const fs = require("fs");
 const path = require("path");
 
@@ -202,6 +203,8 @@ function SYSTEM() {
     "- read_file / list_dir — read code. write_file (NEW files ONLY) / edit_file (targeted exact old→new replace — PREFER for existing files; never rewrite a whole file).",
     "- After ANY edit, VERIFY: call get_problems and run the relevant test/build; fix errors, then finish.",
     "- consult_expert — ask Claude (cloud) a hard reasoning/review question when stuck or to review your plan/diff (needs a Claude key).",
+    "- datadog_query / gcp_logs / k8s_view — READ-ONLY SRE connectors for live investigation (metrics, logs, monitors, pods, events). For multi-step incident work, load the 'investigate' skill.",
+    "- mcp_* — tools from any MCP servers the user configured (datadog, github, etc.). Use them like any other tool.",
     "- search_code — find where things are defined/used across the repo (prefer this over guessing paths or hand-writing grep).",
     "- get_problems — read VS Code's current errors/warnings; check before AND after edits and fix them.",
     "- read_document — PDF/DOCX/images (OCR).",
@@ -280,7 +283,168 @@ const TOOLS = [
   { type: "function", function: { name: "get_problems", description: "Return the current errors and warnings from VS Code's Problems panel (diagnostics) across the workspace. Use before/after edits to see and fix compile/lint errors.", parameters: { type: "object", properties: {} } } },
   { type: "function", function: { name: "remember", description: "Save a DURABLE fact to the repo's persistent memory (.localsre/memory.md) so it's available in EVERY future session, forever. Use for environment specifics (how to reach a cluster/service, proxies, kube-contexts, credential locations), decisions made, setup procedures, and anything the user tells you to remember. CHECK memory before asking the user something you may already know.", parameters: { type: "object", properties: { note: { type: "string" } }, required: ["note"] } } },
   { type: "function", function: { name: "consult_expert", description: "Delegate a HARD reasoning/review question to a stronger cloud model (Claude) and get its answer. Use when stuck, for tricky design decisions, or to review your own plan/diff. Requires a Claude API key.", parameters: { type: "object", properties: { question: { type: "string" } }, required: ["question"] } } },
+  // --- SRE connectors (read-only; creds from .localsre/secrets or env) ---
+  { type: "function", function: { name: "datadog_query", description: "READ-ONLY Datadog: query metrics timeseries, search logs, or list alerting monitors. Needs DD_API_KEY+DD_APP_KEY in .localsre/secrets or env.", parameters: { type: "object", properties: { kind: { type: "string", enum: ["metrics", "logs", "monitors"] }, query: { type: "string", description: "metrics: a metric query like avg:system.cpu.user{service:x}; logs: a log search query like service:x status:error; monitors: optional name filter" }, from_minutes: { type: "number", description: "lookback window in minutes (default 60)" } }, required: ["kind"] } } },
+  { type: "function", function: { name: "gcp_logs", description: "READ-ONLY Google Cloud Logging: read log entries with a filter (uses your gcloud auth).", parameters: { type: "object", properties: { filter: { type: "string", description: "Cloud Logging filter, e.g. resource.type=\"k8s_container\" severity>=ERROR" }, freshness: { type: "string", description: "e.g. 1h, 30m (default 1h)" }, limit: { type: "number" } }, required: ["filter"] } } },
+  { type: "function", function: { name: "k8s_view", description: "READ-ONLY kubectl (get/describe/logs/top/events only — never mutates). Respects your shell env/proxy. Example args: 'get pods -n prod' or 'logs deploy/checkout -n prod --tail=100'.", parameters: { type: "object", properties: { args: { type: "string", description: "kubectl arguments WITHOUT the word kubectl" } }, required: ["args"] } } },
 ];
+
+// ---------- SRE connectors (deterministic plumbing — the model uses these, it never builds them) ----------
+function loadSecrets() {
+  const out = { ...process.env };
+  try {
+    const p = path.join(wsRoot(), ".localsre", "secrets");
+    if (fs.existsSync(p)) for (const ln of fs.readFileSync(p, "utf8").split("\n")) {
+      const m = ln.match(/^\s*([A-Z0-9_]+)\s*=\s*(.+?)\s*$/);
+      if (m) out[m[1]] = m[2].replace(/^["']|["']$/g, "");
+    }
+  } catch (_) {}
+  return out;
+}
+
+function httpJson(url, headers) {
+  return new Promise((resolve) => {
+    const ctrl = new AbortController();
+    const to = setTimeout(() => ctrl.abort(), 30000);
+    fetch(url, { headers, signal: ctrl.signal })
+      .then(async (r) => resolve(r.ok ? await r.json() : { _error: "HTTP " + r.status + ": " + (await r.text()).slice(0, 300) }))
+      .catch((e) => resolve({ _error: String(e.message || e) }))
+      .finally(() => clearTimeout(to));
+  });
+}
+
+async function datadogQuery(args) {
+  const env = loadSecrets();
+  if (!env.DD_API_KEY || !env.DD_APP_KEY) return "ERROR: DD_API_KEY / DD_APP_KEY not set. Add them to .localsre/secrets (KEY=value lines) or export them.";
+  const site = env.DD_SITE || "datadoghq.com";
+  const H = { "DD-API-KEY": env.DD_API_KEY, "DD-APPLICATION-KEY": env.DD_APP_KEY, "Content-Type": "application/json" };
+  const mins = Number(args.from_minutes) > 0 ? Number(args.from_minutes) : 60;
+  const now = Math.floor(Date.now() / 1000);
+  if (args.kind === "metrics") {
+    if (!args.query) return "ERROR: metrics needs a query, e.g. avg:system.cpu.user{service:x}";
+    const d = await httpJson(`https://api.${site}/api/v1/query?from=${now - mins * 60}&to=${now}&query=${encodeURIComponent(args.query)}`, H);
+    if (d._error) return "Datadog error: " + d._error;
+    const series = (d.series || []).map((s) => {
+      const pts = (s.pointlist || []).filter((p) => p[1] != null);
+      const last = pts.slice(-5).map((p) => p[1].toFixed(3)).join(", ");
+      const max = pts.length ? Math.max(...pts.map((p) => p[1])).toFixed(3) : "n/a";
+      return `${s.metric}{${(s.tag_set || []).join(",")}} points=${pts.length} max=${max} last5=[${last}]`;
+    });
+    return series.length ? series.join("\n") : "No datapoints for that query/window.";
+  }
+  if (args.kind === "logs") {
+    const ctrl = new AbortController(); const to = setTimeout(() => ctrl.abort(), 30000);
+    try {
+      const r = await fetch(`https://api.${site}/api/v2/logs/events/search`, { method: "POST", headers: H, signal: ctrl.signal,
+        body: JSON.stringify({ filter: { query: args.query || "*", from: "now-" + mins + "m", to: "now" }, page: { limit: 25 }, sort: "-timestamp" }) });
+      if (!r.ok) return "Datadog logs error: HTTP " + r.status + " " + (await r.text()).slice(0, 200);
+      const d = await r.json();
+      const rows = (d.data || []).map((e) => { const a = e.attributes || {}; return `${a.timestamp || ""} [${a.status || ""}] ${a.service || ""}: ${String(a.message || "").split("\n")[0].slice(0, 180)}`; });
+      return rows.length ? rows.join("\n") : "No matching logs in window.";
+    } catch (e) { return "Datadog logs error: " + (e.message || e); } finally { clearTimeout(to); }
+  }
+  if (args.kind === "monitors") {
+    const d = await httpJson(`https://api.${site}/api/v1/monitor?monitor_tags=&name=${encodeURIComponent(args.query || "")}`, H);
+    if (d._error) return "Datadog error: " + d._error;
+    const rows = (Array.isArray(d) ? d : []).map((m) => `[${m.overall_state}] #${m.id} ${m.name}`);
+    const alerting = rows.filter((r) => /\[(Alert|Warn|No Data)\]/.test(r));
+    return (alerting.length ? "ALERTING/WARN:\n" + alerting.join("\n") + "\n\n" : "") + "All (" + rows.length + "):\n" + rows.slice(0, 40).join("\n");
+  }
+  return "ERROR: kind must be metrics|logs|monitors";
+}
+
+function gcpLogs(args) {
+  return new Promise((resolve) => {
+    const a = ["logging", "read", args.filter || "severity>=ERROR", "--freshness=" + (args.freshness || "1h"),
+      "--limit=" + (Number(args.limit) > 0 ? Math.min(Number(args.limit), 100) : 30),
+      "--format=value(timestamp,severity,resource.labels.namespace_name,textPayload,jsonPayload.message)"];
+    cp.execFile("gcloud", a, { env: execEnv(), maxBuffer: 5 * 1024 * 1024, timeout: 60000 }, (e, so, se) => {
+      if (e && e.code === "ENOENT") return resolve("ERROR: gcloud not found on PATH.");
+      if (so && so.trim()) return resolve(distill(so, 7000));
+      if (se && /ERROR|denied|auth/i.test(se)) return resolve("gcloud error: " + se.slice(0, 400) + "\nHint: run gcloud auth login (see the gcp skill).");
+      resolve("No log entries matched.");
+    });
+  });
+}
+
+function k8sView(args) {
+  const argv = String(args.args || "").trim().replace(/^kubectl\s+/, "").split(/\s+/);
+  const verb = argv[0] || "";
+  if (!["get", "describe", "logs", "top", "events", "explain", "api-resources", "config", "version"].includes(verb))
+    return Promise.resolve("ERROR: k8s_view is READ-ONLY (get/describe/logs/top/events/explain). For mutations use run_command (user approval).");
+  if (verb === "config" && argv[1] !== "current-context" && argv[1] !== "get-contexts") return Promise.resolve("ERROR: only config current-context / get-contexts allowed here.");
+  return new Promise((resolve) => {
+    // shell:true so the user's login env/proxy vars apply (private GKE via jump proxy etc.)
+    cp.exec("kubectl " + argv.join(" "), { env: execEnv(), maxBuffer: 5 * 1024 * 1024, timeout: 60000 }, (e, so, se) => {
+      if (so && so.trim()) return resolve(distill(so, 7000));
+      resolve((se && se.trim()) ? "kubectl: " + se.slice(0, 500) : "(no output)");
+    });
+  });
+}
+
+// ---------- minimal MCP client (stdio JSON-RPC) — query ANY configured MCP server ----------
+const mcpClients = {}; // name -> {child, buf, pending, tools}
+let mcpTools = []; // dynamic TOOLS entries discovered from servers
+function mcpSend(cli, msg) {
+  const s = JSON.stringify(msg);
+  cli.child.stdin.write("Content-Length: " + Buffer.byteLength(s) + "\r\n\r\n" + s);
+}
+function mcpRequest(cli, method, params, timeoutMs = 20000) {
+  return new Promise((resolve) => {
+    const id = ++cli.seq;
+    const to = setTimeout(() => { delete cli.pending[id]; resolve({ error: { message: "MCP timeout: " + method } }); }, timeoutMs);
+    cli.pending[id] = (resp) => { clearTimeout(to); resolve(resp); };
+    mcpSend(cli, { jsonrpc: "2.0", id, method, params });
+  });
+}
+function mcpOnData(cli, chunk) {
+  cli.buf += chunk.toString();
+  for (;;) {
+    const m = cli.buf.match(/Content-Length: (\d+)\r?\n\r?\n/);
+    if (!m) return;
+    const start = m.index + m[0].length, len = parseInt(m[1], 10);
+    if (cli.buf.length < start + len) return;
+    const body = cli.buf.slice(start, start + len);
+    cli.buf = cli.buf.slice(start + len);
+    try { const msg = JSON.parse(body); if (msg.id && cli.pending[msg.id]) { const cb = cli.pending[msg.id]; delete cli.pending[msg.id]; cb(msg); } } catch (_) {}
+  }
+}
+async function mcpConnect(name, spec) {
+  if (mcpClients[name]) return mcpClients[name];
+  const child = cp.spawn(spec.command, spec.args || [], { env: { ...loadSecrets(), ...(spec.env || {}) }, cwd: wsRoot() });
+  const cli = { child, buf: "", pending: {}, seq: 0, tools: [] };
+  child.stdout.on("data", (d) => mcpOnData(cli, d));
+  child.on("exit", () => { delete mcpClients[name]; mcpTools = mcpTools.filter((t) => t._mcp !== name); });
+  mcpClients[name] = cli;
+  await mcpRequest(cli, "initialize", { protocolVersion: "2024-11-05", capabilities: {}, clientInfo: { name: "localsre", version: "0.15.0" } });
+  mcpSend(cli, { jsonrpc: "2.0", method: "notifications/initialized" });
+  const resp = await mcpRequest(cli, "tools/list", {});
+  const tools = (resp.result && resp.result.tools) || [];
+  cli.tools = tools.map((t) => t.name);
+  for (const t of tools) {
+    mcpTools.push({ _mcp: name, type: "function", function: { name: "mcp_" + name + "_" + t.name, description: "[MCP:" + name + "] " + (t.description || t.name).slice(0, 300), parameters: t.inputSchema || { type: "object", properties: {} } } });
+  }
+  return cli;
+}
+async function mcpStartAll() {
+  const conf = vscode.workspace.getConfiguration("localsre").get("mcpServers") || {};
+  for (const [name, spec] of Object.entries(conf)) {
+    if (spec && spec.command) { try { await mcpConnect(name, spec); } catch (e) { console.error("MCP " + name + ":", e.message); } }
+  }
+  return Object.keys(mcpClients);
+}
+async function mcpCall(toolName, args) {
+  const t = mcpTools.find((x) => x.function.name === toolName);
+  if (!t) return "ERROR: unknown MCP tool " + toolName;
+  const cli = mcpClients[t._mcp];
+  if (!cli) return "ERROR: MCP server " + t._mcp + " not connected.";
+  const real = toolName.replace("mcp_" + t._mcp + "_", "");
+  const resp = await mcpRequest(cli, "tools/call", { name: real, arguments: args }, 60000);
+  if (resp.error) return "MCP error: " + (resp.error.message || JSON.stringify(resp.error)).slice(0, 400);
+  const content = (resp.result && resp.result.content) || [];
+  return distill(content.map((c) => c.text || JSON.stringify(c)).join("\n"), 7000) || "(empty result)";
+}
+function getTools() { return TOOLS.concat(mcpTools); }
 
 // ---------- tool execution ----------
 function sh(command) {
@@ -464,6 +628,10 @@ async function execTool(name, args) {
         return (data.content || []).filter((b) => b.type === "text").map((b) => b.text).join("\n") || "(no answer)";
       } catch (e) { return "consult error: " + (e.message || e); }
     }
+    if (name === "datadog_query") return await datadogQuery(args);
+    if (name === "gcp_logs") return await gcpLogs(args);
+    if (name === "k8s_view") return await k8sView(args);
+    if (name.startsWith("mcp_")) return await mcpCall(name, args);
     return "ERROR: unknown tool " + name;
   } catch (e) {
     return "ERROR: " + (e.message || String(e));
@@ -561,7 +729,7 @@ async function callModelHTTP(messages, onDelta) {
   try {
     const res = await fetch(c.endpoint + "/chat/completions", {
       method: "POST", headers, signal: ctrl.signal,
-      body: JSON.stringify({ model: await localModelName(), messages, tools: TOOLS, tool_choice: "auto", temperature: c.temperature, stream: !!onDelta }),
+      body: JSON.stringify({ model: await localModelName(), messages, tools: getTools(), tool_choice: "auto", temperature: c.temperature, stream: !!onDelta }),
     });
     if (!res.ok) throw new Error("HTTP " + res.status + ": " + (await res.text()).slice(0, 300));
     // Stream when asked (real servers); fall back to JSON when there's no readable body (tests/non-stream).
@@ -636,7 +804,7 @@ async function callModelLM(messages, onDelta) {
   let models = (await vscode.lm.selectChatModels({ vendor: "copilot", family: fam })) || [];
   if (!models.length) models = (await vscode.lm.selectChatModels({ vendor: "copilot" })) || [];
   if (!models.length) throw new Error("No Copilot model available. Sign in to GitHub Copilot in VS Code.");
-  const lmTools = TOOLS.map((t) => ({ name: t.function.name, description: t.function.description, inputSchema: t.function.parameters }));
+  const lmTools = getTools().map((t) => ({ name: t.function.name, description: t.function.description, inputSchema: t.function.parameters }));
   const cts = new vscode.CancellationTokenSource();
   const to = setTimeout(() => cts.cancel(), 180000); // Copilot path must not hang forever
   try {
@@ -782,7 +950,7 @@ async function callModelAnthropic(messages) {
       conv.push({ role: "user", content: [{ type: "tool_result", tool_use_id: m.tool_call_id, content: String(m.content) }] });
     }
   }
-  const tools = TOOLS.map((t) => ({ name: t.function.name, description: t.function.description, input_schema: t.function.parameters }));
+  const tools = getTools().map((t) => ({ name: t.function.name, description: t.function.description, input_schema: t.function.parameters }));
   const ctrl = new AbortController();
   const to = setTimeout(() => ctrl.abort(), 180000);
   try {
@@ -854,27 +1022,43 @@ class ChatProvider {
   }
   resolveWebviewView(view) {
     this.view = view;
-    view.webview.options = { enableScripts: true };
-    view.webview.html = getHtml();
+    const mediaUri = vscode.Uri.joinPath(this.context.extensionUri, "media");
+    view.webview.options = { enableScripts: true, localResourceRoots: [mediaUri] };
+    view.webview.html = getHtml(view.webview, mediaUri);
     const post = (m) => { try { view.webview.postMessage(m); } catch (_) {} };
     postToWebview = post; // enable inline approvals
     view.webview.onDidReceiveMessage(async (m) => {
       try {
         if (m.type === "ready") this._replay(); // webview is now listening → safe to restore history
         else if (m.type === "ask") {
-          const newly = relevantSkills(m.text).filter((s) => !activeSkills.has(s.name));
+          let text = m.text || "";
+          // attachments: files/screenshots → extract text (OCR for images) and fold into the message
+          if (Array.isArray(m.attachments) && m.attachments.length) {
+            const parts = [];
+            for (const a of m.attachments) {
+              try {
+                const dir = path.join(os.tmpdir(), "localsre-att"); fs.mkdirSync(dir, { recursive: true });
+                const fp = path.join(dir, (Date.now() + "-" + (a.name || "file")).replace(/[^\w.\-]/g, "_"));
+                fs.writeFileSync(fp, Buffer.from(a.b64 || "", "base64"));
+                const content = await readDocument(fp);
+                parts.push("[Attached file: " + (a.name || "file") + "]\n" + String(content).slice(0, 6000));
+                try { fs.unlinkSync(fp); } catch (_) {}
+              } catch (e) { parts.push("[Attached: " + (a.name || "file") + " — unreadable: " + (e.message || e) + "]"); }
+            }
+            text = parts.join("\n\n") + (text ? "\n\n" + text : "");
+          }
+          const newly = relevantSkills(text).filter((s) => !activeSkills.has(s.name));
           if (newly.length) {
             newly.forEach((s) => activeSkills.add(s.name));
             this.messages[0] = { role: "system", content: SYSTEM() }; // refresh system prompt with the auto-loaded skills
             post({ type: "status", text: "auto-loaded skill: " + newly.map((s) => s.name).join(", ") });
           }
           if (this.busy) {
-            // mid-run → STEER the live run (abort the in-flight call so it reacts in seconds)
-            steerBuffer.push(withEditorContext(m.text));
+            steerBuffer.push(withEditorContext(text)); // mid-run → STEER (abort in-flight so it reacts in seconds)
             if (activeAbort) { try { activeAbort.abort(); } catch (_) {} }
             post({ type: "status", text: "↪ got it — steering the current run" });
           } else {
-            this.queue.push(withEditorContext(m.text));
+            this.queue.push(withEditorContext(text));
             this._drain(post);
           }
         }
@@ -896,78 +1080,48 @@ class ChatProvider {
   }
 }
 
-function getHtml() {
+function getHtml(webview, mediaUri) {
+  const u = (f) => webview.asWebviewUri(vscode.Uri.joinPath(mediaUri, f));
+  const csp = "default-src 'none'; img-src " + webview.cspSource + " data: blob:; style-src " + webview.cspSource + " 'unsafe-inline'; script-src " + webview.cspSource + "; font-src " + webview.cspSource + ";";
   return `<!DOCTYPE html><html><head><meta charset="utf-8"/>
+<meta http-equiv="Content-Security-Policy" content="${csp}"/>
 <style>
-  body{font-family:var(--vscode-font-family);font-size:14px;line-height:1.6;color:var(--vscode-editor-foreground);background:var(--vscode-editor-background);margin:0;display:flex;flex-direction:column;height:100vh;}
+  body{font-family:var(--vscode-font-family);font-size:14px;line-height:1.6;color:var(--vscode-editor-foreground);background:var(--vscode-editor-background);margin:0;height:100vh;}
   #log{flex:1;overflow-y:auto;padding:12px;}
   .msg{margin:10px 0;padding:10px 12px;border-radius:8px;white-space:pre-wrap;word-wrap:break-word;color:var(--vscode-editor-foreground);}
   .user{background:var(--vscode-input-background);border:1px solid var(--vscode-focusBorder,#0a84ff);}
   .assistant{background:var(--vscode-textBlockQuote-background,rgba(128,128,128,0.14));border-left:3px solid var(--vscode-focusBorder,#0a84ff);}
-  .tool{font-family:var(--vscode-editor-font-family);font-size:12.5px;background:var(--vscode-textCodeBlock-background);border-left:3px solid var(--vscode-charts-blue);padding:6px 8px;margin:4px 0;color:var(--vscode-editor-foreground);}
-  .toolres{font-family:var(--vscode-editor-font-family);font-size:12.5px;color:var(--vscode-editor-foreground);opacity:.85;background:var(--vscode-textCodeBlock-background);padding:6px 8px;margin:2px 0 8px;max-height:180px;overflow:auto;border-left:3px solid var(--vscode-charts-green);}
+  .tool{font-family:var(--vscode-editor-font-family);font-size:12.5px;background:var(--vscode-textCodeBlock-background);border-left:3px solid var(--vscode-charts-blue);padding:6px 8px;margin:4px 0;}
+  .toolres{font-family:var(--vscode-editor-font-family);font-size:12.5px;opacity:.85;background:var(--vscode-textCodeBlock-background);padding:6px 8px;margin:2px 0 8px;max-height:180px;overflow:auto;border-left:3px solid var(--vscode-charts-green);}
   .err{color:var(--vscode-errorForeground);}
   .status{color:var(--vscode-descriptionForeground);font-style:italic;}
   #bar{display:flex;gap:6px;padding:8px;border-top:1px solid var(--vscode-panel-border);background:var(--vscode-editor-background);}
   #inp{flex:1;resize:none;background:var(--vscode-input-background);color:var(--vscode-input-foreground);border:1px solid var(--vscode-input-border,#888);border-radius:6px;padding:8px;font-family:inherit;font-size:14px;}
   button{background:var(--vscode-button-background);color:var(--vscode-button-foreground);border:none;border-radius:6px;padding:7px 10px;cursor:pointer;font-size:13px;}
   button.sec{background:var(--vscode-button-secondaryBackground);color:var(--vscode-button-secondaryForeground);}
+  .iconbtn{background:var(--vscode-button-secondaryBackground);color:var(--vscode-button-secondaryForeground);}
   .label{font-weight:700;opacity:.6;font-size:10.5px;text-transform:uppercase;letter-spacing:.6px;}
   .approve{background:var(--vscode-inputValidation-warningBackground,rgba(255,180,0,.12));border:1px solid var(--vscode-inputValidation-warningBorder,#caa700);}
   .approve .cmd{font-family:var(--vscode-editor-font-family);font-size:12.5px;background:var(--vscode-textCodeBlock-background);padding:6px 8px;border-radius:4px;margin:6px 0 0;white-space:pre-wrap;word-break:break-all;}
   .approw{display:flex;gap:8px;margin-top:8px;}
-  .okbtn{background:var(--vscode-button-background);color:var(--vscode-button-foreground);font-weight:600;}
+  .okbtn{font-weight:600;}
   .adone{opacity:.75;font-size:12.5px;font-weight:600;}
-  #plan{display:none;padding:10px 12px;border-bottom:1px solid var(--vscode-panel-border);background:var(--vscode-editor-background);}
+  #plan{padding:10px 12px;border-bottom:1px solid var(--vscode-panel-border);background:var(--vscode-editor-background);}
   .planhd{font-weight:700;opacity:.6;font-size:10.5px;text-transform:uppercase;letter-spacing:.6px;margin-bottom:4px;}
-  .pstep{font-size:13px;padding:2px 0;color:var(--vscode-editor-foreground);}
+  .pstep{font-size:13px;padding:2px 0;}
   .pstep.pdone{opacity:.5;text-decoration:line-through;}
   .pstep.pcur{font-weight:600;color:var(--vscode-charts-blue);}
+  .atts{display:flex;flex-wrap:wrap;gap:6px;padding:0 8px 4px;}
+  .att{display:flex;align-items:center;gap:4px;background:var(--vscode-input-background);border:1px solid var(--vscode-input-border,#888);border-radius:6px;padding:3px 6px;font-size:11.5px;}
+  .att img{height:22px;border-radius:3px;}
+  .att .x{cursor:pointer;opacity:.6;font-weight:700;margin-left:2px;}
 </style></head><body>
-<div id="plan"></div>
-<div id="log"></div>
-<div id="bar">
-  <textarea id="inp" rows="2" placeholder="Ask LocalSRE to build, fix, run… (Enter to send, Shift+Enter newline)"></textarea>
-  <div style="display:flex;flex-direction:column;gap:4px;"><button id="send">Send</button><button id="stop" class="sec">⏹ Stop</button><button id="model" class="sec">Model</button><button id="reset" class="sec">Reset</button></div>
-</div>
-<script>
-const vscode = acquireVsCodeApi();
-const log = document.getElementById('log'); const inp = document.getElementById('inp'); let statusEl=null; let streamEl=null;
-function esc(s){return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
-function add(cls,html){const d=document.createElement('div');d.className='msg '+cls;d.innerHTML=html;log.appendChild(d);log.scrollTop=log.scrollHeight;return d;}
-function clearStatus(){if(statusEl){statusEl.remove();statusEl=null;}}
-function send(){const t=inp.value.trim();if(!t)return;add('user','<span class="label">you</span>\\n'+esc(t));inp.value='';vscode.postMessage({type:'ask',text:t});statusEl=add('status','…');}
-document.getElementById('send').onclick=send;
-document.getElementById('reset').onclick=()=>vscode.postMessage({type:'reset'});
-document.getElementById('model').onclick=()=>vscode.postMessage({type:'switchModel'});
-document.getElementById('stop').onclick=()=>vscode.postMessage({type:'stop'});
-inp.addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();send();}});
-window.addEventListener('message',ev=>{const m=ev.data;
-  if(m.type==='status'){if(statusEl)statusEl.textContent=m.text;}
-  else if(m.type==='assistantDelta'){clearStatus();if(!streamEl){streamEl=add('assistant','<span class="label">sre</span>\\n');streamEl._raw='';}streamEl._raw+=m.text;streamEl.innerHTML='<span class="label">sre</span>\\n'+esc(streamEl._raw);log.scrollTop=log.scrollHeight;}
-  else if(m.type==='assistantEnd'){streamEl=null;}
-  else if(m.type==='assistant'){clearStatus();streamEl=null;add('assistant','<span class="label">sre</span>\\n'+esc(m.text));}
-  else if(m.type==='tool'){clearStatus();add('tool','▶ '+esc(m.name)+'('+esc(JSON.stringify(m.args))+')');statusEl=add('status','running…');}
-  else if(m.type==='toolResult'){clearStatus();add('toolres',esc(m.result));}
-  else if(m.type==='error'){clearStatus();add('assistant err','⚠ '+esc(m.text));}
-  else if(m.type==='model'){clearStatus();add('status','model → '+esc(m.name));}
-  else if(m.type==='restore'){log.innerHTML='';m.items.forEach(it=>add(it.role==='user'?'user':'assistant','<span class="label">'+(it.role==='user'?'you':'sre')+'</span>\\n'+esc(it.text)));}
-  else if(m.type==='plan'){var p=document.getElementById('plan');if(!m.todos||!m.todos.length){p.innerHTML='';p.style.display='none';}else{p.style.display='block';p.innerHTML='<div class="planhd">plan</div>'+m.todos.map(function(t){var i=t.status==='completed'?'✓':(t.status==='in_progress'?'▸':'○');var c=t.status==='completed'?'pdone':(t.status==='in_progress'?'pcur':'');return '<div class="pstep '+c+'">'+i+' '+esc(t.content)+'</div>';}).join('');}}
-  else if(m.type==='cleared'){log.innerHTML='';var pl=document.getElementById('plan');pl.innerHTML='';pl.style.display='none';}
-  else if(m.type==='approve'){clearStatus();
-    const d=document.createElement('div');d.className='msg approve';
-    d.innerHTML='<div class="label">approve · '+esc(m.what)+'</div><pre class="cmd">'+esc(m.command)+'</pre>';
-    const row=document.createElement('div');row.className='approw';
-    const ok=document.createElement('button');ok.textContent='✓ Approve';ok.className='okbtn';
-    const no=document.createElement('button');no.textContent='✗ Deny';no.className='sec';
-    ok.onclick=()=>{vscode.postMessage({type:'approveResult',id:m.id,approved:true});row.innerHTML='<span class="adone">✓ approved</span>';};
-    no.onclick=()=>{vscode.postMessage({type:'approveResult',id:m.id,approved:false});row.innerHTML='<span class="adone">✗ denied</span>';};
-    row.appendChild(ok);row.appendChild(no);d.appendChild(row);log.appendChild(d);log.scrollTop=log.scrollHeight;
-  }
-  else if(m.type==='done'){clearStatus();}
-});
-vscode.postMessage({type:'ready'});
-</script></body></html>`;
+<div id="root"></div>
+<script src="${u('react.min.js')}"></script>
+<script src="${u('react-dom.min.js')}"></script>
+<script src="${u('htm.min.js')}"></script>
+<script src="${u('app.js')}"></script>
+</body></html>`;
 }
 
 // ---------- activation ----------
@@ -988,9 +1142,12 @@ function activate(context) {
       if (k) { await SECRETS.store("localsre.anthropicApiKey", k.trim()); vscode.window.showInformationMessage("Claude key saved to keychain."); }
     })
   );
+  // connect configured MCP servers in the background (tools appear as mcp_<server>_<tool>)
+  mcpStartAll().then((names) => { if (names.length && provider.view) provider.view.webview.postMessage({ type: "status", text: "MCP connected: " + names.join(", ") }); }).catch(() => {});
 }
 function deactivate() {
   for (const s of servers.slice()) killServer(s);
+  for (const n of Object.keys(mcpClients)) { try { mcpClients[n].child.kill(); } catch (_) {} }
 }
 module.exports = { activate, deactivate };
 // Test-only surface (harmless in production; used by test/run.js).
