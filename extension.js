@@ -536,6 +536,10 @@ async function callModel(messages, onDelta) {
 
 let activeAbort = null;   // the in-flight model call's AbortController (for the Stop button)
 let stopRequested = false; // set by Stop; checked in the agent loop
+// STEERING: messages typed while the agent is mid-run get injected into the LIVE run at the
+// next step (and the in-flight model call is aborted so it reacts in seconds) — instead of
+// queueing behind everything as a separate turn. This is how Claude Code feels responsive.
+let steerBuffer = [];
 
 async function callModelHTTP(messages, onDelta) {
   const c = cfg();
@@ -669,6 +673,13 @@ async function runAgent(userText, messages, post) {
   let edited = false, verified = false, verifyNudges = 0; // self-verify loop state
   for (let i = 0; i < c.maxIterations; i++) {
     if (stopRequested) { post({ type: "assistant", text: "⏹ stopped." }); return; }
+    // steer: fold in anything the user typed mid-run — their new instruction takes priority NOW
+    if (steerBuffer.length) {
+      for (const s of steerBuffer.splice(0)) {
+        messages.push({ role: "user", content: "[STEERING — the user just said this MID-TASK. It takes priority over your current plan. Adjust immediately:]\n" + s });
+      }
+      post({ type: "status", text: "↪ steering — picked up your new instruction" });
+    }
     trimInPlace(messages); // bound prefill every iteration
     post({ type: "status", text: "thinking…" });
     let msg;
@@ -679,6 +690,7 @@ async function runAgent(userText, messages, post) {
       if (streamed) post({ type: "assistantEnd" });
       const em = String(e.message || e);
       if (em === "stopped" || stopRequested) { post({ type: "assistant", text: "⏹ stopped." }); return; }
+      if (steerBuffer.length) continue; // call aborted because the user steered — loop picks up their message NOW
       post({ type: "error", text: em }); return;
     }
     if (streamed) post({ type: "assistantEnd" }); // finalize the streamed bubble
@@ -791,8 +803,9 @@ class ChatProvider {
     this.busy = true;
     stopRequested = false; // fresh run
     try {
-      while (this.queue.length && !stopRequested) {
-        const text = this.queue.shift();
+      while ((this.queue.length || steerBuffer.length) && !stopRequested) {
+        // a steer that arrived in the run's final moments becomes the next turn (never dropped)
+        const text = this.queue.length ? this.queue.shift() : steerBuffer.shift();
         try { await runAgent(text, this.messages, post); this._save(); }
         catch (e) { post({ type: "error", text: "internal: " + (e && e.message ? e.message : String(e)) }); }
       }
@@ -839,13 +852,20 @@ class ChatProvider {
             this.messages[0] = { role: "system", content: SYSTEM() }; // refresh system prompt with the auto-loaded skills
             post({ type: "status", text: "auto-loaded skill: " + newly.map((s) => s.name).join(", ") });
           }
-          this.queue.push(withEditorContext(m.text));
-          this._drain(post);
+          if (this.busy) {
+            // mid-run → STEER the live run (abort the in-flight call so it reacts in seconds)
+            steerBuffer.push(withEditorContext(m.text));
+            if (activeAbort) { try { activeAbort.abort(); } catch (_) {} }
+            post({ type: "status", text: "↪ got it — steering the current run" });
+          } else {
+            this.queue.push(withEditorContext(m.text));
+            this._drain(post);
+          }
         }
         else if (m.type === "reset") this.reset();
         else if (m.type === "switchModel") await vscode.commands.executeCommand("localsre.selectModel");
         else if (m.type === "approveResult") { const r = pendingApprovals[m.id]; if (r) r(!!m.approved); }
-        else if (m.type === "stop") { stopRequested = true; this.queue.length = 0; if (activeAbort) { try { activeAbort.abort(); } catch (_) {} } post({ type: "status", text: "stopping…" }); }
+        else if (m.type === "stop") { stopRequested = true; this.queue.length = 0; steerBuffer.length = 0; if (activeAbort) { try { activeAbort.abort(); } catch (_) {} } post({ type: "status", text: "stopping…" }); }
       } catch (e) {
         // Never let an error escape into the extension host.
         post({ type: "error", text: "internal: " + (e && e.message ? e.message : String(e)) });
