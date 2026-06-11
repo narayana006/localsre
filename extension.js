@@ -71,16 +71,23 @@ function execEnv() {
   return { ...process.env, PATH, HOMEBREW_NO_AUTO_UPDATE: "1" };
 }
 function clip(s, n = 30000) {
-  return s.length > n ? s.slice(0, n) + "\n…[truncated]" : s;
+  s = String(s);
+  if (s.length <= n) return s;
+  // snap to a line boundary so we never cut a number/JSON token mid-stream
+  let cut = s.lastIndexOf("\n", n); if (cut < n * 0.5) cut = n;
+  return s.slice(0, cut) + "\n[⚠ TRUNCATED — showing first " + cut + " of " + s.length + " chars. This is NOT the whole content; do not assume it ends here — read the rest with run_command (sed/grep/tail).]";
 }
-// (4) Distill long tool output: keep the HEAD and the TAIL (errors/results usually live at the end)
-// so the relevant signal survives into context instead of being chopped to just the top.
+// Distill long tool output: keep HEAD + TAIL (errors/results usually live at the end), snapped to line
+// boundaries, with an UNMISSABLE marker so the model never treats the elided middle as complete data.
 function distill(s, n = 6000) {
   s = String(s);
   if (s.length <= n) return s;
-  const head = s.slice(0, Math.floor(n * 0.6));
-  const tail = s.slice(-Math.floor(n * 0.35));
-  return head + "\n…[" + (s.length - head.length - tail.length) + " chars elided — head+tail kept]…\n" + tail;
+  let hEnd = Math.floor(n * 0.6); hEnd = s.lastIndexOf("\n", hEnd); if (hEnd < n * 0.3) hEnd = Math.floor(n * 0.6);
+  let tStart = s.length - Math.floor(n * 0.35); const nl = s.indexOf("\n", tStart); if (nl > -1 && nl < s.length - 50) tStart = nl + 1;
+  const head = s.slice(0, hEnd), tail = s.slice(tStart);
+  const elidedChars = s.length - head.length - tail.length;
+  const elidedLines = (s.slice(hEnd, tStart).match(/\n/g) || []).length;
+  return head + "\n\n[⚠ MIDDLE OMITTED — " + elidedLines + " lines (" + elidedChars + " chars) removed. The output below is the TAIL only, not the full result. Do NOT infer totals, counts, or completeness from what you see; re-run with a narrower query/grep if you need the middle.]\n\n" + tail;
 }
 
 // Reliable code search (ripgrep, falling back to grep) — argv array, no shell injection.
@@ -178,6 +185,7 @@ function SYSTEM() {
   return [
     "You are LocalSRE, an autonomous coding agent inside the user's VS Code on macOS (M3 Pro).",
     "You build, fix, and run real software by USING TOOLS — never by guessing.",
+    "ANTI-FABRICATION (critical): if a fact (hostname, path, proxy, cookie name, count, status, prior value) is NOT visible in your current context, you do NOT know it — re-read the file or re-run the tool to get it. NEVER invent it. If a tool result is marked TRUNCATED / MIDDLE OMITTED / NO DATA / FAILED, treat it as incomplete: do not infer the rest, and say what you couldn't verify. It is correct to answer 'I don't have enough data to conclude X — here's how to get it.'",
     "",
     "## PERSISTENCE — within the CURRENT task only",
     "While working on the task the user gave you, you hunt: on a failure, read the error, form a new hypothesis, and try a different concrete approach instead of bailing mid-task. Do things yourself with tools rather than asking the user to run them.",
@@ -330,7 +338,7 @@ async function datadogQuery(args) {
       const max = pts.length ? Math.max(...pts.map((p) => p[1])).toFixed(3) : "n/a";
       return `${s.metric}{${(s.tag_set || []).join(",")}} points=${pts.length} max=${max} last5=[${last}]`;
     });
-    return series.length ? series.join("\n") : "No datapoints for that query/window.";
+    return series.length ? series.join("\n") : "NO DATA RETURNED — the query matched no datapoints in this window. This does NOT mean the value is 0 or that the service is healthy; the metric name or window may be wrong. Verify the query before concluding anything.";
   }
   if (args.kind === "logs") {
     const ctrl = new AbortController(); const to = setTimeout(() => ctrl.abort(), 30000);
@@ -340,7 +348,7 @@ async function datadogQuery(args) {
       if (!r.ok) return "Datadog logs error: HTTP " + r.status + " " + (await r.text()).slice(0, 200);
       const d = await r.json();
       const rows = (d.data || []).map((e) => { const a = e.attributes || {}; return `${a.timestamp || ""} [${a.status || ""}] ${a.service || ""}: ${String(a.message || "").split("\n")[0].slice(0, 180)}`; });
-      return rows.length ? rows.join("\n") : "No matching logs in window.";
+      return rows.length ? rows.join("\n") : "NO LOGS MATCHED — the filter returned nothing for this window. This does NOT prove there are no errors; the filter/service/status may be wrong. Do not conclude the service is healthy from this.";
     } catch (e) { return "Datadog logs error: " + (e.message || e); } finally { clearTimeout(to); }
   }
   if (args.kind === "monitors") {
@@ -361,23 +369,28 @@ function gcpLogs(args) {
     cp.execFile("gcloud", a, { env: execEnv(), maxBuffer: 5 * 1024 * 1024, timeout: 60000 }, (e, so, se) => {
       if (e && e.code === "ENOENT") return resolve("ERROR: gcloud not found on PATH.");
       if (so && so.trim()) return resolve(distill(so, 7000));
-      if (se && /ERROR|denied|auth/i.test(se)) return resolve("gcloud error: " + se.slice(0, 400) + "\nHint: run gcloud auth login (see the gcp skill).");
-      resolve("No log entries matched.");
+      // any non-zero exit OR non-empty stderr = a real failure, NOT an empty result — never report it as "no logs".
+      if (e || (se && se.trim())) return resolve("gcloud FAILED (not an empty result): " + String(se || (e && e.message) || "").slice(0, 400) + "\nHint: check auth (gcloud auth login) and the filter. Do NOT conclude there are no logs.");
+      resolve("NO LOG ENTRIES MATCHED the filter in this window. This is an empty MATCH, not proof of health — verify the filter is correct.");
     });
   });
 }
 
 function k8sView(args) {
-  const argv = String(args.args || "").trim().replace(/^kubectl\s+/, "").split(/\s+/);
+  const raw = String(args.args || "").trim().replace(/^kubectl\s+/, "");
+  // Reject shell metacharacters outright — defense in depth even though we use execFile (no shell).
+  if (/[;&|`$<>(){}\n\\!]/.test(raw) || raw.includes("$(")) return Promise.resolve("ERROR: k8s_view rejects shell metacharacters. Pass plain kubectl arguments only.");
+  const argv = raw.split(/\s+/).filter(Boolean);
   const verb = argv[0] || "";
   if (!["get", "describe", "logs", "top", "events", "explain", "api-resources", "config", "version"].includes(verb))
     return Promise.resolve("ERROR: k8s_view is READ-ONLY (get/describe/logs/top/events/explain). For mutations use run_command (user approval).");
   if (verb === "config" && argv[1] !== "current-context" && argv[1] !== "get-contexts") return Promise.resolve("ERROR: only config current-context / get-contexts allowed here.");
   return new Promise((resolve) => {
-    // shell:true so the user's login env/proxy vars apply (private GKE via jump proxy etc.)
-    cp.exec("kubectl " + argv.join(" "), { env: execEnv(), maxBuffer: 5 * 1024 * 1024, timeout: 60000 }, (e, so, se) => {
+    // execFile (NO shell) — argv passed directly; user's login env/proxy vars come from execEnv().
+    cp.execFile("kubectl", argv, { env: execEnv(), maxBuffer: 5 * 1024 * 1024, timeout: 60000 }, (e, so, se) => {
+      if (e && e.code === "ENOENT") return resolve("ERROR: kubectl not found on PATH.");
       if (so && so.trim()) return resolve(distill(so, 7000));
-      resolve((se && se.trim()) ? "kubectl: " + se.slice(0, 500) : "(no output)");
+      resolve((se && se.trim()) ? "kubectl: " + se.slice(0, 500) : "(no output — command ran but returned nothing)");
     });
   });
 }
@@ -387,7 +400,7 @@ const mcpClients = {}; // name -> {child, buf, pending, tools}
 let mcpTools = []; // dynamic TOOLS entries discovered from servers
 function mcpSend(cli, msg) {
   const s = JSON.stringify(msg);
-  cli.child.stdin.write("Content-Length: " + Buffer.byteLength(s) + "\r\n\r\n" + s);
+  try { cli.child.stdin.write("Content-Length: " + Buffer.byteLength(s) + "\r\n\r\n" + s); } catch (_) {} // child may have died (EPIPE)
 }
 function mcpRequest(cli, method, params, timeoutMs = 20000) {
   return new Promise((resolve) => {
@@ -398,22 +411,27 @@ function mcpRequest(cli, method, params, timeoutMs = 20000) {
   });
 }
 function mcpOnData(cli, chunk) {
-  cli.buf += chunk.toString();
+  // Buffer-accurate framing: Content-Length is BYTES. Concatenating strings + slicing by chars
+  // desyncs on any non-ASCII body and can wedge forever. Work in Buffers, slice by bytes.
+  cli.buf = cli.buf && cli.buf.length ? Buffer.concat([cli.buf, chunk]) : Buffer.from(chunk);
+  if (cli.buf.length > 16 * 1024 * 1024) { cli.buf = Buffer.alloc(0); return; } // runaway guard
   for (;;) {
-    const m = cli.buf.match(/Content-Length: (\d+)\r?\n\r?\n/);
+    const header = cli.buf.toString("latin1", 0, Math.min(cli.buf.length, 4096));
+    const m = header.match(/Content-Length: (\d+)\r?\n\r?\n/);
     if (!m) return;
     const start = m.index + m[0].length, len = parseInt(m[1], 10);
     if (cli.buf.length < start + len) return;
-    const body = cli.buf.slice(start, start + len);
+    const body = cli.buf.slice(start, start + len).toString("utf8");
     cli.buf = cli.buf.slice(start + len);
-    try { const msg = JSON.parse(body); if (msg.id && cli.pending[msg.id]) { const cb = cli.pending[msg.id]; delete cli.pending[msg.id]; cb(msg); } } catch (_) {}
+    try { const msg = JSON.parse(body); if (msg.id != null && cli.pending[msg.id]) { const cb = cli.pending[msg.id]; delete cli.pending[msg.id]; cb(msg); } } catch (_) {}
   }
 }
 async function mcpConnect(name, spec) {
   if (mcpClients[name]) return mcpClients[name];
   const child = cp.spawn(spec.command, spec.args || [], { env: { ...loadSecrets(), ...(spec.env || {}) }, cwd: wsRoot() });
-  const cli = { child, buf: "", pending: {}, seq: 0, tools: [] };
+  const cli = { child, buf: Buffer.alloc(0), pending: {}, seq: 0, tools: [] };
   child.stdout.on("data", (d) => mcpOnData(cli, d));
+  child.on("error", (e) => { delete mcpClients[name]; mcpTools = mcpTools.filter((t) => t._mcp !== name); for (const id of Object.keys(cli.pending)) { try { cli.pending[id]({ error: { message: "MCP spawn error: " + e.message } }); } catch (_) {} } });
   child.on("exit", () => { delete mcpClients[name]; mcpTools = mcpTools.filter((t) => t._mcp !== name); });
   mcpClients[name] = cli;
   await mcpRequest(cli, "initialize", { protocolVersion: "2024-11-05", capabilities: {}, clientInfo: { name: "localsre", version: "0.15.0" } });
@@ -452,7 +470,7 @@ function sh(command) {
     cp.exec(command, { cwd: wsRoot(), env: execEnv(), timeout: cmdTimeoutMs(), maxBuffer: 20 * 1024 * 1024 }, (err, stdout, stderr) => {
       let out = (stdout || "") + (stderr ? "\n[stderr]\n" + stderr : "");
       if (err && !out.trim()) out = "[exit " + (err.code ?? "?") + "] " + (err.message || "");
-      resolve(out.trim().slice(0, 20000) || "(no output)");
+      resolve(clip(out.trim(), 20000) || "(no output)");
     });
   });
 }
@@ -479,7 +497,7 @@ function startServer(command, label) {
       child.stdout.removeListener("data", onData);
       child.stderr.removeListener("data", onData);
       child.stdout.resume(); child.stderr.resume();
-      resolve("[" + (label || "server") + " started, pid " + child.pid + "]\n" + (buf.slice(-3000) || "(no output yet)"));
+      resolve("[" + (label || "server") + " started, pid " + child.pid + "]\n" + (capped ? "[⚠ early output may be missing — showing the tail only; check logs if startup errored]\n" : "") + (buf.slice(-3000) || "(no output yet)"));
     }, 5000);
   });
 }
@@ -740,7 +758,7 @@ async function callModelHTTP(messages, onDelta) {
   } catch (e) {
     if (e.name === "AbortError") throw new Error(stopRequested ? "stopped" : "Model timed out (180s).");
     throw e;
-  } finally { clearTimeout(to); activeAbort = null; }
+  } finally { clearTimeout(to); if (activeAbort === ctrl) activeAbort = null; } // don't null a NEWER call's controller
 }
 
 // Parse an OpenAI-style SSE stream: emit text deltas live, assemble tool_calls by index.
@@ -830,16 +848,13 @@ let toolIdSeq = 0; // process-global so tool_call_ids never collide across turns
 function trimInPlace(messages) {
   if (messages.length <= HISTORY_CAP + 1) return; // +1 for system
   let start = messages.length - HISTORY_CAP;
-  // advance to a SAFE cut boundary: a user message, or an assistant WITHOUT tool_calls.
-  // Never start the kept window on a 'tool' or a dangling assistant→tool_calls (Ollama 400),
-  // and never run off the end (that would wipe the whole conversation).
-  while (start < messages.length) {
-    const m = messages[start];
-    if (m.role === "user") break;
-    if (m.role === "assistant" && !(m.tool_calls && m.tool_calls.length)) break;
-    start++;
-  }
-  if (start < messages.length && start > 2) messages.splice(2, start - 2); // keep system + first turn + window
+  // The kept window may START on a user OR an assistant (with or without tool_calls — its tool
+  // results follow it). It must NEVER start on a 'tool' (that orphans it from its assistant → 400).
+  // Walk back only past 'tool' messages — this ALWAYS finds a boundary (worst case the prior assistant),
+  // so a long unbroken tool-chain still gets trimmed (fixes the unbounded-prefill bug).
+  while (start > 2 && messages[start].role === "tool") start--;
+  if (start <= 2) return;
+  messages.splice(2, start - 2); // keep system(0) + first turn(1) + safe window
 }
 
 // ---------- agent loop ----------
@@ -848,6 +863,7 @@ async function runAgent(userText, messages, post) {
   const c = cfg();
   const originalTask = String(userText).replace(/\[Editor context[\s\S]*?\[User request\]\n/, "").slice(0, 600); // anchor
   const callLog = {}; // detect repeated identical tool calls (local models tend to loop)
+  let loopTrips = 0;  // total times the loop-guard tripped → hard-stop when stuck across actions
   let edited = false, verified = false, verifyNudges = 0; // self-verify loop state
   for (let i = 0; i < c.maxIterations; i++) {
     if (stopRequested) { post({ type: "assistant", text: "⏹ stopped." }); return; }
@@ -883,7 +899,8 @@ async function runAgent(userText, messages, post) {
     const toolCalls = (Array.isArray(msg.tool_calls) ? msg.tool_calls : []).filter((tc) => tc && tc.function && tc.function.name);
     toolCalls.forEach((tc) => { if (!tc.id) tc.id = "call_" + ++toolIdSeq; });
     // OpenAI protocol wants content:null (not "") when tool_calls are present.
-    messages.push({ role: "assistant", content: content || null, tool_calls: toolCalls.length ? toolCalls : undefined });
+    // content must be null ONLY when tool_calls are present; otherwise a string (Ollama/OpenAI reject content:null with no tool_calls).
+    messages.push(toolCalls.length ? { role: "assistant", content: content || null, tool_calls: toolCalls } : { role: "assistant", content: content || "" });
 
     if (toolCalls.length) {
       if (content && !streamed) post({ type: "assistant", text: content });
@@ -895,20 +912,25 @@ async function runAgent(userText, messages, post) {
         let args = {};
         try { args = JSON.parse(tc.function.arguments || "{}"); } catch (_) {}
         post({ type: "tool", name: tname, args });
-        // Loop guard: if the model repeats the EXACT same call, stop re-running it and tell it to change course.
+        // Loop guard: if the model repeats the EXACT same call, DON'T re-run it (and don't reset the
+        // counter — resetting let A,B,A,B oscillate forever). Escalate to a hard stop if it stays stuck.
         const sig = tname + "::" + (tc.function.arguments || "");
         callLog[sig] = (callLog[sig] || 0) + 1;
         let result;
         if (callLog[sig] >= 3) {
-          // (3) Stuck-recovery: anchor back to the goal and force a fundamentally different approach.
-          result = "LOOP DETECTED: you already made this exact call 3 times — the result won't change. STOP. Step back, re-read the original goal (\"" + originalTask + "\"), and take a FUNDAMENTALLY different approach (different tool, different command, or ask the user one specific question). Do NOT repeat this call.";
-          callLog[sig] = 0; // reset — a later genuine call (e.g. re-read after an edit) must still run
+          loopTrips++;
+          result = "LOOP DETECTED: you already made this exact call " + callLog[sig] + " times — the result will NOT change, so it was NOT run again. STOP repeating it. Re-read the goal (\"" + originalTask + "\") and take a FUNDAMENTALLY different approach (different tool/command) or ask the user one specific question.";
         } else {
-          result = await execTool(tname, args);
+          try { result = await execTool(tname, args); }
+          catch (e) { result = "TOOL ERROR (" + tname + "): " + (e && e.message ? e.message : String(e)); }
         }
         post({ type: "toolResult", name: tname, result: String(result).slice(0, 4000) });
-        // (4) Distill (head+tail) what goes back into context — keeps prefill lean AND keeps the signal.
+        // ALWAYS push a tool result for this tc.id — never leave a tool_calls turn unanswered (that 400s every future call).
         messages.push({ role: "tool", tool_call_id: tc.id, content: distill(result, 6000) });
+      }
+      if (loopTrips >= 3) { // stuck across multiple actions → stop instead of burning the whole budget
+        post({ type: "assistant", text: "I'm stuck repeating actions without progress, so I've stopped. Here's the original goal: " + originalTask + ". Could you give me one concrete pointer, or should I try a different approach?" });
+        return;
       }
       continue;
     }
@@ -988,8 +1010,12 @@ class ChatProvider {
     stopRequested = false; // fresh run
     try {
       while ((this.queue.length || steerBuffer.length) && !stopRequested) {
-        // a steer that arrived in the run's final moments becomes the next turn (never dropped)
-        const text = this.queue.length ? this.queue.shift() : steerBuffer.shift();
+        // A queued message is a NEW turn → drop any stale steers (they belonged to the finished run,
+        // must not leak into this unrelated task). Only when the queue is empty does a leftover steer
+        // (typed in the run's dying moments) become its own turn.
+        let text;
+        if (this.queue.length) { text = this.queue.shift(); steerBuffer.length = 0; }
+        else text = steerBuffer.shift();
         try { await runAgent(text, this.messages, post); this._save(); }
         catch (e) { post({ type: "error", text: "internal: " + (e && e.message ? e.message : String(e)) }); }
       }
@@ -1047,11 +1073,15 @@ class ChatProvider {
             }
             text = parts.join("\n\n") + (text ? "\n\n" + text : "");
           }
-          const newly = relevantSkills(text).filter((s) => !activeSkills.has(s.name));
-          if (newly.length) {
-            newly.forEach((s) => activeSkills.add(s.name));
-            this.messages[0] = { role: "system", content: SYSTEM() }; // refresh system prompt with the auto-loaded skills
-            post({ type: "status", text: "auto-loaded skill: " + newly.map((s) => s.name).join(", ") });
+          // Scope auto-loaded skills to the CURRENT request (last relevant set), capped — so the system
+          // prompt doesn't grow forever with stale skill bodies across a long session.
+          const rel = relevantSkills(text).slice(0, 3).map((s) => s.name);
+          const before = activeSkills.size, had = new Set(activeSkills);
+          activeSkills.clear(); rel.forEach((n) => activeSkills.add(n));
+          const newly = rel.filter((n) => !had.has(n));
+          if (newly.length || activeSkills.size !== before) {
+            this.messages[0] = { role: "system", content: SYSTEM() }; // refresh system prompt with the current skills
+            if (newly.length) post({ type: "status", text: "loaded skill: " + newly.join(", ") });
           }
           if (this.busy) {
             steerBuffer.push(withEditorContext(text)); // mid-run → STEER (abort in-flight so it reacts in seconds)
@@ -1065,7 +1095,7 @@ class ChatProvider {
         else if (m.type === "reset") this.reset();
         else if (m.type === "switchModel") await vscode.commands.executeCommand("localsre.selectModel");
         else if (m.type === "approveResult") { const r = pendingApprovals[m.id]; if (r) r(!!m.approved); }
-        else if (m.type === "stop") { stopRequested = true; this.queue.length = 0; steerBuffer.length = 0; if (activeAbort) { try { activeAbort.abort(); } catch (_) {} } post({ type: "status", text: "stopping…" }); }
+        else if (m.type === "stop") { stopRequested = true; this.queue.length = 0; steerBuffer.length = 0; for (const id of Object.keys(pendingApprovals)) pendingApprovals[id](false); if (activeAbort) { try { activeAbort.abort(); } catch (_) {} } post({ type: "status", text: "stopping…" }); }
       } catch (e) {
         // Never let an error escape into the extension host.
         post({ type: "error", text: "internal: " + (e && e.message ? e.message : String(e)) });
@@ -1140,6 +1170,9 @@ function activate(context) {
     vscode.commands.registerCommand("localsre.setClaudeKey", async () => {
       const k = await vscode.window.showInputBox({ password: true, ignoreFocusOut: true, prompt: "Anthropic API key (stored in the OS keychain, not settings)" });
       if (k) { await SECRETS.store("localsre.anthropicApiKey", k.trim()); vscode.window.showInformationMessage("Claude key saved to keychain."); }
+    }),
+    vscode.workspace.onDidChangeConfiguration((e) => {
+      if (e.affectsConfiguration("localsre.endpoint") || e.affectsConfiguration("localsre.model")) autoLocalModel = null; // re-detect
     })
   );
   // connect configured MCP servers in the background (tools appear as mcp_<server>_<tool>)
