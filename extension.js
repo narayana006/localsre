@@ -72,6 +72,15 @@ function execEnv() {
 function clip(s, n = 30000) {
   return s.length > n ? s.slice(0, n) + "\n…[truncated]" : s;
 }
+// (4) Distill long tool output: keep the HEAD and the TAIL (errors/results usually live at the end)
+// so the relevant signal survives into context instead of being chopped to just the top.
+function distill(s, n = 6000) {
+  s = String(s);
+  if (s.length <= n) return s;
+  const head = s.slice(0, Math.floor(n * 0.6));
+  const tail = s.slice(-Math.floor(n * 0.35));
+  return head + "\n…[" + (s.length - head.length - tail.length) + " chars elided — head+tail kept]…\n" + tail;
+}
 
 // Reliable code search (ripgrep, falling back to grep) — argv array, no shell injection.
 function searchCode(query) {
@@ -669,6 +678,7 @@ function trimInPlace(messages) {
 async function runAgent(userText, messages, post) {
   messages.push({ role: "user", content: userText });
   const c = cfg();
+  const originalTask = String(userText).replace(/\[Editor context[\s\S]*?\[User request\]\n/, "").slice(0, 600); // anchor
   const callLog = {}; // detect repeated identical tool calls (local models tend to loop)
   let edited = false, verified = false, verifyNudges = 0; // self-verify loop state
   for (let i = 0; i < c.maxIterations; i++) {
@@ -679,6 +689,11 @@ async function runAgent(userText, messages, post) {
         messages.push({ role: "user", content: "[STEERING — the user just said this MID-TASK. It takes priority over your current plan. Adjust immediately:]\n" + s });
       }
       post({ type: "status", text: "↪ steering — picked up your new instruction" });
+    }
+    // (1) Reflection + (2) anchoring: every 6 rounds, re-orient to the goal (local models drift/loop).
+    if (i > 0 && i % 6 === 0) {
+      messages.push({ role: "user", content: "[CHECKPOINT — not a new task] Re-read the ORIGINAL goal: \"" + originalTask + "\". State briefly what is DONE, what is LEFT, and whether you're still on target. If you're repeating yourself or drifting, switch approach NOW. Then keep going." });
+      post({ type: "status", text: "↻ reflection checkpoint" });
     }
     trimInPlace(messages); // bound prefill every iteration
     post({ type: "status", text: "thinking…" });
@@ -717,14 +732,15 @@ async function runAgent(userText, messages, post) {
         callLog[sig] = (callLog[sig] || 0) + 1;
         let result;
         if (callLog[sig] >= 3) {
-          result = "LOOP DETECTED: you already made this exact call 3 times in a row — the result won't change. STOP repeating it; try a different approach or give your final answer now.";
+          // (3) Stuck-recovery: anchor back to the goal and force a fundamentally different approach.
+          result = "LOOP DETECTED: you already made this exact call 3 times — the result won't change. STOP. Step back, re-read the original goal (\"" + originalTask + "\"), and take a FUNDAMENTALLY different approach (different tool, different command, or ask the user one specific question). Do NOT repeat this call.";
           callLog[sig] = 0; // reset — a later genuine call (e.g. re-read after an edit) must still run
         } else {
           result = await execTool(tname, args);
         }
         post({ type: "toolResult", name: tname, result: String(result).slice(0, 4000) });
-        // Cap what goes back into context — keeps prefill fast on local hardware over long sessions.
-        messages.push({ role: "tool", tool_call_id: tc.id, content: String(result).slice(0, 6000) });
+        // (4) Distill (head+tail) what goes back into context — keeps prefill lean AND keeps the signal.
+        messages.push({ role: "tool", tool_call_id: tc.id, content: distill(result, 6000) });
       }
       continue;
     }
