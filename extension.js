@@ -29,15 +29,32 @@ function wsRoot() {
   const f = vscode.workspace.workspaceFolders;
   return f && f.length ? f[0].uri.fsPath : process.cwd();
 }
-function resolvePath(p) {
-  return path.isAbsolute(p) ? p : path.join(wsRoot(), p || ".");
+
+// Session working directory — persists across tool calls so the model doesn't snap back to wsRoot.
+let sessionCwd = null;
+// Files touched this session — injected into system prompt so trim never erases "what was I editing".
+const sessionFiles = { read: new Set(), written: new Set() };
+function getCwd() { return sessionCwd || wsRoot(); }
+function setCwd(p) {
+  const resolved = path.resolve(p);
+  if (!fs.existsSync(resolved)) return "ERROR: directory does not exist: " + resolved;
+  if (!fs.statSync(resolved).isDirectory()) return "ERROR: not a directory: " + resolved;
+  sessionCwd = resolved;
+  return "Working directory set to: " + resolved;
 }
-// Confine a path to the workspace (and never the secrets file). Returns null if it escapes.
+
+function resolvePath(p) {
+  return path.isAbsolute(p) ? p : path.join(getCwd(), p || ".");
+}
+// Confine a path to the workspace OR sessionCwd (and never the secrets file). Returns null if it escapes.
 function safePath(p, { allowSecrets = false } = {}) {
-  const root = path.resolve(wsRoot());
+  const wsR = path.resolve(wsRoot());
+  const cwdR = path.resolve(getCwd());
   const resolved = path.resolve(resolvePath(p));
-  if (resolved !== root && !resolved.startsWith(root + path.sep)) return null; // outside workspace
-  if (!allowSecrets && resolved.startsWith(path.join(root, ".localsre", "secrets"))) return null; // never expose secrets
+  const inWs = resolved === wsR || resolved.startsWith(wsR + path.sep);
+  const inCwd = resolved === cwdR || resolved.startsWith(cwdR + path.sep);
+  if (!inWs && !inCwd) return null; // outside both workspace and sessionCwd
+  if (!allowSecrets && resolved.startsWith(path.join(wsR, ".localsre", "secrets"))) return null;
   return resolved;
 }
 
@@ -190,6 +207,9 @@ function SYSTEM() {
   const skillList = SKILLS.length ? SKILLS.map((s) => `- ${s.name}: ${s.description}`).join("\n") : "(none)";
   const act = SKILLS.filter((s) => activeSkills.has(s.name));
   const activeBlock = act.length ? "\n## Auto-loaded skills (relevant to this work — FOLLOW these now)\n" + act.map((s) => "### " + s.name + "\n" + s.body).join("\n\n") : "";
+  const cwdLine = sessionCwd ? `\n## Current working directory\n${sessionCwd}\nAll relative paths, run_command, and file ops resolve from here. Call change_dir to switch.` : "";
+  const touched = [...sessionFiles.written].map(f => "✎ " + f).concat([...sessionFiles.read].filter(f => !sessionFiles.written.has(f)).map(f => "👁 " + f));
+  const filesLine = touched.length ? "\n## Files touched this session (re-read before editing if context was trimmed)\n" + touched.join("\n") : "";
   return [
     "You are LocalSRE, an autonomous coding agent inside the user's VS Code on macOS (M3 Pro).",
     "You build, fix, and run real software by USING TOOLS — never by guessing.",
@@ -218,7 +238,6 @@ function SYSTEM() {
     "## Tools",
     "- read_file / list_dir — read code. write_file (NEW files ONLY) / edit_file (targeted exact old→new replace — PREFER for existing files; never rewrite a whole file).",
     "- After ANY edit, VERIFY: call get_problems and run the relevant test/build; fix errors, then finish.",
-    "- consult_expert — ask Claude (cloud) a hard reasoning/review question when stuck or to review your plan/diff (needs a Claude key).",
     "- datadog_query / gcp_logs / k8s_view — READ-ONLY SRE connectors for live investigation (metrics, logs, monitors, pods, events). For multi-step incident work, load the 'investigate' skill.",
     "- mcp_* — tools from any MCP servers the user configured (datadog, github, etc.). Use them like any other tool.",
     "- search_code — find where things are defined/used across the repo (prefer this over guessing paths or hand-writing grep).",
@@ -228,6 +247,7 @@ function SYSTEM() {
     "- start_server — launch a long-running dev server in the BACKGROUND (don't use run_command for servers, it would block).",
     "- open_preview — open a URL in VS Code's built-in browser so the user can see the UI.",
     "- update_plan — show a live checklist for multi-step work.",
+    "- change_dir(path) — switch the working directory for ALL subsequent tool calls (run_command, file ops). Use this instead of cd in a command when you need to work in a different folder.",
     "",
     "The user's ACTIVE FILE, selection, and open tabs are included at the top of each request. When they say 'this', 'here', 'this file/function', they mean that — act on it (read the active file for full contents if needed).",
     "",
@@ -237,6 +257,8 @@ function SYSTEM() {
     "",
     "Be concise in prose; let tools do the work. Finish with a short summary + how to run it.",
     "Workspace root: " + wsRoot(),
+    cwdLine,
+    filesLine,
     projectMemory(),
   ].filter(Boolean).join("\n");
 }
@@ -298,7 +320,7 @@ const TOOLS = [
   { type: "function", function: { name: "search_code", description: "Search the codebase for a string/regex and return matching file:line results. Use this to find where things are defined/used instead of guessing.", parameters: { type: "object", properties: { query: { type: "string" } }, required: ["query"] } } },
   { type: "function", function: { name: "get_problems", description: "Return the current errors and warnings from VS Code's Problems panel (diagnostics) across the workspace. Use before/after edits to see and fix compile/lint errors.", parameters: { type: "object", properties: {} } } },
   { type: "function", function: { name: "remember", description: "Save a DURABLE fact to the repo's persistent memory (.localsre/memory.md) so it's available in EVERY future session, forever. Use for environment specifics (how to reach a cluster/service, proxies, kube-contexts, credential locations), decisions made, setup procedures, and anything the user tells you to remember. CHECK memory before asking the user something you may already know.", parameters: { type: "object", properties: { note: { type: "string" } }, required: ["note"] } } },
-  { type: "function", function: { name: "consult_expert", description: "Delegate a HARD reasoning/review question to a stronger cloud model (Claude) and get its answer. Use when stuck, for tricky design decisions, or to review your own plan/diff. Requires a Claude API key.", parameters: { type: "object", properties: { question: { type: "string" } }, required: ["question"] } } },
+  { type: "function", function: { name: "change_dir", description: "Switch the working directory for ALL subsequent tool calls (run_command, file ops, list_dir). Persists for the whole session. Use instead of 'cd' in a shell command when you need to work in a different folder.", parameters: { type: "object", properties: { path: { type: "string", description: "Absolute or relative path to the target directory." } }, required: ["path"] } } },
   // --- SRE connectors (read-only; creds from .localsre/secrets or env) ---
   { type: "function", function: { name: "datadog_query", description: "READ-ONLY Datadog: query metrics timeseries, search logs, or list alerting monitors. Needs DD_API_KEY+DD_APP_KEY in .localsre/secrets or env.", parameters: { type: "object", properties: { kind: { type: "string", enum: ["metrics", "logs", "monitors"] }, query: { type: "string", description: "metrics: a metric query like avg:system.cpu.user{service:x}; logs: a log search query like service:x status:error; monitors: optional name filter" }, from_minutes: { type: "number", description: "lookback window in minutes (default 60)" } }, required: ["kind"] } } },
   { type: "function", function: { name: "gcp_logs", description: "READ-ONLY Google Cloud Logging: read log entries with a filter (uses your gcloud auth).", parameters: { type: "object", properties: { filter: { type: "string", description: "Cloud Logging filter, e.g. resource.type=\"k8s_container\" severity>=ERROR" }, freshness: { type: "string", description: "e.g. 1h, 30m (default 1h)" }, limit: { type: "number" } }, required: ["filter"] } } },
@@ -503,7 +525,7 @@ function getTools() {
 // ---------- tool execution ----------
 function sh(command) {
   return new Promise((resolve) => {
-    cp.exec(command, { cwd: wsRoot(), env: execEnv(), timeout: cmdTimeoutMs(), maxBuffer: 20 * 1024 * 1024 }, (err, stdout, stderr) => {
+    cp.exec(command, { cwd: getCwd(), env: execEnv(), timeout: cmdTimeoutMs(), maxBuffer: 20 * 1024 * 1024 }, (err, stdout, stderr) => {
       let out = (stdout || "") + (stderr ? "\n[stderr]\n" + stderr : "");
       if (err && !out.trim()) out = "[exit " + (err.code ?? "?") + "] " + (err.message || "");
       resolve(clip(out.trim(), 20000) || "(no output)");
@@ -519,7 +541,7 @@ function killServer(entry) {
 }
 function startServer(command, label) {
   return new Promise((resolve) => {
-    const child = cp.spawn(command, { cwd: wsRoot(), env: execEnv(), shell: true, detached: true });
+    const child = cp.spawn(command, { cwd: getCwd(), env: execEnv(), shell: true, detached: true });
     const entry = { child, label: label || command, pid: child.pid };
     servers.push(entry);
     child.on("exit", () => { const i = servers.indexOf(entry); if (i >= 0) servers.splice(i, 1); });
@@ -597,6 +619,7 @@ async function execTool(name, args) {
       const st = fs.statSync(fp);
       if (st.size > 5 * 1024 * 1024)
         return "ERROR: file too large (" + Math.round(st.size / 1e6) + " MB). Use run_command with grep/sed/head to inspect it.";
+      sessionFiles.read.add(args.path);
       return clip(fs.readFileSync(fp, "utf8"), 20000);
     }
     if (name === "write_file") {
@@ -604,6 +627,7 @@ async function execTool(name, args) {
       if (!p) return "ERROR: refusing to write outside the workspace.";
       fs.mkdirSync(path.dirname(p), { recursive: true });
       fs.writeFileSync(p, args.content ?? "");
+      sessionFiles.written.add(args.path);
       vscode.workspace.openTextDocument(p).then((d) => vscode.window.showTextDocument(d, { preview: false }), () => {});
       return `wrote ${args.path} (${(args.content || "").length} bytes)`;
     }
@@ -619,6 +643,7 @@ async function execTool(name, args) {
       if (count === 0) return "ERROR: old_string not found in " + args.path + " — read the file and copy an EXACT snippet (including whitespace).";
       if (count > 1) return "ERROR: old_string appears " + count + " times — add more surrounding context to make it unique.";
       fs.writeFileSync(fp, src.replace(oldS, newS));
+      sessionFiles.written.add(args.path);
       vscode.workspace.openTextDocument(fp).then((d) => vscode.window.showTextDocument(d, { preview: false }), () => {});
       return "Edited " + args.path + " (−" + oldS.split("\n").length + " / +" + newS.split("\n").length + " lines).";
     }
@@ -626,6 +651,10 @@ async function execTool(name, args) {
       const dp = safePath(args.path || ".");
       if (!dp) return "ERROR: path is outside the workspace.";
       return fs.readdirSync(dp, { withFileTypes: true }).map((d) => (d.isDirectory() ? d.name + "/" : d.name)).join("\n");
+    }
+    if (name === "change_dir") {
+      const target = path.isAbsolute(args.path) ? args.path : path.join(getCwd(), args.path);
+      return setCwd(target);
     }
     if (name === "run_command") {
       if (!(await approveCommand(args.command))) return "DENIED by user.";
@@ -670,19 +699,6 @@ async function execTool(name, args) {
         }
       } catch (_) {}
       return "Saved to repo memory (.localsre/memory.md).";
-    }
-    if (name === "consult_expert") {
-      const key = await getAnthropicKey();
-      if (!key) return "No Claude key available — set ANTHROPIC_API_KEY or run 'LocalSRE: Set Claude API Key'. (Without it, rely on your own reasoning.)";
-      try {
-        const res = await fetch("https://api.anthropic.com/v1/messages", {
-          method: "POST", headers: { "content-type": "application/json", "x-api-key": key, "anthropic-version": "2023-06-01" },
-          body: JSON.stringify({ model: "claude-sonnet-4-6", max_tokens: 1500, messages: [{ role: "user", content: String(args.question || "") }] }),
-        });
-        if (!res.ok) return "consult error: " + (await res.text()).slice(0, 200);
-        const data = await res.json();
-        return (data.content || []).filter((b) => b.type === "text").map((b) => b.text).join("\n") || "(no answer)";
-      } catch (e) { return "consult error: " + (e.message || e); }
     }
     if (name === "datadog_query") return await datadogQuery(args);
     if (name === "gcp_logs") return await gcpLogs(args);
@@ -746,6 +762,35 @@ async function selectModel() {
   const pick = await vscode.window.showQuickPick(items, { placeHolder: "Model — current: " + curProvider() + ":" + curModel() });
   if (pick) { active.provider = pick._p; active.model = pick._m; vscode.window.showInformationMessage("LocalSRE → " + pick._p + ": " + pick._m); }
   return pick;
+}
+
+// Connectivity probe: which providers are reachable + a live 1-shot round-trip on the current model.
+async function testConnection() {
+  const lines = ["LocalSRE connection test", ""];
+  let models = [];
+  try { models = await listModels(); } catch (e) { lines.push("listModels error: " + (e.message || e)); }
+  const byProv = {};
+  for (const m of models) (byProv[m._p] = byProv[m._p] || []).push(m._m);
+  lines.push("Providers reachable:");
+  lines.push("  • local (Ollama/llama.cpp): " + ((byProv.local || []).length ? byProv.local.slice(0, 6).join(", ") : "— none (server not running?)"));
+  lines.push("  • GitHub Copilot: " + ((byProv.copilot || []).length ? byProv.copilot.slice(0, 8).join(", ") : "— none (Copilot not signed in?)"));
+  lines.push("  • Claude (Anthropic key): " + ((byProv.anthropic || []).length ? byProv.anthropic.join(", ") : "— no key set"));
+  const claude = (byProv.copilot || []).find((m) => /claude/i.test(m));
+  if (claude) lines.push("", "✅ Claude IS available via Copilot: " + claude + "  → pick it with the Model button.");
+  // live round-trip on the CURRENT model
+  lines.push("", "Round-trip test (" + curProvider() + ":" + curModel() + "):");
+  const t0 = Date.now();
+  try {
+    const msg = await callModel([{ role: "system", content: "Connectivity probe. Reply with exactly: OK" }, { role: "user", content: "ping" }]);
+    const txt = (stripThink(msg.content || "") || (msg.tool_calls ? "(tool_call)" : "(empty)")).slice(0, 60);
+    lines.push("  ✅ responded in " + ((Date.now() - t0) / 1000).toFixed(1) + "s — \"" + txt + "\"");
+  } catch (e) {
+    lines.push("  ❌ FAILED in " + ((Date.now() - t0) / 1000).toFixed(1) + "s — " + (e.message || e));
+  }
+  const report = lines.join("\n");
+  if (postToWebview) postToWebview({ type: "assistant", text: report });
+  vscode.window.showInformationMessage(claude ? "Claude reachable via Copilot ✅ — see the LocalSRE panel for the full test." : "Connection test done — see the LocalSRE panel.");
+  return report;
 }
 
 // ---------- secrets (OS keychain via VS Code SecretStorage) ----------
@@ -906,6 +951,11 @@ function trimInPlace(messages) {
   // drop it too so we never send a dangling tool_calls turn (400 on every provider).
   if (messages[1] && messages[1].role === "assistant" && messages[1].tool_calls && messages[1].tool_calls.length &&
       !(messages[2] && messages[2].role === "tool")) messages.splice(1, 1);
+  // Always refresh the system prompt so sessionCwd + sessionFiles survive the trim.
+  if (messages[0] && messages[0].role === "system") messages[0] = { role: "system", content: SYSTEM() };
+  // Warn the model that earlier context was dropped so it re-reads before touching files.
+  messages.splice(1, 0, { role: "user", content: "[CONTEXT TRIMMED — earlier messages were dropped to stay within limits. The files you were working on are listed in the system prompt under 'Files touched this session'. Re-read any file before editing it — do NOT rely on your memory of its contents.]" },
+    { role: "assistant", content: "Understood — I will re-read files before making edits since earlier context was trimmed." });
 }
 
 // ---------- agent loop ----------
@@ -1093,6 +1143,9 @@ class ChatProvider {
   }
   reset() {
     activeSkills.clear();
+    sessionCwd = null;
+    sessionFiles.read.clear();
+    sessionFiles.written.clear();
     this.messages = [{ role: "system", content: SYSTEM() }];
     this._save();
     if (this.view) this.view.webview.postMessage({ type: "cleared" });
@@ -1227,6 +1280,7 @@ function activate(context) {
       await selectModel();
       if (provider.view) provider.view.webview.postMessage({ type: "model", name: curProvider() + ":" + curModel() });
     }),
+    vscode.commands.registerCommand("localsre.testConnection", () => testConnection()),
     vscode.commands.registerCommand("localsre.setClaudeKey", async () => {
       const k = await vscode.window.showInputBox({ password: true, ignoreFocusOut: true, prompt: "Anthropic API key (stored in the OS keychain, not settings)" });
       if (k) { await SECRETS.store("localsre.anthropicApiKey", k.trim()); vscode.window.showInformationMessage("Claude key saved to keychain."); }
