@@ -1242,9 +1242,10 @@ async function runAgent(userText, messages, post) {
     }
     // PROMISE WITHOUT ACTION: the model announced it would do something ("Now I'll create…",
     // "Let me write the file…") but called NO tool and ended its turn. Don't stop — make it act.
-    if (content && promiseNudges < 2 &&
-        /\b(i'?ll|i will|let me|i'm going to|i am going to|i need to|now i'?ll|going to|i'?ll now|let me now)\b[\s\S]{0,80}?\b(creat|writ|generat|implement|add|sav|build|updat|edit|run|do (that|this|it)|make)/i.test(content) &&
-        !streamed) {
+    // Guard on SHORT content: a pure announcement is brief; a real knowledge answer is long and
+    // shouldn't be nudged. Fires whether or not the text was streamed.
+    if (content && content.length < 240 && promiseNudges < 2 &&
+        /\b(i'?ll|i will|let me|i'm going to|i am going to|i need to|now i'?ll|going to|i'?ll now|let me now)\b[\s\S]{0,90}?\b(creat|writ|generat|implement|add|sav|build|updat|edit|run|do (that|this|it)|make)\b/i.test(content)) {
       promiseNudges++;
       if (!streamed) post({ type: "assistant", text: content });
       messages.push({ role: "user", content: "You said you would do this but did NOT call any tool. Do it NOW in this turn — actually call the tool (e.g. write_file with the full content). Do not describe it again or announce it; just make the tool call." });

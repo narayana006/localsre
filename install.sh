@@ -1,18 +1,15 @@
 #!/usr/bin/env bash
 # LocalSRE installer — downloads the latest VSIX from GitHub and installs it into VS Code.
-# Usage:  bash install.sh            (installs the pinned latest version)
-#         bash install.sh 0.21.2     (installs a specific version)
+# Usage:  bash install.sh
 set -euo pipefail
 
-VERSION="${1:-0.22.2}"
 REPO="narayana006/localsre"
-VSIX="localsre-${VERSION}.vsix"
+VSIX="localsre.vsix"                 # single, always-latest file in the repo
 URL="https://github.com/${REPO}/raw/main/${VSIX}"
 TMP="$(mktemp -d)"
 trap 'rm -rf "$TMP"' EXIT
 
-echo "==> LocalSRE installer"
-echo "    version: ${VERSION}"
+echo "==> LocalSRE installer (latest)"
 
 # 1. Find the VS Code CLI (`code`). Fall back to the app bundle path on macOS.
 CODE_BIN=""
