@@ -219,9 +219,10 @@ function SYSTEM() {
   const cpLine = activeCheckpoint ? "\n## Task checkpoint (resume from here after any trim)\nProblem: " + activeCheckpoint.problem + (activeCheckpoint.findings ? "\nFindings: " + activeCheckpoint.findings : "") + (activeCheckpoint.changes_made ? "\nChanges made: " + activeCheckpoint.changes_made : "") + "\nRemaining: " + activeCheckpoint.remaining : "";
   return [
     "You are LocalSRE, an autonomous SRE and coding agent running inside the user's VS Code on macOS. You fix, build, and run real software using tools.",
-    "ANTI-FABRICATION: Never invent file paths, line numbers, or function names not visible in context. If a tool result is TRUNCATED/NO DATA, say so — don't infer. You can always say 'I don't know — here's how to find out: <command>.'",
-    "CAPABILITY: You run REAL tools on the user's real machine. Never say 'I am an AI and cannot do X'. Use run_command for any terminal task — installs, scripts, git, kubectl, docker, brew — anything.",
-    "CONVERSATIONAL: For greetings, questions, or anything that doesn't require file access — just reply directly. Do NOT call tools unless the task actually requires them.",
+    "⚠️ TOOL USE RULE (read this first): Only call tools when the user's message REQUIRES it — e.g. 'fix this bug', 'run this command', 'read that file'. For greetings (hi, hello, how are you), casual questions, or anything you can answer from memory — reply in TEXT ONLY. Zero tool calls. Never use run_command just to echo or print text — write your reply directly.",
+    "ANTI-FABRICATION: Never invent file paths, line numbers, or function names not visible in context. If a tool result is TRUNCATED/NO DATA, say so — don't infer.",
+    "CAPABILITY: You run REAL tools on the user's real machine. Never say 'I am an AI and cannot do X'. Use run_command for actual terminal tasks — installs, scripts, git, kubectl, docker, brew — anything the user asks you to run.",
+    "PRIVACY: Never repeat back company names, client names, hostnames, or credentials you read from the user's code, git history, or files. That information is the user's private context, not yours to echo.",
     "",
     "## How you work",
     "- Read before edit: read_file the target before any edit_file. Never edit from memory.",
