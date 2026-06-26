@@ -880,26 +880,6 @@ let stopRequested = false; // set by Stop; checked in the agent loop
 // queueing behind everything as a separate turn. This is how Claude Code feels responsive.
 let steerBuffer = [];
 
-// No-tools variant — for conversational messages, skips tool schema entirely (faster + no spurious tool calls).
-async function callModelNoTools(messages, onDelta) {
-  const c = cfg();
-  if (!c.endpoint) throw new Error("No endpoint configured.");
-  const headers = { "Content-Type": "application/json" };
-  if (c.apiKey) headers["Authorization"] = "Bearer " + c.apiKey;
-  const ctrl = new AbortController();
-  activeAbort = ctrl;
-  const to = setTimeout(() => ctrl.abort(), 60000);
-  try {
-    const res = await fetch(c.endpoint + "/chat/completions", {
-      method: "POST", headers, signal: ctrl.signal,
-      body: JSON.stringify({ model: await localModelName(), messages, temperature: c.temperature, stream: !!onDelta }),
-    });
-    if (!res.ok) throw new Error("HTTP " + res.status);
-    if (onDelta && res.body && typeof res.body.getReader === "function") return await parseSSE(res.body, onDelta);
-    const data = await res.json();
-    return data.choices[0].message;
-  } finally { clearTimeout(to); }
-}
 
 async function callModelHTTP(messages, onDelta) {
   const c = cfg();
@@ -1071,31 +1051,10 @@ function trimInPlace(messages) {
     { role: "assistant", content: "Understood. Context trimmed. I will re-read files before editing and verify the working directory before running commands. Proceeding from the task state in the system prompt." });
 }
 
-// Short conversational messages — reply directly, no tools, no loop overhead.
-const CHAT_RE = /^(hi|hello|hey|sup|yo|how are you|what's up|whats up|good morning|good afternoon|good evening|thanks|thank you|ok|okay|cool|great|sounds good|got it|nice|perfect|bye|cya|later|👋|🙂|😊)[!?.🙂😊 ]*$/i;
-function isChat(text) { return CHAT_RE.test(text.trim()) || (text.trim().length < 15 && !/\b(file|code|run|fix|error|edit|create|install|check|show|list|find|how|what|why|when)\b/i.test(text)); }
-
 // ---------- agent loop ----------
 async function runAgent(userText, messages, post) {
   messages.push({ role: "user", content: userText });
   const c = cfg();
-
-  // Conversational short-circuit: no tools, single call, no loop overhead.
-  if (isChat(userText)) {
-    post({ type: "status", text: "thinking…" });
-    let streamed = false;
-    const onDelta = (t) => { streamed = true; post({ type: "assistantDelta", text: t }); };
-    try {
-      const msg = await callModelNoTools(messages, onDelta);
-      if (streamed) post({ type: "assistantEnd" });
-      else post({ type: "assistant", text: stripThink(msg.content || "") });
-      messages.push({ role: "assistant", content: stripThink(msg.content || "") });
-    } catch (e) {
-      if (streamed) post({ type: "assistantEnd" });
-      post({ type: "error", text: String(e.message || e) });
-    }
-    return;
-  }
   const originalTask = String(userText).replace(/\[Editor context[\s\S]*?\[User request\]\n/, "").slice(0, 600); // anchor
   const callLog = {}; // detect repeated identical tool calls (local models tend to loop)
   let loopTrips = 0;  // total times the loop-guard tripped → hard-stop when stuck across actions
