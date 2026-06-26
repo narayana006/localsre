@@ -2,7 +2,7 @@
   "name": "localsre",
   "displayName": "LocalSRE",
   "description": "Lightweight local AI coding + SRE agent for VS Code. Local models (Qwen3/DeepSeek), GitHub Copilot, or Claude. 23 SRE skills, per-repo memory, 100% private.",
-  "version": "0.20.0",
+  "version": "0.20.1",
   "publisher": "narayana006",
   "engines": {
     "vscode": "^1.85.0"
