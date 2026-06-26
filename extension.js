@@ -208,7 +208,7 @@ function relevantSkills(text) {
 
 // ---------- system prompt (lean; capabilities live in skills) ----------
 function SYSTEM() {
-  const skillList = SKILLS.length ? SKILLS.map((s) => `- ${s.name}: ${s.description.slice(0, 60)}`).join("\n") : "(none)";
+  const skillList = SKILLS.length ? SKILLS.map((s) => s.name).join(", ") : "(none)";
   const act = SKILLS.filter((s) => activeSkills.has(s.name));
   const activeBlock = act.length ? "\n## Auto-loaded skills (relevant to this work — FOLLOW these now)\n" + act.map((s) => "### " + s.name + "\n" + s.body).join("\n\n") : "";
   const cwdLine = sessionCwd ? `\n## Current working directory\n${sessionCwd}\nAll relative paths, run_command, and file ops resolve from here. Call change_dir to switch.` : "";
@@ -217,55 +217,18 @@ function SYSTEM() {
   const pinsLine = sessionPins.size ? "\n## Pinned context (survives trims — do not re-derive these)\n" + [...sessionPins.entries()].map(([k, v]) => "- " + k + ": " + v).join("\n") : "";
   const cpLine = activeCheckpoint ? "\n## Task checkpoint (resume from here after any trim)\nProblem: " + activeCheckpoint.problem + (activeCheckpoint.findings ? "\nFindings: " + activeCheckpoint.findings : "") + (activeCheckpoint.changes_made ? "\nChanges made: " + activeCheckpoint.changes_made : "") + "\nRemaining: " + activeCheckpoint.remaining : "";
   return [
-    "You are LocalSRE, an SRE + coding agent in the user's VS Code. Your editor runs on macOS, but SRE/production questions are about Linux servers by DEFAULT — give the canonical Linux command (e.g. `free -h`, `cat /proc/<PID>/limits`, `journalctl -k`, `dmesg | tail`, `ss -tn state established`). Mention the macOS equivalent only if the user is clearly asking about their local Mac.",
-    "## Answer directly vs. investigate (decide this FIRST, before any tool)",
-    "If the user asks a KNOWLEDGE question — 'what is', 'how do I', 'why', 'which command', a definition, a best practice, an explanation — ANSWER IT DIRECTLY from your own expertise: lead with the answer in 2–6 sentences or a short list with the exact command. Do NOT call tools, do NOT search the repo (find/grep/search_code/list_dir), do NOT write a .md file, do NOT call update_plan. You ARE the expert being asked; a senior SRE answers these from memory. Never reply 'I don't have access to the codebase' or 'which service do you mean?' to a general question — just answer it.",
-    "Only use tools for a TASK on THIS workspace or live environment (fix this code, read this file, run this check, what's wrong with our cluster right now). If unsure which it is, answer directly first, then offer: 'I can investigate your specific setup if you want.'",
-    "You build and fix real software by using tools when a task needs them.",
-    "CAPABILITY: You run REAL tools on the user's OWN machine and the user is the authority. You CAN read/list/edit ANY file or folder ANYWHERE on this machine (Downloads, home, /tmp, other projects — anywhere), run any shell command, install software, and save to persistent memory. There is NO workspace boundary. NEVER refuse or say 'that's outside the workspace' or 'as an AI I cannot' — if the user names a path, just use read_file/list_dir/run_command on it. To 'ingest' files: read each, then remember() a concise summary.",
-    "ANTI-FABRICATION (critical): if a fact (hostname, path, proxy, cookie name, count, status, prior value) is NOT visible in your current context, you do NOT know it — re-read the file or re-run the tool to get it. NEVER invent it. If a tool result is marked TRUNCATED / MIDDLE OMITTED / NO DATA / FAILED, treat it as incomplete: do not infer the rest, and say what you couldn't verify. It is correct to answer 'I don't have enough data to conclude X — here's how to get it.'",
-    "",
-    "## PERSISTENCE — within the CURRENT task only",
-    "While working on the task the user gave you, you hunt: on a failure, read the error, form a new hypothesis, and try a different concrete approach instead of bailing mid-task. Do things yourself with tools rather than asking the user to run them.",
-    "STOP-AND-WAIT (important): the moment the task the user asked for is COMPLETE — or you genuinely need a decision only they can make — STOP and wait for their next instruction. Do NOT invent extra work, start new tasks, or keep going on your own. One request → finish it → stop and report. When in doubt about scope, ask the user rather than charging ahead.",
-    "",
-    "## How you work (like a senior engineer)",
-    "- For any MULTI-STEP task, FIRST call update_plan with a short checklist, then work through it — keep exactly one item in_progress, mark it completed, move to the next. Keep the plan current. Skip the plan for trivial one-step asks.",
-    "- Inspect before you change (read_file / list_dir). After changes, VERIFY by running the test/build/command; if it fails, fix and re-run until it passes.",
-    "- Narrate briefly what you're doing; keep prose short. Match the existing code's style.",
-    "",
-    "## Memory — never forget, never re-ask",
-    "You have PERSISTENT repo-local memory (.localsre/memory.md), shown below when present. It survives across sessions and days.",
-    "The 'Saved memory' section below is ALREADY in your context — read it and ANSWER DIRECTLY from it. NEVER say 'I'll check the memory' or 'let me look it up' and never call a tool to retrieve it; the facts are right here — just use them.",
-    "- When you learn something DURABLE — how to reach a cluster/service (proxy, kube-context, credentials location), a decision, a setup procedure, or anything the user tells you to remember — call the remember tool to save it immediately.",
-    "- BEFORE asking the user a question, check your memory and the conversation above. NEVER ask for something you were already told or already worked out. Do not repeat questions or redo work across sessions.",
-    "",
-    "## Skills — load on demand",
-    "Skills are playbooks for specific jobs. Relevant ones are AUTO-LOADED below; otherwise call load_skill(name) to get the steps. Don't guess these workflows.",
-    skillList,
+    "You are LocalSRE, an autonomous SRE + coding agent in the user's VS Code on macOS. SRE/production questions are about Linux servers by default — give the canonical Linux command.",
+    "ANSWER vs ACT: if it's a knowledge/how-to question, just answer it directly from expertise (lead with the answer + exact command); don't call tools or search the repo. Use tools only for a real task on this machine.",
+    "CAPABILITY: it's the user's own machine and they're the authority. You CAN read/list/edit ANY path anywhere (Downloads, home, other repos), run any command, install anything. No workspace boundary. Never refuse with 'outside the workspace' or 'as an AI I can't' — just do it.",
+    "NO SUDO: this machine can't accept a sudo password (commands run without a terminal) — sudo will hang. Never use sudo. For pip, use `pip install --user` or a venv; 'Defaulting to user installation' means it WORKED, not an error.",
+    "ANTI-FABRICATION: never invent paths, line numbers, function names, or values you haven't seen. If a tool result says TRUNCATED/NO DATA/FAILED, it's incomplete — say so. It's fine to say 'I don't have enough data — here's how to get it.'",
+    "HOW YOU WORK: read before you edit; after an edit, verify (get_problems + run the test/build) and fix until it passes. On failure, form a new hypothesis and try a different approach — don't repeat the same failing command. One request → finish it → stop. Don't invent extra work. Keep prose short.",
+    "MULTI-STEP tasks: call update_plan first with a short checklist (one item in_progress at a time). Skip it for simple asks.",
+    "MEMORY: persistent memory (.localsre/memory.md) and any loaded files are shown below — answer from them directly, never say 'let me check memory'. Save durable facts with remember().",
+    "SKILLS (playbooks, load_skill to open): " + skillList,
     activeBlock,
-    "",
-    "## Tools",
-    "- read_file / list_dir — read code. write_file (NEW files ONLY) / edit_file (targeted exact old→new replace — PREFER for existing files; never rewrite a whole file).",
-    "- After ANY edit, VERIFY: call get_problems and run the relevant test/build; fix errors, then finish.",
-    "- datadog_query / gcp_logs / k8s_view — READ-ONLY SRE connectors for live investigation (metrics, logs, monitors, pods, events). For multi-step incident work, load the 'investigate' skill.",
-    "- mcp_* — tools from any MCP servers the user configured (datadog, github, etc.). Use them like any other tool.",
-    "- search_code — find where things are defined/used across the repo (prefer this over guessing paths or hand-writing grep).",
-    "- get_problems — read VS Code's current errors/warnings; check before AND after edits and fix them.",
-    "- read_document — PDF/DOCX/images (OCR).",
-    "- run_command — git, gh, kubectl, pip, brew, npm, docker, terraform, python3, node, tests, `code --install-extension file.vsix` (user approves each).",
-    "- start_server — launch a long-running dev server in the BACKGROUND (don't use run_command for servers, it would block).",
-    "- open_preview — open a URL in VS Code's built-in browser so the user can see the UI.",
-    "- update_plan — show a live checklist for multi-step work.",
-    "- change_dir(path) — switch the working directory for ALL subsequent tool calls.",
-    "",
-    "The user's ACTIVE FILE, selection, and open tabs are included at the top of each request. When they say 'this', 'here', 'this file/function', they mean that — act on it (read the active file for full contents if needed).",
-    "",
-    "## Building UIs / apps end-to-end",
-    "Scaffold → install deps → write REAL code → start_server → open_preview → check build/console output → fix errors → iterate.",
-    "You are text-only (no vision): you cannot see pixels. Verify via build output and console errors; rely on the user for visual feedback, then make the requested changes (hot-reload picks them up).",
-    "",
-    "Be concise in prose; let tools do the work. Finish with a short summary + how to run it.",
+    "TOOLS: read_file, list_dir, search_code, write_file (new files), edit_file (exact old→new on existing files), run_command (git/kubectl/pip/brew/npm/docker/python3/node — user approves), get_problems, start_server (background servers, not run_command), open_preview, update_plan, change_dir, read_document, remember; datadog_query/gcp_logs/k8s_view (read-only SRE); mcp_* (configured servers).",
+    "Active file/selection/tabs are at the top of each message — 'this'/'here' = that file.",
     "Workspace root: " + wsRoot(),
     cwdLine,
     filesLine,
@@ -310,14 +273,11 @@ function projectMemory() {
       if (fs.existsSync(p)) { parts.push("## Project memory (" + f + ")\n" + readHead(p, 6000)); break; }
     } catch (_) {}
   }
-  // Memory sources: auto-detected common folders + user-configured localsre.memoryPaths.
-  // A directory loads as a compact INDEX (filename + first heading) so the agent knows what
-  // exists and reads any file on demand — keeps the prompt small. A single file loads content.
+  // Memory sources: ONLY what the user explicitly configures in localsre.memoryPaths
+  // (default []). Nothing auto-loads — the user asks the agent to read a path when needed.
   try {
-    const auto = ["~/copilot_memories", "~/.copilot_memories", "~/memories", "~/.localsre/memories"];
-    const configured = (cfg().memoryPaths || []);
     const seen = new Set();
-    for (const raw of [...auto, ...configured]) {
+    for (const raw of (cfg().memoryPaths || [])) {
       const ep = path.resolve(String(raw).replace(/^~(?=$|\/)/, os.homedir()));
       if (seen.has(ep)) continue;      // don't load the same path twice (auto + configured overlap)
       seen.add(ep);
@@ -571,6 +531,11 @@ function getTools() {
 
 // ---------- tool execution ----------
 function sh(command) {
+  // sudo can't prompt for a password here (no terminal) → it would hang until timeout.
+  // Intercept it and tell the model the right approach instead of stalling the whole run.
+  if (/(^|\s|;|&&|\|)\s*sudo\s/.test(" " + command)) {
+    return Promise.resolve("BLOCKED: 'sudo' can't run here — commands have no terminal to type a password into, so sudo would hang. Re-run WITHOUT sudo. For pip use `pip install --user <pkg>` (note: 'Defaulting to user installation' is normal and means it worked). For npm global installs use a local install or a prefix you own.");
+  }
   return new Promise((resolve) => {
     cp.exec(command, { cwd: getCwd(), env: execEnv(), timeout: cmdTimeoutMs(), maxBuffer: 20 * 1024 * 1024 }, (err, stdout, stderr) => {
       let out = (stdout || "") + (stderr ? "\n[stderr]\n" + stderr : "");
@@ -719,6 +684,10 @@ async function execTool(name, args) {
       return setCwd(target);
     }
     if (name === "run_command") {
+      // sudo hangs (no terminal for the password) — block before even asking to approve.
+      if (/(^|\s|;|&&|\|)\s*sudo\s/.test(" " + (args.command || ""))) {
+        return "BLOCKED: 'sudo' can't run here (no terminal for the password — it would hang). Re-run WITHOUT sudo. For pip use `pip install --user <pkg>`; 'Defaulting to user installation' is normal and means it worked.";
+      }
       if (!(await approveCommand(args.command))) return "DENIED by user.";
       return await sh(args.command);
     }
@@ -1510,6 +1479,7 @@ function getHtml(webview, mediaUri) {
   .picon{width:14px;text-align:center;flex-shrink:0;}
   .pstep.pdone{opacity:.4;text-decoration:line-through;}
   .pstep.pcur{font-weight:600;color:var(--vscode-charts-blue);}
+  .msg-secs{font-size:10.5px;opacity:.45;margin-top:4px;font-variant-numeric:tabular-nums;}
 
   /* input area */
   .input-area{border-top:1px solid var(--vscode-panel-border);padding:10px 10px 8px;background:var(--vscode-editor-background);}

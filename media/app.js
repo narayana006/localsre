@@ -4,10 +4,10 @@
   const html = htm.bind(React.createElement);
   const vscode = acquireVsCodeApi();
 
-  const init = { msgs: [], plan: [], status: "", streaming: false };
+  const init = { msgs: [], plan: [], status: "", streaming: false, t0: null };
   function reducer(s, m) {
     switch (m.type) {
-      case "_user": return { ...s, msgs: [...s.msgs, { role: "user", text: m.text, atts: m.atts || [] }], status: "" };
+      case "_user": return { ...s, msgs: [...s.msgs, { role: "user", text: m.text, atts: m.atts || [] }], status: "", t0: Date.now() };
       case "status": return { ...s, status: m.text };
       case "assistantDelta": {
         const msgs = s.msgs.slice();
@@ -27,7 +27,15 @@
       case "cleared": return { ...init };
       case "approve": return { ...s, msgs: [...s.msgs, { role: "approve", id: m.id, command: m.command, what: m.what, resolved: null }], status: "" };
       case "_approved": return { ...s, msgs: s.msgs.map((x) => (x.role === "approve" && x.id === m.id ? { ...x, resolved: m.approved } : x)) };
-      case "done": return { ...s, status: "" };
+      case "done": {
+        if (!s.t0) return { ...s, status: "" };
+        const secs = ((Date.now() - s.t0) / 1000).toFixed(1);
+        const msgs = s.msgs.slice();
+        for (let i = msgs.length - 1; i >= 0; i--) {
+          if (msgs[i].role === "assistant") { msgs[i] = { ...msgs[i], secs }; break; }
+        }
+        return { ...s, status: "", msgs, t0: null };
+      }
       default: return s;
     }
   }
@@ -102,6 +110,7 @@
       <div class="avatar agent-avatar">S</div>
       <div class="bubble agent-bubble">
         <div class="msg-text">${renderText(m.text)}</div>
+        ${m.secs ? html`<div class="msg-secs">⏱ ${m.secs}s</div>` : null}
       </div>
     </div>`;
 
