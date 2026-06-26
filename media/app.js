@@ -4,10 +4,10 @@
   const html = htm.bind(React.createElement);
   const vscode = acquireVsCodeApi();
 
-  const init = { msgs: [], plan: [], status: "", streaming: false, t0: null };
+  const init = { msgs: [], plan: [], status: "", streaming: false, t0: null, busy: false };
   function reducer(s, m) {
     switch (m.type) {
-      case "_user": return { ...s, msgs: [...s.msgs, { role: "user", text: m.text, atts: m.atts || [] }], status: "", t0: Date.now() };
+      case "_user": return { ...s, msgs: [...s.msgs, { role: "user", text: m.text, atts: m.atts || [] }], status: "thinking…", t0: Date.now(), busy: true };
       case "status": return { ...s, status: m.text };
       case "assistantDelta": {
         const msgs = s.msgs.slice();
@@ -20,7 +20,7 @@
       case "assistant": return { ...s, msgs: [...s.msgs, { role: "assistant", text: m.text }], streaming: false, status: "" };
       case "tool": return { ...s, msgs: [...s.msgs, { role: "tool", name: m.name, args: m.args }], status: "running…" };
       case "toolResult": return { ...s, msgs: [...s.msgs, { role: "toolres", name: m.name, text: m.result }], status: "" };
-      case "error": return { ...s, msgs: [...s.msgs, { role: "error", text: m.text }], streaming: false, status: "" };
+      case "error": return { ...s, msgs: [...s.msgs, { role: "error", text: m.text }], streaming: false, status: "", busy: false, t0: null };
       case "model": return { ...s, msgs: [...s.msgs, { role: "note", text: "switched to " + m.name }], status: "" };
       case "plan": return { ...s, plan: m.todos || [] };
       case "restore": return { ...s, msgs: (m.items || []).map((it) => ({ role: it.role === "user" ? "user" : "assistant", text: it.text })) };
@@ -28,13 +28,13 @@
       case "approve": return { ...s, msgs: [...s.msgs, { role: "approve", id: m.id, command: m.command, what: m.what, resolved: null }], status: "" };
       case "_approved": return { ...s, msgs: s.msgs.map((x) => (x.role === "approve" && x.id === m.id ? { ...x, resolved: m.approved } : x)) };
       case "done": {
-        if (!s.t0) return { ...s, status: "" };
+        if (!s.t0) return { ...s, status: "", busy: false };
         const secs = ((Date.now() - s.t0) / 1000).toFixed(1);
         const msgs = s.msgs.slice();
         for (let i = msgs.length - 1; i >= 0; i--) {
           if (msgs[i].role === "assistant") { msgs[i] = { ...msgs[i], secs }; break; }
         }
-        return { ...s, status: "", msgs, t0: null };
+        return { ...s, status: "", msgs, t0: null, busy: false };
       }
       default: return s;
     }
@@ -154,6 +154,15 @@
     }, []);
     useEffect(() => { if (logRef.current) logRef.current.scrollTop = logRef.current.scrollHeight; }, [s.msgs, s.status, s.plan]);
 
+    // Live ticking elapsed seconds while busy → an obvious "it's working" sign.
+    const [tick, setTick] = useState(0);
+    useEffect(() => {
+      if (!s.busy) return;
+      const id = setInterval(() => setTick((x) => x + 1), 250);
+      return () => clearInterval(id);
+    }, [s.busy]);
+    const elapsed = s.busy && s.t0 ? ((Date.now() - s.t0) / 1000).toFixed(0) : null;
+
     function addFiles(files) {
       Array.from(files || []).forEach((f) => {
         const r = new FileReader();
@@ -192,9 +201,11 @@
 
         <div class="log" ref=${logRef}>
           ${s.msgs.map((m, i) => html`<${Msg} key=${i} m=${m} dispatch=${dispatch} />`)}
-          ${s.status ? html`<div class="status-row">
+          ${s.busy ? html`<div class="status-row busy-row">
+            <span class="status-dot"></span><span class="status-text">${s.status || "working…"}${elapsed ? html` · ${elapsed}s` : ""}</span>
+          </div>` : (s.status ? html`<div class="status-row">
             <span class="status-dot"></span><span class="status-text">${s.status}</span>
-          </div>` : null}
+          </div>` : null)}
           ${s.streaming ? html`<span class="cursor">▋</span>` : null}
         </div>
 

@@ -1477,6 +1477,8 @@ function getHtml(webview, mediaUri) {
   /* status */
   .status-row{display:flex;align-items:center;gap:8px;padding:4px 36px;color:var(--vscode-descriptionForeground);font-size:12.5px;}
   .status-dot{width:6px;height:6px;border-radius:50%;background:var(--vscode-charts-blue,#4fc3f7);animation:pulse 1.2s ease-in-out infinite;}
+  .busy-row{padding:8px 36px;margin:2px 0;color:var(--vscode-charts-blue,#4fc3f7);font-weight:600;font-size:13px;background:color-mix(in srgb, var(--vscode-charts-blue,#4fc3f7) 8%, transparent);border-radius:6px;}
+  .busy-row .status-dot{width:8px;height:8px;}
   @keyframes pulse{0%,100%{opacity:.3}50%{opacity:1}}
   .cursor{color:var(--vscode-charts-blue);animation:blink .9s step-end infinite;margin-left:36px;}
   @keyframes blink{0%,100%{opacity:1}50%{opacity:0}}
