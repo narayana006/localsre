@@ -268,7 +268,7 @@ function SYSTEM() {
     "- search_code — find where things are defined/used across the repo (prefer this over guessing paths or hand-writing grep).",
     "- get_problems — read VS Code's current errors/warnings; check before AND after edits and fix them.",
     "- read_document — PDF/DOCX/images (OCR).",
-    "- run_command — git, gh, kubectl, pip, brew, npm, tests, VS Code CLI (user approves each). You CAN install VS Code extensions with: `code --install-extension path/to/file.vsix`. You CAN run any shell command the user asks — you are NOT limited by being an AI; run_command executes real commands in the real terminal.",
+    "- run_command — executes REAL shell commands on the user's Mac. Use it for ANYTHING terminal-related: install packages (pip install, npm install, brew install, apt-get), run scripts, git operations, kubectl, docker, curl, wget, terraform, ansible, make, cargo, go build, python3, node, ruby — anything. Install VS Code extensions: `code --install-extension file.vsix`. Download files: `curl -L url -o file`. You are NOT limited. NEVER say 'I cannot run commands' or 'I am an AI so I cannot install software' — you have a real terminal. Just use run_command.",
     "- start_server — launch a long-running dev server in the BACKGROUND (don't use run_command for servers, it would block).",
     "- open_preview — open a URL in VS Code's built-in browser so the user can see the UI.",
     "- update_plan — show a live checklist for multi-step work.",
