@@ -218,39 +218,51 @@ function SYSTEM() {
   const pinsLine = sessionPins.size ? "\n## Pinned context (survives trims — do not re-derive these)\n" + [...sessionPins.entries()].map(([k, v]) => "- " + k + ": " + v).join("\n") : "";
   const cpLine = activeCheckpoint ? "\n## Task checkpoint (resume from here after any trim)\nProblem: " + activeCheckpoint.problem + (activeCheckpoint.findings ? "\nFindings: " + activeCheckpoint.findings : "") + (activeCheckpoint.changes_made ? "\nChanges made: " + activeCheckpoint.changes_made : "") + "\nRemaining: " + activeCheckpoint.remaining : "";
   return [
-    "You are LocalSRE, an autonomous SRE and coding agent running inside the user's VS Code on macOS. You fix, build, and run real software using tools.",
-    "Use your judgment: reply in text when no tools are needed, use tools when the task actually requires them. Never use run_command just to echo text — write replies directly.",
-    "ANTI-FABRICATION: Never invent file paths, line numbers, or function names not visible in context. If a tool result is TRUNCATED/NO DATA, say so — don't infer.",
-    "CAPABILITY: You run REAL tools on the user's real machine. Never say 'I am an AI and cannot do X'. Use run_command for actual terminal tasks — installs, scripts, git, kubectl, docker, brew — anything the user asks you to run.",
+    "You are LocalSRE, an autonomous coding agent inside the user's VS Code on macOS (M3 Pro).",
+    "You build, fix, and run real software by USING TOOLS — never by guessing.",
+    "ANTI-FABRICATION (critical): if a fact (hostname, path, proxy, cookie name, count, status, prior value) is NOT visible in your current context, you do NOT know it — re-read the file or re-run the tool to get it. NEVER invent it. If a tool result is marked TRUNCATED / MIDDLE OMITTED / NO DATA / FAILED, treat it as incomplete: do not infer the rest, and say what you couldn't verify. It is correct to answer 'I don't have enough data to conclude X — here's how to get it.'",
     "",
-    "## How you work",
-    "- Read before edit: read_file the target before any edit_file. Never edit from memory.",
-    "- After every edit: call get_problems + run the relevant test/build. Fix failures.",
-    "- Destructive commands (rm -rf, DROP TABLE, kubectl delete): tell the user what will be deleted first.",
-    "- Secrets: env vars only, never hardcoded. Never commit .env to git.",
-    "- Multi-step tasks: call update_plan with a checklist first.",
-    "- Finish then stop: complete the task, report briefly, stop. Don't invent follow-on work.",
+    "## PERSISTENCE — within the CURRENT task only",
+    "While working on the task the user gave you, you hunt: on a failure, read the error, form a new hypothesis, and try a different concrete approach instead of bailing mid-task. Do things yourself with tools rather than asking the user to run them.",
+    "STOP-AND-WAIT (important): the moment the task the user asked for is COMPLETE — or you genuinely need a decision only they can make — STOP and wait for their next instruction. Do NOT invent extra work, start new tasks, or keep going on your own. One request → finish it → stop and report. When in doubt about scope, ask the user rather than charging ahead.",
     "",
-    "## Memory",
-    "Persistent memory (.localsre/memory.md) is shown below — answer from it directly, no tool needed. Save durable facts (cluster access, decisions, setup steps) with remember().",
+    "## How you work (like a senior engineer)",
+    "- For any MULTI-STEP task, FIRST call update_plan with a short checklist, then work through it — keep exactly one item in_progress, mark it completed, move to the next. Keep the plan current. Skip the plan for trivial one-step asks.",
+    "- Inspect before you change (read_file / list_dir). After changes, VERIFY by running the test/build/command; if it fails, fix and re-run until it passes.",
+    "- Narrate briefly what you're doing; keep prose short. Match the existing code's style.",
     "",
-    "## Skills",
-    "Skills are step-by-step playbooks. Relevant ones auto-load below. Call load_skill(name) for others.",
+    "## Memory — never forget, never re-ask",
+    "You have PERSISTENT repo-local memory (.localsre/memory.md), shown below when present. It survives across sessions and days.",
+    "The 'Saved memory' section below is ALREADY in your context — read it and ANSWER DIRECTLY from it. NEVER say 'I'll check the memory' or 'let me look it up' and never call a tool to retrieve it; the facts are right here — just use them.",
+    "- When you learn something DURABLE — how to reach a cluster/service (proxy, kube-context, credentials location), a decision, a setup procedure, or anything the user tells you to remember — call the remember tool to save it immediately.",
+    "- BEFORE asking the user a question, check your memory and the conversation above. NEVER ask for something you were already told or already worked out. Do not repeat questions or redo work across sessions.",
+    "",
+    "## Skills — load on demand",
+    "Skills are playbooks for specific jobs. Relevant ones are AUTO-LOADED below; otherwise call load_skill(name) to get the steps. Don't guess these workflows.",
     skillList,
     activeBlock,
     "",
     "## Tools",
-    "- read_file / list_dir / search_code — explore. Never guess paths.",
-    "- edit_file — exact old→new replace on existing files (read first). write_file — new files only.",
-    "- run_command — any shell command: pip/npm/brew install, git, kubectl, docker, curl, python3, node, terraform, `code --install-extension file.vsix`, etc.",
-    "- get_problems — VS Code errors/warnings. Check before AND after edits.",
-    "- start_server — background long-running process (use this, not run_command, for servers).",
-    "- datadog_query / gcp_logs / k8s_view — read-only SRE connectors.",
-    "- mcp_* — MCP server tools (datadog, github, etc.).",
-    "- open_preview / update_plan / change_dir / remember / load_skill / read_document — agent utilities.",
-    "- show_diff / confirm_scope / state_hypothesis / pin_context / checkpoint_plan — discipline tools (use when doing complex multi-file work).",
+    "- read_file / list_dir — read code. write_file (NEW files ONLY) / edit_file (targeted exact old→new replace — PREFER for existing files; never rewrite a whole file).",
+    "- After ANY edit, VERIFY: call get_problems and run the relevant test/build; fix errors, then finish.",
+    "- datadog_query / gcp_logs / k8s_view — READ-ONLY SRE connectors for live investigation (metrics, logs, monitors, pods, events). For multi-step incident work, load the 'investigate' skill.",
+    "- mcp_* — tools from any MCP servers the user configured (datadog, github, etc.). Use them like any other tool.",
+    "- search_code — find where things are defined/used across the repo (prefer this over guessing paths or hand-writing grep).",
+    "- get_problems — read VS Code's current errors/warnings; check before AND after edits and fix them.",
+    "- read_document — PDF/DOCX/images (OCR).",
+    "- run_command — git, gh, kubectl, pip, brew, npm, docker, terraform, python3, node, tests, `code --install-extension file.vsix` (user approves each).",
+    "- start_server — launch a long-running dev server in the BACKGROUND (don't use run_command for servers, it would block).",
+    "- open_preview — open a URL in VS Code's built-in browser so the user can see the UI.",
+    "- update_plan — show a live checklist for multi-step work.",
+    "- change_dir(path) — switch the working directory for ALL subsequent tool calls.",
     "",
-    "Active file/selection/tabs included at top of each message. 'this'/'here' = that file.",
+    "The user's ACTIVE FILE, selection, and open tabs are included at the top of each request. When they say 'this', 'here', 'this file/function', they mean that — act on it (read the active file for full contents if needed).",
+    "",
+    "## Building UIs / apps end-to-end",
+    "Scaffold → install deps → write REAL code → start_server → open_preview → check build/console output → fix errors → iterate.",
+    "You are text-only (no vision): you cannot see pixels. Verify via build output and console errors; rely on the user for visual feedback, then make the requested changes (hot-reload picks them up).",
+    "",
+    "Be concise in prose; let tools do the work. Finish with a short summary + how to run it.",
     "Workspace root: " + wsRoot(),
     cwdLine,
     filesLine,
@@ -868,6 +880,27 @@ let stopRequested = false; // set by Stop; checked in the agent loop
 // queueing behind everything as a separate turn. This is how Claude Code feels responsive.
 let steerBuffer = [];
 
+// No-tools variant — for conversational messages, skips tool schema entirely (faster + no spurious tool calls).
+async function callModelNoTools(messages, onDelta) {
+  const c = cfg();
+  if (!c.endpoint) throw new Error("No endpoint configured.");
+  const headers = { "Content-Type": "application/json" };
+  if (c.apiKey) headers["Authorization"] = "Bearer " + c.apiKey;
+  const ctrl = new AbortController();
+  activeAbort = ctrl;
+  const to = setTimeout(() => ctrl.abort(), 60000);
+  try {
+    const res = await fetch(c.endpoint + "/chat/completions", {
+      method: "POST", headers, signal: ctrl.signal,
+      body: JSON.stringify({ model: await localModelName(), messages, temperature: c.temperature, stream: !!onDelta }),
+    });
+    if (!res.ok) throw new Error("HTTP " + res.status);
+    if (onDelta && res.body && typeof res.body.getReader === "function") return await parseSSE(res.body, onDelta);
+    const data = await res.json();
+    return data.choices[0].message;
+  } finally { clearTimeout(to); }
+}
+
 async function callModelHTTP(messages, onDelta) {
   const c = cfg();
   if (!c.endpoint) throw new Error("No endpoint configured (localsre.endpoint).");
@@ -1038,10 +1071,31 @@ function trimInPlace(messages) {
     { role: "assistant", content: "Understood. Context trimmed. I will re-read files before editing and verify the working directory before running commands. Proceeding from the task state in the system prompt." });
 }
 
+// Short conversational messages — reply directly, no tools, no loop overhead.
+const CHAT_RE = /^(hi|hello|hey|sup|yo|how are you|what's up|whats up|good morning|good afternoon|good evening|thanks|thank you|ok|okay|cool|great|sounds good|got it|nice|perfect|bye|cya|later|👋|🙂|😊)[!?.🙂😊 ]*$/i;
+function isChat(text) { return CHAT_RE.test(text.trim()) || (text.trim().length < 15 && !/\b(file|code|run|fix|error|edit|create|install|check|show|list|find|how|what|why|when)\b/i.test(text)); }
+
 // ---------- agent loop ----------
 async function runAgent(userText, messages, post) {
   messages.push({ role: "user", content: userText });
   const c = cfg();
+
+  // Conversational short-circuit: no tools, single call, no loop overhead.
+  if (isChat(userText)) {
+    post({ type: "status", text: "thinking…" });
+    let streamed = false;
+    const onDelta = (t) => { streamed = true; post({ type: "assistantDelta", text: t }); };
+    try {
+      const msg = await callModelNoTools(messages, onDelta);
+      if (streamed) post({ type: "assistantEnd" });
+      else post({ type: "assistant", text: stripThink(msg.content || "") });
+      messages.push({ role: "assistant", content: stripThink(msg.content || "") });
+    } catch (e) {
+      if (streamed) post({ type: "assistantEnd" });
+      post({ type: "error", text: String(e.message || e) });
+    }
+    return;
+  }
   const originalTask = String(userText).replace(/\[Editor context[\s\S]*?\[User request\]\n/, "").slice(0, 600); // anchor
   const callLog = {}; // detect repeated identical tool calls (local models tend to loop)
   let loopTrips = 0;  // total times the loop-guard tripped → hard-stop when stuck across actions
@@ -1072,12 +1126,6 @@ async function runAgent(userText, messages, post) {
       messages.push({ role: "user", content: "[ANALYSIS PARALYSIS] You have called only read-only tools for " + readOnlyStreak + " consecutive rounds without making any change or running any command. State your finding NOW: either (a) make the edit you've been exploring, or (b) explain one specific thing that is blocking you and ask the user for input. Do not read another file without first stating your conclusion from the ones you already read." });
       post({ type: "status", text: "nudge — analysis paralysis (" + readOnlyStreak + " read-only rounds)" });
       readOnlyStreak = 0; // reset so the nudge fires again if it persists
-    }
-    // PRE-TOOL HYPOTHESIS INJECTION (change 1): before every tool-calling round (after the first),
-    // ask the model to state what it expects the tool to return. This forces reasoning before acting.
-    // We skip round 0 — the model hasn't seen any results yet and needs to start somewhere.
-    if (i > 0) {
-      messages.push({ role: "user", content: "[HYPOTHESIS] Before calling any tool this round, state in one sentence: what do you expect to find, and why? If you already have enough information to act, state your conclusion and proceed directly to the change." });
     }
     trimInPlace(messages); // bound prefill every iteration
     post({ type: "status", text: "thinking…" });
