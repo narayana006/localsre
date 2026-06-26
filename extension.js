@@ -201,7 +201,7 @@ function relevantSkills(text) {
       seen.add(k);
       if (t.includes(" " + k + " ") || t.includes(" " + k + "s ") || t.includes("/" + k)) score++;
     }
-    if (score >= 2) scored.push({ s, score });
+    if (score >= 3 && t.length > 22) scored.push({ s, score });
   }
   scored.sort((a, b) => b.score - a.score);
   return scored.slice(0, 2).map((x) => x.s);
@@ -209,7 +209,7 @@ function relevantSkills(text) {
 
 // ---------- system prompt (lean; capabilities live in skills) ----------
 function SYSTEM() {
-  const skillList = SKILLS.length ? SKILLS.map((s) => `- ${s.name}: ${s.description}`).join("\n") : "(none)";
+  const skillList = SKILLS.length ? SKILLS.map((s) => `- ${s.name}: ${s.description.slice(0, 60)}`).join("\n") : "(none)";
   const act = SKILLS.filter((s) => activeSkills.has(s.name));
   const activeBlock = act.length ? "\n## Auto-loaded skills (relevant to this work — FOLLOW these now)\n" + act.map((s) => "### " + s.name + "\n" + s.body).join("\n\n") : "";
   const cwdLine = sessionCwd ? `\n## Current working directory\n${sessionCwd}\nAll relative paths, run_command, and file ops resolve from here. Call change_dir to switch.` : "";
@@ -892,7 +892,7 @@ async function callModelHTTP(messages, onDelta) {
   try {
     const res = await fetch(c.endpoint + "/chat/completions", {
       method: "POST", headers, signal: ctrl.signal,
-      body: JSON.stringify({ model: await localModelName(), messages, tools: getTools(), tool_choice: "auto", temperature: c.temperature, stream: !!onDelta }),
+      body: JSON.stringify({ model: await localModelName(), messages, tools: getTools(), tool_choice: "auto", temperature: c.temperature, stream: !!onDelta, max_tokens: 4096, think: false, enable_thinking: false }),
     });
     if (!res.ok) throw new Error("HTTP " + res.status + ": " + (await res.text()).slice(0, 300));
     // Stream when asked (real servers); fall back to JSON when there's no readable body (tests/non-stream).
