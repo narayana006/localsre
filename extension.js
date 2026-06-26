@@ -224,6 +224,7 @@ function SYSTEM() {
     "NO SUDO: this machine can't accept a sudo password (commands run without a terminal) — sudo will hang. Never use sudo. For pip, use `pip install --user` or a venv; 'Defaulting to user installation' means it WORKED, not an error.",
     "ANTI-FABRICATION: never invent paths, line numbers, function names, or values you haven't seen. If a tool result says TRUNCATED/NO DATA/FAILED, it's incomplete — say so. It's fine to say 'I don't have enough data — here's how to get it.'",
     "HOW YOU WORK: read before you edit; after an edit, verify (get_problems + run the test/build) and fix until it passes. On failure, form a new hypothesis and try a different approach — don't repeat the same failing command. One request → finish it → stop. Don't invent extra work. Keep prose short.",
+    "ACT, DON'T ANNOUNCE: never end your turn saying 'I'll create X' or 'let me do that now' without actually calling the tool in that SAME turn. To write a file, call write_file with the full content right away — don't describe it first.",
     "MULTI-STEP tasks: call update_plan first with a short checklist (one item in_progress at a time). Skip it for simple asks.",
     "MEMORY: persistent memory (.localsre/memory.md) and any loaded files are shown below — answer from them directly, never say 'let me check memory'. Save durable facts with remember().",
     "SKILLS (playbooks, load_skill to open): " + skillList,
@@ -1083,6 +1084,7 @@ async function runAgent(userText, messages, post) {
   const callLog = {}; // detect repeated identical tool calls (local models tend to loop)
   let loopTrips = 0;  // total times the loop-guard tripped → hard-stop when stuck across actions
   let edited = false, verified = false, verifyNudges = 0; // self-verify loop state
+  let promiseNudges = 0; // catch "I'll do X" with no tool call → make it actually act
   // SCOPE GUARD (change 5): track distinct files edited this task; prompt user before > 5 files.
   const sessionEditedFiles = new Set();
   let scopeGuardFired = false;
@@ -1236,6 +1238,16 @@ async function runAgent(userText, messages, post) {
     if (edited && !verified && verifyNudges < 1) {
       verifyNudges++;
       messages.push({ role: "user", content: "You edited files but have not verified them. Before reporting done: (1) call get_problems, (2) run the relevant test or build command, (3) if errors appear, fix them and re-verify. Only after a clean verification pass should you give your final summary in the format: 'Changed <file>:<lines> — <what changed> — <why>. Verified: <how you confirmed it works>.'" });
+      continue;
+    }
+    // PROMISE WITHOUT ACTION: the model announced it would do something ("Now I'll create…",
+    // "Let me write the file…") but called NO tool and ended its turn. Don't stop — make it act.
+    if (content && promiseNudges < 2 &&
+        /\b(i'?ll|i will|let me|i'm going to|i am going to|i need to|now i'?ll|going to|i'?ll now|let me now)\b[\s\S]{0,80}?\b(creat|writ|generat|implement|add|sav|build|updat|edit|run|do (that|this|it)|make)/i.test(content) &&
+        !streamed) {
+      promiseNudges++;
+      if (!streamed) post({ type: "assistant", text: content });
+      messages.push({ role: "user", content: "You said you would do this but did NOT call any tool. Do it NOW in this turn — actually call the tool (e.g. write_file with the full content). Do not describe it again or announce it; just make the tool call." });
       continue;
     }
     // No tool calls → done. (Already shown live if streamed.)
