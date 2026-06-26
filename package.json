@@ -2,7 +2,7 @@
   "name": "localsre",
   "displayName": "LocalSRE",
   "description": "Lightweight local AI coding + SRE agent for VS Code. Local models (Qwen3/DeepSeek), GitHub Copilot, or Claude. 23 SRE skills, per-repo memory, 100% private.",
-  "version": "0.21.4",
+  "version": "0.21.5",
   "publisher": "narayana006",
   "engines": {
     "vscode": "^1.85.0"
@@ -113,6 +113,12 @@
           "type": "object",
           "default": {},
           "markdownDescription": "MCP servers to connect (stdio). Their tools become available to the agent as mcp_<name>_<tool>. Example: {\"datadog\": {\"command\": \"npx\", \"args\": [\"-y\", \"@winor30/mcp-server-datadog\"], \"env\": {\"DATADOG_API_KEY\": \"...\"}}}"
+        },
+        "localsre.memoryPaths": {
+          "type": "array",
+          "items": { "type": "string" },
+          "default": [],
+          "markdownDescription": "Extra memory sources auto-loaded into every session. A **directory** loads as a compact index (filename + first heading) so the agent knows what exists and reads any file on demand — drop new .md files in and they're picked up automatically, no reconfig. A **single file** loads its content. Supports `~`. Example: `[\"~/copilot_memories\"]`"
         }
       }
     }

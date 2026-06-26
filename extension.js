@@ -22,6 +22,7 @@ function cfg() {
     provider: c.get("provider") || "local",
     anthropicApiKey: c.get("anthropicApiKey") || "",
     editorContext: !!c.get("editorContext"), // off by default — it can distract local models
+    memoryPaths: Array.isArray(c.get("memoryPaths")) ? c.get("memoryPaths") : [],
   };
 }
 
@@ -317,6 +318,30 @@ function projectMemory() {
       if (fs.existsSync(p)) { parts.push("## Project memory (" + f + ")\n" + readHead(p, 6000)); break; }
     } catch (_) {}
   }
+  // User-configured memory sources (localsre.memoryPaths). A directory loads as a compact
+  // INDEX (filename + first heading) so the agent knows what exists and reads any file on
+  // demand — keeps the prompt small. A single file loads its content (bounded).
+  try {
+    for (const raw of (cfg().memoryPaths || [])) {
+      const ep = path.resolve(String(raw).replace(/^~(?=$|\/)/, os.homedir()));
+      if (!fs.existsSync(ep)) continue;
+      if (fs.statSync(ep).isDirectory()) {
+        const mds = fs.readdirSync(ep).filter((f) => /\.(md|markdown|txt)$/i.test(f)).sort();
+        if (!mds.length) continue;
+        const idx = mds.slice(0, 100).map((f) => {
+          let hint = "";
+          try {
+            const head = readHead(path.join(ep, f), 400).split("\n").map((l) => l.trim()).filter(Boolean);
+            hint = (head.find((l) => l.startsWith("#")) || head[0] || "").replace(/^#+\s*/, "").slice(0, 80);
+          } catch (_) {}
+          return "- " + f + (hint ? " — " + hint : "");
+        }).join("\n");
+        parts.push("## Memory library: " + ep + " (" + mds.length + " files — read any with read_file for full content)\n" + idx);
+      } else {
+        parts.push("## Memory (" + path.basename(ep) + ")\n" + readHead(ep, 4000));
+      }
+    }
+  } catch (_) {}
   return parts.length ? "\n" + parts.join("\n\n") : "";
 }
 
