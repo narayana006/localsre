@@ -52,14 +52,20 @@ function resolvePath(p) {
   return path.isAbsolute(p) ? p : path.join(getCwd(), p || ".");
 }
 // Confine a path to the workspace OR sessionCwd (and never the secrets file). Returns null if it escapes.
-function safePath(p, { allowSecrets = false } = {}) {
+function safePath(p, { allowSecrets = false, read = false } = {}) {
   const wsR = path.resolve(wsRoot());
   const cwdR = path.resolve(getCwd());
   const resolved = path.resolve(resolvePath(p));
   const inWs = resolved === wsR || resolved.startsWith(wsR + path.sep);
   const inCwd = resolved === cwdR || resolved.startsWith(cwdR + path.sep);
-  if (!inWs && !inCwd) return null; // outside both workspace and sessionCwd
+  // READS may go anywhere under the user's home dir — it's their own machine and their own
+  // files (e.g. ~/copilot_memories). Writes/edits stay confined to workspace + sessionCwd.
+  const homeR = path.resolve(os.homedir());
+  const inHome = resolved === homeR || resolved.startsWith(homeR + path.sep);
+  if (!inWs && !inCwd && !(read && inHome)) return null;
   if (!allowSecrets && resolved.startsWith(path.join(wsR, ".localsre", "secrets"))) return null;
+  // Even on reads, never expose private key material / cloud creds.
+  if (read && /(^|\/)(\.ssh\/id_|\.aws\/credentials|\.config\/gcloud\/.*credential)/.test(resolved)) return null;
   return resolved;
 }
 
@@ -223,6 +229,7 @@ function SYSTEM() {
     "If the user asks a KNOWLEDGE question — 'what is', 'how do I', 'why', 'which command', a definition, a best practice, an explanation — ANSWER IT DIRECTLY from your own expertise: lead with the answer in 2–6 sentences or a short list with the exact command. Do NOT call tools, do NOT search the repo (find/grep/search_code/list_dir), do NOT write a .md file, do NOT call update_plan. You ARE the expert being asked; a senior SRE answers these from memory. Never reply 'I don't have access to the codebase' or 'which service do you mean?' to a general question — just answer it.",
     "Only use tools for a TASK on THIS workspace or live environment (fix this code, read this file, run this check, what's wrong with our cluster right now). If unsure which it is, answer directly first, then offer: 'I can investigate your specific setup if you want.'",
     "You build and fix real software by using tools when a task needs them.",
+    "CAPABILITY: You run REAL tools on the user's own machine. You CAN read any file in their home directory, run shell commands, install software, and save to persistent memory (the remember tool). NEVER refuse with 'as an AI I cannot do X' — if a tool can do it, just use the tool. To 'ingest' or 'memorize' files: read each one, then call remember with a concise summary of each (memory holds short durable facts, not whole files verbatim).",
     "ANTI-FABRICATION (critical): if a fact (hostname, path, proxy, cookie name, count, status, prior value) is NOT visible in your current context, you do NOT know it — re-read the file or re-run the tool to get it. NEVER invent it. If a tool result is marked TRUNCATED / MIDDLE OMITTED / NO DATA / FAILED, treat it as incomplete: do not infer the rest, and say what you couldn't verify. It is correct to answer 'I don't have enough data to conclude X — here's how to get it.'",
     "",
     "## PERSISTENCE — within the CURRENT task only",
@@ -647,8 +654,8 @@ async function approveCommand(command, what) {
 async function execTool(name, args) {
   try {
     if (name === "read_file") {
-      const fp = safePath(args.path);
-      if (!fp) return "ERROR: path is outside the workspace (or is a protected file). I can only access files in this project.";
+      const fp = safePath(args.path, { read: true });
+      if (!fp) return "ERROR: cannot read this path (private key/credential file, or outside your home directory).";
       const st = fs.statSync(fp);
       if (st.size > 5 * 1024 * 1024)
         return "ERROR: file too large (" + Math.round(st.size / 1e6) + " MB). Use run_command with grep/sed/head to inspect it.";
@@ -681,8 +688,8 @@ async function execTool(name, args) {
       return "Edited " + args.path + " (−" + oldS.split("\n").length + " / +" + newS.split("\n").length + " lines).";
     }
     if (name === "list_dir") {
-      const dp = safePath(args.path || ".");
-      if (!dp) return "ERROR: path is outside the workspace.";
+      const dp = safePath(args.path || ".", { read: true });
+      if (!dp) return "ERROR: cannot list this path (outside your home directory).";
       return fs.readdirSync(dp, { withFileTypes: true }).map((d) => (d.isDirectory() ? d.name + "/" : d.name)).join("\n");
     }
     if (name === "change_dir") {
