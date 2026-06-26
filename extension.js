@@ -50,7 +50,9 @@ function setCwd(p) {
 }
 
 function resolvePath(p) {
-  return path.isAbsolute(p) ? p : path.join(getCwd(), p || ".");
+  p = String(p == null ? "." : p);
+  if (p === "~" || p.startsWith("~/")) return path.join(os.homedir(), p.slice(1)); // expand ~ to home
+  return path.isAbsolute(p) ? p : path.join(getCwd(), p);
 }
 // Confine a path to the workspace OR sessionCwd (and never the secrets file). Returns null if it escapes.
 // No path confinement — this is the user's own machine and the user is the authority.
