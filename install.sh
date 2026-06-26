@@ -4,7 +4,7 @@
 #         bash install.sh 0.21.2     (installs a specific version)
 set -euo pipefail
 
-VERSION="${1:-0.21.2}"
+VERSION="${1:-0.21.3}"
 REPO="narayana006/localsre"
 VSIX="localsre-${VERSION}.vsix"
 URL="https://github.com/${REPO}/raw/main/${VSIX}"

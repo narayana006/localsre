@@ -1416,7 +1416,7 @@ function getHtml(webview, mediaUri) {
 <meta http-equiv="Content-Security-Policy" content="${csp}"/>
 <style>
   *{box-sizing:border-box;}
-  body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",system-ui,sans-serif;font-size:13.5px;line-height:1.65;color:var(--vscode-editor-foreground);background:var(--vscode-editor-background);margin:0;height:100vh;}
+  body{font-family:var(--vscode-font-family,-apple-system,BlinkMacSystemFont,"Segoe UI",system-ui,sans-serif);font-size:var(--vscode-font-size,13px);line-height:1.6;color:var(--vscode-editor-foreground);background:var(--vscode-editor-background);margin:0;height:100vh;}
   .root{display:flex;flex-direction:column;height:100vh;}
 
   /* log */
