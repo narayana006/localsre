@@ -318,13 +318,18 @@ function projectMemory() {
       if (fs.existsSync(p)) { parts.push("## Project memory (" + f + ")\n" + readHead(p, 6000)); break; }
     } catch (_) {}
   }
-  // User-configured memory sources (localsre.memoryPaths). A directory loads as a compact
-  // INDEX (filename + first heading) so the agent knows what exists and reads any file on
-  // demand — keeps the prompt small. A single file loads its content (bounded).
+  // Memory sources: auto-detected common folders + user-configured localsre.memoryPaths.
+  // A directory loads as a compact INDEX (filename + first heading) so the agent knows what
+  // exists and reads any file on demand — keeps the prompt small. A single file loads content.
   try {
-    for (const raw of (cfg().memoryPaths || [])) {
+    const auto = ["~/copilot_memories", "~/.copilot_memories", "~/memories", "~/.localsre/memories"];
+    const configured = (cfg().memoryPaths || []);
+    const seen = new Set();
+    for (const raw of [...auto, ...configured]) {
       const ep = path.resolve(String(raw).replace(/^~(?=$|\/)/, os.homedir()));
-      if (!fs.existsSync(ep)) continue;
+      if (seen.has(ep)) continue;      // don't load the same path twice (auto + configured overlap)
+      seen.add(ep);
+      if (!fs.existsSync(ep)) continue; // path not there → silently skip, no error
       if (fs.statSync(ep).isDirectory()) {
         const mds = fs.readdirSync(ep).filter((f) => /\.(md|markdown|txt)$/i.test(f)).sort();
         if (!mds.length) continue;
