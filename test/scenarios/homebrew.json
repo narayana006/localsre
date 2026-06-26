@@ -1,0 +1,605 @@
+{
+  "skill": "homebrew",
+  "scenarios": [
+    {
+      "prompt": "Install jq using Homebrew.",
+      "must_include": ["brew install", "jq"],
+      "must_not_include": ["sudo brew", "apt-get"],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "How do I install wget with brew?",
+      "must_include": ["brew install", "wget"],
+      "must_not_include": ["sudo brew", "apt install"],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "Install the kubectl CLI on my Mac.",
+      "must_include": ["brew install", "kubectl"],
+      "must_not_include": ["sudo brew", "yum install"],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "I need tesseract for OCR. Install it.",
+      "must_include": ["brew install", "tesseract"],
+      "must_not_include": ["sudo brew", "pip install tesseract"],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "Install poppler so I can use pdftotext.",
+      "must_include": ["brew install", "poppler"],
+      "must_not_include": ["sudo brew", "apt-get"],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "Install Google Chrome with Homebrew.",
+      "must_include": ["brew install --cask", "google-chrome"],
+      "must_not_include": ["sudo brew", "brew install google-chrome\n"],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "How do I install the Visual Studio Code app via brew?",
+      "must_include": ["brew install --cask", "visual-studio-code"],
+      "must_not_include": ["sudo brew", "apt-get"],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "Search Homebrew for a package related to redis.",
+      "must_include": ["brew search", "redis"],
+      "must_not_include": ["brew find", "sudo brew"],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "Show me info about the wget formula.",
+      "must_include": ["brew info", "wget"],
+      "must_not_include": ["brew show", "sudo brew"],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "Upgrade all my Homebrew packages.",
+      "must_include": ["brew upgrade"],
+      "must_not_include": ["sudo brew", "brew update --all"],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "Update Homebrew itself before installing anything.",
+      "must_include": ["brew update"],
+      "must_not_include": ["sudo brew", "brew upgrade --self"],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "List all the formulae I have installed.",
+      "must_include": ["brew list"],
+      "must_not_include": ["brew ls --all", "sudo brew"],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "Uninstall the node formula.",
+      "must_include": ["brew uninstall", "node"],
+      "must_not_include": ["brew remove --force-all", "sudo brew"],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "How do I check which version of jq I have installed via brew?",
+      "must_include": ["brew info", "jq"],
+      "must_not_include": ["sudo brew", "apt-cache"],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "Install git with Homebrew.",
+      "must_include": ["brew install", "git"],
+      "must_not_include": ["sudo brew", "apt-get install git"],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "Install htop to monitor processes.",
+      "must_include": ["brew install", "htop"],
+      "must_not_include": ["sudo brew", "yum install"],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "Install the AWS CLI using brew.",
+      "must_include": ["brew install", "awscli"],
+      "must_not_include": ["sudo brew", "pip install awscli"],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "Install Terraform with Homebrew.",
+      "must_include": ["brew install", "terraform"],
+      "must_not_include": ["sudo brew", "apt-get"],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "I want the Docker Desktop app installed via brew.",
+      "must_include": ["brew install --cask", "docker"],
+      "must_not_include": ["sudo brew", "apt-get"],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "Install ripgrep so I can search code fast.",
+      "must_include": ["brew install", "ripgrep"],
+      "must_not_include": ["sudo brew", "apt install ripgrep"],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "Install fzf with Homebrew.",
+      "must_include": ["brew install", "fzf"],
+      "must_not_include": ["sudo brew", "apt-get"],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "Install the gh GitHub CLI.",
+      "must_include": ["brew install", "gh"],
+      "must_not_include": ["sudo brew", "apt-get install gh"],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "Install Python 3.12 via Homebrew.",
+      "must_include": ["brew install", "python@3.12"],
+      "must_not_include": ["sudo brew", "apt-get"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "How can I see if I already have brew installed on this Mac?",
+      "must_include": ["which brew", "brew --version"],
+      "must_not_include": ["sudo brew", "apt list"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "After installing kubectl, how do I verify it's on my PATH?",
+      "must_include": ["which kubectl", "kubectl version"],
+      "must_not_include": ["sudo brew", "apt-get"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "I installed jq but the shell says command not found. How do I confirm where brew put it?",
+      "must_include": ["which jq", "/opt/homebrew", "brew --prefix"],
+      "must_not_include": ["/usr/local/Cellar only", "sudo brew"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "On my Apple Silicon Mac, where does Homebrew install binaries and how do I add it to PATH?",
+      "must_include": ["/opt/homebrew", "brew shellenv", ".zprofile"],
+      "must_not_include": ["/usr/local/bin", "sudo brew"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "brew command isn't found on my new M3 MacBook. How do I install Homebrew?",
+      "must_include": ["/bin/bash -c", "install.sh", "/opt/homebrew"],
+      "must_not_include": ["sudo brew", "apt-get install brew"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Homebrew is installed but `brew` isn't recognized in my terminal on Apple Silicon. Fix the PATH.",
+      "must_include": ["/opt/homebrew/bin/brew shellenv", "eval", ".zprofile"],
+      "must_not_include": ["/usr/local", "sudo brew"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Show outdated formulae before I upgrade.",
+      "must_include": ["brew outdated"],
+      "must_not_include": ["brew list --old", "sudo brew"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Upgrade only the kubectl formula, not everything.",
+      "must_include": ["brew upgrade", "kubectl"],
+      "must_not_include": ["sudo brew", "brew upgrade --all"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Pin the terraform formula so brew doesn't upgrade it.",
+      "must_include": ["brew pin", "terraform"],
+      "must_not_include": ["brew hold", "sudo brew"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Unpin terraform so it can be upgraded again.",
+      "must_include": ["brew unpin", "terraform"],
+      "must_not_include": ["brew unhold", "sudo brew"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Clean up old downloaded versions and free disk space in Homebrew.",
+      "must_include": ["brew cleanup"],
+      "must_not_include": ["brew prune", "sudo brew"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Run Homebrew's diagnostic to check for problems.",
+      "must_include": ["brew doctor"],
+      "must_not_include": ["brew check", "sudo brew"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Search only for casks matching 'slack'.",
+      "must_include": ["brew search --cask", "slack"],
+      "must_not_include": ["brew find", "sudo brew"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Get info about the visual-studio-code cask.",
+      "must_include": ["brew info --cask", "visual-studio-code"],
+      "must_not_include": ["brew show", "sudo brew"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Install poppler and tesseract together in one command.",
+      "must_include": ["brew install", "poppler", "tesseract"],
+      "must_not_include": ["sudo brew", "apt-get"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Which formulae did I install on purpose vs as dependencies? Show only the ones I asked for.",
+      "must_include": ["brew leaves"],
+      "must_not_include": ["brew list --top", "sudo brew"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Show me what depends on the openssl formula.",
+      "must_include": ["brew uses", "openssl"],
+      "must_not_include": ["brew depends-on", "sudo brew"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "List the dependencies of the ffmpeg formula.",
+      "must_include": ["brew deps", "ffmpeg"],
+      "must_not_include": ["brew dependencies", "sudo brew"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Where is the Homebrew prefix on this machine? Print it.",
+      "must_include": ["brew --prefix"],
+      "must_not_include": ["brew --root", "sudo brew"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Install tesseract along with the extra language data packs.",
+      "must_include": ["brew install", "tesseract", "tesseract-lang"],
+      "must_not_include": ["sudo brew", "apt-get"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "I need both jq and yq for parsing JSON and YAML. Install them.",
+      "must_include": ["brew install", "jq", "yq"],
+      "must_not_include": ["sudo brew", "pip install yq"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Install the kubernetes-cli formula (kubectl) and verify the binary version.",
+      "must_include": ["brew install", "kubectl", "kubectl version"],
+      "must_not_include": ["sudo brew", "apt-get"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Reinstall jq because the binary seems corrupted.",
+      "must_include": ["brew reinstall", "jq"],
+      "must_not_include": ["sudo brew", "brew install --repair"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Install helm and verify it runs.",
+      "must_include": ["brew install", "helm", "helm version"],
+      "must_not_include": ["sudo brew", "apt-get"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Install the iTerm2 terminal app through Homebrew.",
+      "must_include": ["brew install --cask", "iterm2"],
+      "must_not_include": ["sudo brew", "apt-get"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Tap the hashicorp/tap and install packer from it.",
+      "must_include": ["brew tap", "hashicorp/tap", "brew install"],
+      "must_not_include": ["sudo brew", "brew add-repo"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "List the taps I currently have configured.",
+      "must_include": ["brew tap"],
+      "must_not_include": ["brew taps --list", "sudo brew"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Install a specific older version: postgresql@14.",
+      "must_include": ["brew install", "postgresql@14"],
+      "must_not_include": ["sudo brew", "apt-get"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Start the postgresql@14 service in the background.",
+      "must_include": ["brew services start", "postgresql@14"],
+      "must_not_include": ["sudo brew", "systemctl start"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "List all Homebrew-managed background services and their status.",
+      "must_include": ["brew services list"],
+      "must_not_include": ["systemctl status", "sudo brew"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Stop the redis service managed by brew.",
+      "must_include": ["brew services stop", "redis"],
+      "must_not_include": ["systemctl stop", "sudo brew"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Restart the postgresql service after a config change.",
+      "must_include": ["brew services restart", "postgresql"],
+      "must_not_include": ["systemctl restart", "sudo brew"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Install node and verify it's the brew copy, not the system one.",
+      "must_include": ["brew install", "node", "which node"],
+      "must_not_include": ["sudo brew", "apt-get"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "How do I confirm a formula like wget is already installed without reinstalling it?",
+      "must_include": ["brew list", "wget"],
+      "must_not_include": ["sudo brew", "brew check-installed"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Install the 1Password app via Homebrew cask.",
+      "must_include": ["brew install --cask", "1password"],
+      "must_not_include": ["sudo brew", "apt-get"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Show me the full list of files a formula installs, e.g. for jq.",
+      "must_include": ["brew list", "jq"],
+      "must_not_include": ["brew files", "sudo brew"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Install awscli and confirm the aws binary resolves to the brew path.",
+      "must_include": ["brew install", "awscli", "which aws"],
+      "must_not_include": ["sudo brew", "pip install awscli"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "I'm on an Intel Mac. Where does Homebrew install things, and is that different from Apple Silicon?",
+      "must_include": ["/usr/local", "/opt/homebrew", "brew --prefix"],
+      "must_not_include": ["sudo brew", "apt-get"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Install kubectx and kubens for faster context switching.",
+      "must_include": ["brew install", "kubectx"],
+      "must_not_include": ["sudo brew", "apt-get"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Verify Homebrew installation is healthy and see what version is running.",
+      "must_include": ["brew --version", "brew doctor"],
+      "must_not_include": ["sudo brew", "brew --check"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Install the latest stable Go toolchain with brew and check the version.",
+      "must_include": ["brew install", "go", "go version"],
+      "must_not_include": ["sudo brew", "apt-get install golang"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Upgrade the Slack cask app.",
+      "must_include": ["brew upgrade --cask", "slack"],
+      "must_not_include": ["sudo brew", "apt-get"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "List the casks I have installed.",
+      "must_include": ["brew list --cask"],
+      "must_not_include": ["brew casks --list", "sudo brew"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Uninstall the google-chrome cask completely.",
+      "must_include": ["brew uninstall --cask", "google-chrome"],
+      "must_not_include": ["sudo brew", "apt-get remove"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "I keep getting 'permission denied' running brew with sudo. What's the right way?",
+      "must_include": ["brew install", "without sudo"],
+      "must_not_include": ["sudo brew install", "run brew as root"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Homebrew commands are slow because it auto-updates every time. How do I disable that for a single install of jq?",
+      "must_include": ["HOMEBREW_NO_AUTO_UPDATE=1", "brew install", "jq"],
+      "must_not_include": ["sudo brew", "brew config --no-update"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "I have python@3.11 and python@3.12 both installed. How do I make 3.12 the default python3 link?",
+      "must_include": ["brew link", "python@3.12"],
+      "must_not_include": ["sudo brew", "update-alternatives"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "A formula is keg-only and not symlinked into PATH. How do I find the instructions to use it?",
+      "must_include": ["brew info", "keg-only"],
+      "must_not_include": ["sudo brew", "brew expose"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "openssl@3 is keg-only. How do I add its bin to my PATH manually?",
+      "must_include": ["brew --prefix openssl@3", "PATH", "/opt/homebrew/opt"],
+      "must_not_include": ["sudo brew", "brew link --force-system"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "brew link node failed with 'already exists' conflicts. How do I force the link?",
+      "must_include": ["brew link", "--overwrite", "node"],
+      "must_not_include": ["sudo brew", "rm -rf /opt/homebrew"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "I want to install a formula but skip its optional dependencies. Is that possible with brew?",
+      "must_include": ["brew install", "--ignore-dependencies"],
+      "must_not_include": ["sudo brew", "--no-deps"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "How do I install a formula from a specific older version using an extracted tap?",
+      "must_include": ["brew extract", "brew install"],
+      "must_not_include": ["sudo brew", "brew install --version="],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "My brew is stuck on an old commit. How do I force-update the Homebrew core tap?",
+      "must_include": ["brew update", "git -C", "brew --repo"],
+      "must_not_include": ["sudo brew", "apt-get update"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Set HOMEBREW_PREFIX in my shell and confirm brew uses it.",
+      "must_include": ["brew --prefix", "/opt/homebrew", "brew config"],
+      "must_not_include": ["sudo brew", "export HOMEBREW_ROOT"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Show the full Homebrew configuration and environment for debugging.",
+      "must_include": ["brew config"],
+      "must_not_include": ["brew env --all", "sudo brew"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "I want to dump all my installed packages to a file to reproduce on another Mac.",
+      "must_include": ["brew bundle dump", "Brewfile"],
+      "must_not_include": ["brew export", "sudo brew"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Install everything listed in my Brewfile on this new machine.",
+      "must_include": ["brew bundle", "Brewfile"],
+      "must_not_include": ["brew import", "sudo brew"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Install jq pinned to a particular version by referencing a specific formula revision. What's the realistic approach?",
+      "must_include": ["brew extract", "jq", "brew install"],
+      "must_not_include": ["sudo brew", "brew install jq==1.6"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "My PATH has /usr/local/bin before /opt/homebrew/bin and the wrong binary wins. How do I fix the ordering on Apple Silicon?",
+      "must_include": ["/opt/homebrew/bin", "PATH", "shellenv"],
+      "must_not_include": ["sudo brew", "rm /usr/local/bin"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "I want brew to not send analytics. How do I turn that off?",
+      "must_include": ["brew analytics off"],
+      "must_not_include": ["sudo brew", "HOMEBREW_DISABLE_TELEMETRY=1"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Upgrade brew and all formulae, then remove stale versions, in one workflow.",
+      "must_include": ["brew update", "brew upgrade", "brew cleanup"],
+      "must_not_include": ["sudo brew", "brew upgrade --prune"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Install ffmpeg with a specific optional build flag enabled. How do I see available options first?",
+      "must_include": ["brew info", "ffmpeg", "brew install"],
+      "must_not_include": ["sudo brew", "./configure"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "How do I install a HEAD (latest git) build of a formula?",
+      "must_include": ["brew install", "--HEAD"],
+      "must_not_include": ["sudo brew", "--git-latest"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "I deleted /opt/homebrew by accident on my M2. How do I reinstall Homebrew cleanly?",
+      "must_include": ["install.sh", "/bin/bash -c", "/opt/homebrew"],
+      "must_not_include": ["sudo brew", "apt-get install brew"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "brew install fails behind a corporate proxy. Which env vars does Homebrew respect?",
+      "must_include": ["HTTPS_PROXY", "HTTP_PROXY"],
+      "must_not_include": ["sudo brew", "brew config --proxy"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Verify the SHA/integrity setup is fine and re-fetch a formula's bottle without installing.",
+      "must_include": ["brew fetch", "jq"],
+      "must_not_include": ["sudo brew", "brew download"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "How do I migrate an old /usr/local Homebrew to /opt/homebrew on Apple Silicon?",
+      "must_include": ["/opt/homebrew", "install.sh", "arch"],
+      "must_not_include": ["sudo brew", "brew migrate-prefix"],
+      "difficulty": "edge"
+    },
+    {
+      "prompt": "I have both an Intel (under Rosetta) and Apple Silicon brew. How do I run the x86 one explicitly?",
+      "must_include": ["arch -x86_64", "/usr/local/bin/brew", "/opt/homebrew/bin/brew"],
+      "must_not_include": ["sudo brew", "brew --arch=intel"],
+      "difficulty": "edge"
+    },
+    {
+      "prompt": "Someone told me to run `sudo brew install kubectl`. Is that correct?",
+      "must_include": ["brew install", "kubectl", "without sudo"],
+      "must_not_include": ["yes, use sudo", "sudo is required"],
+      "difficulty": "edge"
+    },
+    {
+      "prompt": "On macOS, can I just use apt-get to install jq instead of brew?",
+      "must_include": ["brew install", "jq"],
+      "must_not_include": ["apt-get install jq", "yes, apt-get works on macOS"],
+      "difficulty": "edge"
+    },
+    {
+      "prompt": "brew install of a cask fails with 'It seems there is already an App'. How do I force-overwrite the existing app?",
+      "must_include": ["brew install --cask", "--force"],
+      "must_not_include": ["sudo brew", "rm -rf /Applications"],
+      "difficulty": "edge"
+    },
+    {
+      "prompt": "A cask needs a password to install (privileged helper). Will brew prompt me, or do I prefix sudo?",
+      "must_include": ["brew install --cask", "prompt"],
+      "must_not_include": ["sudo brew install --cask", "always prefix sudo"],
+      "difficulty": "edge"
+    },
+    {
+      "prompt": "I need an ancient formula no longer in core. Where do realistic install instructions point me?",
+      "must_include": ["brew extract", "brew tap"],
+      "must_not_include": ["sudo brew", "brew install --legacy"],
+      "difficulty": "edge"
+    },
+    {
+      "prompt": "Homebrew says 'Your Command Line Tools are too outdated'. What do I do before brew will work?",
+      "must_include": ["xcode-select --install", "softwareupdate"],
+      "must_not_include": ["sudo brew", "apt-get"],
+      "difficulty": "edge"
+    },
+    {
+      "prompt": "After a macOS major upgrade, brew commands break with missing Xcode CLT. Fix it then verify brew.",
+      "must_include": ["xcode-select --install", "brew doctor"],
+      "must_not_include": ["sudo brew", "yum"],
+      "difficulty": "edge"
+    },
+    {
+      "prompt": "I want to completely uninstall Homebrew from this Mac. What's the official way?",
+      "must_include": ["uninstall.sh", "/bin/bash -c"],
+      "must_not_include": ["sudo brew uninstall-self", "rm -rf /opt/homebrew only"],
+      "difficulty": "edge"
+    },
+    {
+      "prompt": "Install jq, confirm the binary is on PATH, and show its version, all on Apple Silicon.",
+      "must_include": ["brew install", "jq", "which jq", "/opt/homebrew"],
+      "must_not_include": ["sudo brew", "apt-get"],
+      "difficulty": "hard"
+    }
+  ]
+}

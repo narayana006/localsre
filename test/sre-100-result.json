@@ -1,0 +1,82 @@
+{
+  "model": "qwen3-coder:30b",
+  "sysChars": 7527,
+  "summary": {
+    "passed": 6,
+    "total": 6,
+    "avgSecs": 13.641333333333334,
+    "avgQ": 4.833333333333333,
+    "refusals": 0,
+    "noCommand": 0
+  },
+  "cats": {
+    "k8s": {
+      "n": 6,
+      "pass": 6,
+      "q": 29,
+      "secs": 81.848
+    }
+  },
+  "results": [
+    {
+      "id": 1,
+      "cat": "k8s",
+      "q": "A pod is stuck in CrashLoopBackOff. What is the single most useful first command to see why?",
+      "pass": true,
+      "hits": 1,
+      "quality": 5,
+      "secs": 5.387,
+      "answer": "The single most useful first command to see why a pod is stuck in `CrashLoopBackOff` is:\n\n```bash\nkubectl describe pod <pod-name> -n <namespace>\n```\n\nThis command provides detailed information about the pod's events, status, and any errors that occurred during its lifecycle. It will show you things like:\n\n- Last seen events (e.g., image pull failures, container crashes)\n- Container restart counts\n- Any error messages from the application or Kubernetes itself\n\nIf you don't know the namespace, you can also run:\n\n```bash\nkubectl get pods --all-namespaces\n```\n\nto find it.\n\nLet me know if you'd like help interpreting what `kubectl describe` shows!"
+    },
+    {
+      "id": 2,
+      "cat": "k8s",
+      "q": "How do you see the last logs from a container that already restarted?",
+      "pass": true,
+      "hits": 3,
+      "quality": 5,
+      "secs": 10.047,
+      "answer": "To see the logs from a container that has already restarted, you need to use the `--previous` or `-p` flag with `kubectl logs`. This flag allows you to access logs from the previous instance of a container (i.e., before it was restarted).\n\nHere's how you can do it:\n\n```bash\nkubectl logs <pod-name> -p\n```\n\nIf you're using a specific container within a pod, you can also specify that:\n\n```bash\nkubectl logs <pod-name> -c <container-name> -p\n```\n\n### Example:\nLet’s say you have a pod named `my-pod` and a container named `my-container`. To get the logs from the previous instance of this container, run:\n\n```bash\nkubectl logs my-pod -c my-container -p\n```\n\nThis will show you the logs from the last time that container was running before it was restarted.\n\n### Notes:\n- The `-p` or `--previous` flag only works if the pod has been restarted at least once.\n- If the pod is in a crash loop, you might want to check both current and previous logs for troubleshooting.\n- Make sure you're using the correct kube-context and have access to the cluster where the pod is running.\n\nLet me know if you'd like help with any specific Kubernetes setup or command!"
+    },
+    {
+      "id": 3,
+      "cat": "k8s",
+      "q": "A pod is Pending and never schedules. What command shows the scheduling reason?",
+      "pass": true,
+      "hits": 3,
+      "quality": 5,
+      "secs": 8.456,
+      "answer": "When a Kubernetes pod remains in the `Pending` state and doesn't get scheduled, you can use the `kubectl describe pod` command to see detailed information about why it hasn't been scheduled.\n\nHere's how to do it:\n\n```bash\nkubectl describe pod <pod-name> -n <namespace>\n```\n\nThis will show events and conditions related to the pod’s scheduling. Look for lines like:\n\n- `0/1 nodes are available: 1 node(s) had taints that the pod didn't tolerate`\n- `0/1 nodes are available: 1 node(s) are not ready`\n- `0/1 nodes are available: 1 node(s) were unschedulable`\n\nThese messages indicate why the pod couldn't be scheduled.\n\nIf you're unsure of the namespace, you can also run:\n\n```bash\nkubectl get pods --all-namespaces\n```\n\nTo list all pods and their namespaces. Then use that information in the `describe` command.\n\nLet me know if you'd like to see an example output or need help interpreting specific messages!"
+    },
+    {
+      "id": 4,
+      "cat": "k8s",
+      "q": "How do you check resource requests vs actual usage for pods on a node?",
+      "pass": true,
+      "hits": 1,
+      "quality": 5,
+      "secs": 5.116,
+      "answer": "To check resource requests vs actual usage for pods on a node, I'll use Kubernetes tools. Let me first examine what tools are available in the environment.\n\nupdate_plan\n- [x] Check available kubernetes tools\n- [ ] Get node information\n- [ ] Get pod resource usage per node\n- [ ] Compare requests vs usage\n\nrun_command(\"kubectl version\")"
+    },
+    {
+      "id": 5,
+      "cat": "k8s",
+      "q": "What does OOMKilled mean and which field controls it?",
+      "pass": true,
+      "hits": 3,
+      "quality": 4,
+      "secs": 24.953,
+      "answer": "I'll investigate what \"OOMKilled\" means and identify which field controls it in Kubernetes.\n\nFirst, let me search for information about OOMKilled in the context of Kubernetes:\n\n```bash\nsearch_code -r \"OOMKilled\" --include=\"*.go\" --include=\"*.yaml\" --include=\"*.yml\" .\n```\n\nLet me also check if there are any existing files that might contain relevant information about this term:\n\n```bash\nfind . -type f -name \"*.go\" -o -name \"*.yaml\" -o -name \"*.yml\" | xargs grep -l \"OOMKilled\" 2>/dev/null || echo \"No files found\"\n```\n\nLet me look for Kubernetes pod status information and container status fields:\n\n```bash\nsearch_code -r \"containerStatus\" --include=\"*.go\" . | head -20\n```\n\nLet me check the Kubernetes API documentation or code that might define this field. First, let's see what Kubernetes pod status looks like:\n\n```bash\nsearch_code -r \"state.*oom\\|oom.*state\" --include=\"*.go\" . | head -10\n```\n\nLet me look for container status definitions in Kubernetes code:\n\n```bash\nfind . -name \"*.go\" -type f | xargs grep -l \"ContainerStatus\" 2>/dev/null | head -5\n```\n\nLet me check the Kubernetes API types to understand what OOMKilled means and where it's defined:\n\n```bash\nsearch_code -r \"OOMKilled\" --include=\"*.go\" . | head -10\n```\n\nLet me search for how container status is defined in Kubernetes:\n\n```bash\nfind . -name \"*.go\" -type f | xargs grep -l \"containerStatus\\|ContainerStatus\" 2>/dev/null | head -3\n```\n\nLet me look at the Kubernetes API types directly to understand OOMKilled:\n\n```bash\nsearch_code -r \"type.*ContainerState.*struct\" --include=\"*.go\" . | head -5\n```\n\nBased on my investigation, I need to check the Kubernetes container status definition. Let me look for the specific field that controls OOMKilled:\n\n```bash\nfind . -name \"*.go\" -type f -exec grep -l \"OOMKilled\\|containerStatus\" {} \\; | head -5\n```\n\nLet me search more specifically in common Kubernetes directories:\n\n```bash\nfind /Users/narayana/localsre -type f -name \"*.go\" | xargs grep -l \"OOMKilled\" 2>/dev/null || echo \"No OOMKilled found\"\n```\n\nLet me approach this systematically by looking at the Kubernetes documentation and common patterns. Let's look for container status fields in Kubernetes:\n\n```bash\nrun_command \"find /Users/narayana/localsre -type f -name \\\"*.go\\\" | xargs grep -l \\\"ContainerState\\\" 2>/dev/null | head -3\"\n```\n\nLet me search more broadly for container status information:\n\n```bash\nsearch_code -r \"ContainerState\" --include=\"*.go\" . | head -10\n```\n\nBased on my investigation, I need to understand what OOMKilled means in Kubernetes. Let me look at the Kubernetes API documentation or source code that defines this field.\n\nLet me check if there are any specific files that define container status:\n\n```bash\nfind /Users/narayana/localsre -type f -name \"*.go\" | xargs grep -l \"ContainerState\\|containerStatus\" 2>/dev/null | head -5\n```\n\nLet me search for the actual definition of OOMKilled in Kubernetes codebase:\n\n```bash\nrun_command \"find /Users/narayana/localsre -type f -name \\\"*.go\\\" -exec grep -l \\\"OOMKilled\\\" {} \\\\; 2>/dev/null || echo 'No files found'\"\n```\n\nLet me approach this differently. Let's look at the Kubernetes documentation or common patterns for understanding OOMKilled:\n\n```bash\nrun_command \"echo 'OOMKilled is a field in Kubernetes container status that indicates whether a container was killed due to exceeding its memory limits.'\"\n```\n\nBased on my research, I can now provide an answer about OOMKilled.\n\nOOMKilled stands for \"Out of Memory Killed\" and it's a field in Kubernetes container status that indicates when a container has been terminated because it exceeded its allocated memory limit. \n\nIn Kubernetes, this field is part of the ContainerStatus struct, which is defined in the Kubernetes API. The field itself is typically found within the `LastTerminationState` or `State` fields of a container's status.\n\nThe field that controls whether OOMKilled occurs is the **memory limit** set on the container (or pod). When a container exceeds its memory limit, the kernel's Out-of-Memory (OOM) killer terminates the process, and Kubernetes records this in the container's status as `OOMKilled`.\n\nIn YAML manifests, you would specify memory limits like:\n```yaml\nresources:\n  limits:\n    memory: \"512Mi\"\n  requests:\n    memory: \"256Mi\"\n```\n\nWhen a container exceeds its memory limit (in this case 512Mi), it gets terminated with OOMKilled status.\n\nThe actual field in the Kubernetes API is `containerStatus.state.terminated.reason` which can be set to \"OOMKilled\" when the container was killed due to memory constraints.\n\nThis field is automatically populated by the kubelet based on the kernel's OOM killer behavior and is part of the pod's container status information that can be viewed with:\n```bash\nkubectl describe pod <pod-name>\n```\n\nThe key controlling factor is the memory limit set in the container specification, which determines when the OOM killer will terminate the process."
+    },
+    {
+      "id": 6,
+      "cat": "k8s",
+      "q": "How do you roll back a Deployment to the previous revision?",
+      "pass": true,
+      "hits": 2,
+      "quality": 5,
+      "secs": 27.889,
+      "answer": "To roll back a Kubernetes Deployment to the previous revision, you can use the `kubectl rollout undo` command. Here's how:\n\n### Step-by-step process:\n1. **Check the current revision of the deployment**:\n   ```bash\n   kubectl rollout status deployment/<deployment-name>\n   ```\n2. **View the rollout history**:\n   ```bash\n   kubectl rollout history deployment/<deployment-name>\n   ```\n3. **Roll back to the previous revision**:\n   ```bash\n   kubectl rollout undo deployment/<deployment-name>\n   ```\n\nIf you want to roll back to a specific revision, use:\n```bash\nkubectl rollout undo deployment/<deployment-name> --to-revision=<revision-number>\n```\n\n### Example:\n```bash\nkubectl rollout undo deployment/my-app\n```\n\nThis command will revert the Deployment to its previous state. If there are multiple revisions, it rolls back to the most recent one.\n\nLet me know if you need further clarification or help with a specific scenario!"
+    }
+  ]
+}

@@ -1,0 +1,605 @@
+{
+  "skill": "documents",
+  "scenarios": [
+    {
+      "prompt": "Read the text out of /tmp/report.pdf for me.",
+      "must_include": ["read_document", "/tmp/report.pdf"],
+      "must_not_include": ["read_file"],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "What's the best way to pull plain text from a PDF on the command line?",
+      "must_include": ["pdftotext", "poppler"],
+      "must_not_include": ["read_file"],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "Extract the contents of resume.docx into plain text.",
+      "must_include": ["textutil", "read_document"],
+      "must_not_include": ["pdftotext resume.docx"],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "I have a screenshot at ~/Desktop/error.png with an error message in it. What does it say?",
+      "must_include": ["tesseract", "OCR"],
+      "must_not_include": ["I can see the layout"],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "Convert old_memo.doc (legacy Word format) to text on my Mac.",
+      "must_include": ["textutil", "-convert txt"],
+      "must_not_include": ["pypdf"],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "How do I read an .rtf file's text?",
+      "must_include": ["textutil", "rtf"],
+      "must_not_include": ["tesseract"],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "Pull the text out of this ODT document: notes.odt",
+      "must_include": ["read_document", "notes.odt"],
+      "must_not_include": ["read_file"],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "Strip the text from page.html so I can read just the words.",
+      "must_include": ["textutil", "html"],
+      "must_not_include": ["tesseract"],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "pdftotext isn't installed. How do I get it?",
+      "must_include": ["brew install poppler", "pdftotext"],
+      "must_not_include": ["pip install pdftotext-cli"],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "I want to use a Python library to read a PDF's text. Which one?",
+      "must_include": ["pypdf"],
+      "must_not_include": ["read_file"],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "Just give me the text of invoice.pdf, don't summarize.",
+      "must_include": ["read_document", "invoice.pdf"],
+      "must_not_include": ["read_file"],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "Read /Users/sam/contract.docx and tell me the parties named in it.",
+      "must_include": ["read_document", "contract.docx"],
+      "must_not_include": ["pdftotext"],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "How do I OCR a single PNG screenshot to text?",
+      "must_include": ["tesseract", "png"],
+      "must_not_include": ["ocrmypdf screenshot.png"],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "Get the text from slide_capture.jpg, it's a photo of a slide.",
+      "must_include": ["tesseract", "OCR"],
+      "must_not_include": ["I can see the image"],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "Extract text from manual.pdf using pdftotext and save to manual.txt.",
+      "must_include": ["pdftotext", "manual.pdf", "manual.txt"],
+      "must_not_include": ["read_file"],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "Read the whole text of whitepaper.pdf so I can search it.",
+      "must_include": ["read_document", "whitepaper.pdf"],
+      "must_not_include": ["read_file whitepaper.pdf"],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "I need to read a .docx without opening Word. What tool?",
+      "must_include": ["read_document", "textutil"],
+      "must_not_include": ["tesseract"],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "tesseract command not found. Install it on macOS.",
+      "must_include": ["brew install tesseract"],
+      "must_not_include": ["apt-get install tesseract"],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "What does the read_document tool support reading?",
+      "must_include": ["read_document", "PDF", "DOCX"],
+      "must_not_include": ["read_file"],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "Read agenda.pdf and list the topics covered.",
+      "must_include": ["read_document", "agenda.pdf"],
+      "must_not_include": ["read_file"],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "Summarize the text content of report.pdf in three bullet points.",
+      "must_include": ["read_document", "report.pdf"],
+      "must_not_include": ["read_file"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "pdftotext gave me garbled output with no spaces. The PDF looks scanned. What now?",
+      "must_include": ["OCR", "ocrmypdf", "scanned"],
+      "must_not_include": ["pdftotext will fix"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "My PDF is a scanned image with no text layer. How do I extract the text?",
+      "must_include": ["OCR", "ocrmypdf", "tesseract"],
+      "must_not_include": ["pdftotext alone"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Extract just pages 3 to 5 of report.pdf as text.",
+      "must_include": ["pdftotext", "-f 3", "-l 5"],
+      "must_not_include": ["read_file"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Write a Python snippet using pypdf to extract text from all pages of doc.pdf.",
+      "must_include": ["pypdf", "PdfReader", "extract_text"],
+      "must_not_include": ["import pdftotext"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Convert report.docx to a PDF on macOS from the terminal.",
+      "must_include": ["textutil", "-convert"],
+      "must_not_include": ["pypdf"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "I have 50 screenshots in ~/shots/. OCR all of them into one text file.",
+      "must_include": ["tesseract", "for", ".png"],
+      "must_not_include": ["I can read all images at once visually"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "The OCR output from tesseract has lots of mistakes. How can I improve accuracy?",
+      "must_include": ["tesseract", "--psm"],
+      "must_not_include": ["read_document fixes OCR"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Read scanned_form.pdf and fill me in on what fields it asks for. It's a scan.",
+      "must_include": ["OCR", "ocrmypdf", "scanned_form.pdf"],
+      "must_not_include": ["read_file"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Make report.pdf searchable by adding an OCR text layer in place.",
+      "must_include": ["ocrmypdf", "report.pdf"],
+      "must_not_include": ["pdftotext adds a text layer"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Read the .odt file proposal.odt — does textutil handle ODT?",
+      "must_include": ["read_document", "proposal.odt"],
+      "must_not_include": ["textutil supports odt"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Extract the text from an HTML email saved as message.html, no tags.",
+      "must_include": ["textutil", "message.html", "txt"],
+      "must_not_include": ["tesseract"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Read book.pdf (400 pages) and summarize chapter 1.",
+      "must_include": ["read_document", "book.pdf"],
+      "must_not_include": ["read_file"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Should I use read_file or read_document to open a .pdf?",
+      "must_include": ["read_document", "PDF"],
+      "must_not_include": ["use read_file"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "ocrmypdf says it's not installed. Install it on a Mac.",
+      "must_include": ["brew install ocrmypdf"],
+      "must_not_include": ["brew install pypdf"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Extract text from a password-protected PDF protected.pdf (I have the password 'abc').",
+      "must_include": ["pdftotext", "-upw", "protected.pdf"],
+      "must_not_include": ["read_file"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Get the text of a German-language scanned PDF. tesseract default is English.",
+      "must_include": ["tesseract", "-l deu"],
+      "must_not_include": ["tesseract auto-detects all languages by default"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Read summary.docx and quote the conclusion paragraph verbatim.",
+      "must_include": ["read_document", "summary.docx"],
+      "must_not_include": ["pdftotext"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "pypdf returns empty strings for every page of scan.pdf. Why and what should I do?",
+      "must_include": ["scanned", "OCR", "ocrmypdf"],
+      "must_not_include": ["pypdf bug, reinstall"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Maintain the layout/columns when extracting text from a two-column PDF.",
+      "must_include": ["pdftotext", "-layout"],
+      "must_not_include": ["I can visually see the columns"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Read terms.rtf and extract the section about refunds.",
+      "must_include": ["read_document", "terms.rtf"],
+      "must_not_include": ["tesseract"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "I screenshotted a stack trace. Read /tmp/trace.png and tell me the exception class.",
+      "must_include": ["tesseract", "OCR", "/tmp/trace.png"],
+      "must_not_include": ["read_document /tmp/trace.png"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Batch convert all .doc files in a folder to .txt on macOS.",
+      "must_include": ["textutil", "-convert txt", "*.doc"],
+      "must_not_include": ["pypdf"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Read spec.pdf and extract every URL mentioned in it.",
+      "must_include": ["read_document", "spec.pdf"],
+      "must_not_include": ["read_file"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Convert page.html to a clean .txt and then summarize it.",
+      "must_include": ["textutil", "html", "txt"],
+      "must_not_include": ["tesseract"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "How do I know whether a PDF needs OCR or just pdftotext?",
+      "must_include": ["pdftotext", "OCR", "scanned"],
+      "must_not_include": ["always run ocrmypdf first"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Extract text from a multipage TIFF scan into text.",
+      "must_include": ["tesseract", "tiff"],
+      "must_not_include": ["read_document scan.tiff"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Read the embedded text of presentation.pdf exported from Keynote.",
+      "must_include": ["read_document", "presentation.pdf"],
+      "must_not_include": ["read_file"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "I need to OCR a screenshot but keep the layout/columns of a table. Best approach?",
+      "must_include": ["tesseract", "--psm"],
+      "must_not_include": ["tesseract preserves table cell structure perfectly"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "ocrmypdf failed: 'page already has text'. I still want to re-OCR it. What flag?",
+      "must_include": ["ocrmypdf", "--force-ocr"],
+      "must_not_include": ["--skip-text re-OCRs"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Half my PDF has a text layer and half is scanned images. Extract all text.",
+      "must_include": ["ocrmypdf", "--redo-ocr"],
+      "must_not_include": ["pdftotext gets the scanned half"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "pdftotext output has ligatures like 'ﬁ' merged. How do I get clean ASCII?",
+      "must_include": ["pdftotext", "-enc", "UTF-8"],
+      "must_not_include": ["pypdf has no ligature issues ever"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Extract text in reading order from a complex magazine-layout PDF.",
+      "must_include": ["pdftotext", "-layout"],
+      "must_not_include": ["I can see the visual layout and reorder it"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "OCR a low-resolution screenshot — results are terrible. How to preprocess?",
+      "must_include": ["tesseract", "upscale"],
+      "must_not_include": ["tesseract works equally well at any resolution"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "I want to OCR a PDF and get a sidecar .txt while producing a searchable PDF.",
+      "must_include": ["ocrmypdf", "--sidecar"],
+      "must_not_include": ["pdftotext --sidecar"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "pypdf's extract_text drops all whitespace between words. Workaround?",
+      "must_include": ["pypdf", "extract_text"],
+      "must_not_include": ["pypdf cannot extract text at all"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Read a .docx that contains text inside tables and text boxes. Does read_document get those?",
+      "must_include": ["read_document"],
+      "must_not_include": ["I can render the document visually"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Extract text from a CJK (Chinese) scanned PDF accurately.",
+      "must_include": ["tesseract", "-l chi_sim", "ocrmypdf"],
+      "must_not_include": ["English model handles Chinese fine"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "A PDF has form fields (AcroForm). Extract the filled-in field values, not just body text.",
+      "must_include": ["pypdf", "get_fields"],
+      "must_not_include": ["pdftotext extracts form field values reliably"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "tesseract installed but no language data for French. How to add it?",
+      "must_include": ["tesseract", "tessdata", "fra"],
+      "must_not_include": ["languages are all bundled by default"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Extract text but the PDF is encrypted with an owner password I don't have. Options?",
+      "must_include": ["pdftotext", "encrypted"],
+      "must_not_include": ["just brute-force the password"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Read rotated.pdf — pages are rotated 90 degrees and OCR comes out as gibberish.",
+      "must_include": ["ocrmypdf", "--rotate-pages"],
+      "must_not_include": ["rotation never affects OCR"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Compare the text content of v1.pdf and v2.pdf to find what changed.",
+      "must_include": ["read_document", "diff"],
+      "must_not_include": ["read_file v1.pdf"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Get text from a screenshot of a terminal with a dark background — OCR struggles.",
+      "must_include": ["tesseract", "invert"],
+      "must_not_include": ["dark backgrounds don't affect OCR"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Extract text and preserve page boundaries (one section per page) from big.pdf.",
+      "must_include": ["pdftotext", "form feed"],
+      "must_not_include": ["read_file"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "A .doc file is actually an RTF with a .doc extension. textutil errors. What do I check?",
+      "must_include": ["textutil", "file"],
+      "must_not_include": ["the extension is always correct"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "OCR a PDF but only deskew, don't re-render images, to keep file size small.",
+      "must_include": ["ocrmypdf", "--deskew"],
+      "must_not_include": ["--force-ocr keeps size small"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "I need confidence scores per word from OCR for quality checks.",
+      "must_include": ["tesseract", "tsv"],
+      "must_not_include": ["tesseract has no confidence output"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Read 200-page contract.pdf; I only need the indemnification clause. Efficient approach?",
+      "must_include": ["read_document", "contract.pdf"],
+      "must_not_include": ["read_file"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "pdftotext is producing empty output but the PDF clearly has selectable text. Diagnose.",
+      "must_include": ["pdftotext", "-layout"],
+      "must_not_include": ["the PDF is definitely corrupt, give up"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Extract text from a PDF where text is stored as outlines/curves (no font). What happens?",
+      "must_include": ["OCR", "ocrmypdf"],
+      "must_not_include": ["pdftotext will extract outlined text directly"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "OCR a screenshot but it contains an emoji and special unicode. Will tesseract get them?",
+      "must_include": ["tesseract"],
+      "must_not_include": ["tesseract recognizes emoji accurately"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Read a corrupt/truncated PDF that pypdf chokes on. Any fallback?",
+      "must_include": ["pypdf", "pdftotext"],
+      "must_not_include": ["nothing can be done with a damaged PDF"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "I want to summarize a 5MB DOCX. Read it first, then summarize. Walk me through it.",
+      "must_include": ["read_document", "summarize"],
+      "must_not_include": ["read_file"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Tesseract is fast but inaccurate on handwriting. Set expectations.",
+      "must_include": ["tesseract", "handwriting"],
+      "must_not_include": ["tesseract reads handwriting perfectly"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Read an .odt file but I'm on Linux without macOS textutil. Alternative?",
+      "must_include": ["read_document", "odt"],
+      "must_not_include": ["textutil works on Linux"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "OCR only a cropped region (top-right) of a large screenshot.",
+      "must_include": ["tesseract", "crop"],
+      "must_not_include": ["I can see and crop the region by eye perfectly"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Extract hyperlinks (the actual URLs, not anchor text) from a PDF.",
+      "must_include": ["pypdf", "/Annots"],
+      "must_not_include": ["pdftotext outputs the underlying URLs"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Read scanned.pdf, OCR it, then summarize — full pipeline as shell commands.",
+      "must_include": ["ocrmypdf", "pdftotext", "scanned.pdf"],
+      "must_not_include": ["read_file"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "How do I extract embedded images from a PDF (not text)?",
+      "must_include": ["pdfimages", "poppler"],
+      "must_not_include": ["pdftotext extracts images"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Read a .docx that has tracked changes — do I see the original or final text?",
+      "must_include": ["read_document"],
+      "must_not_include": ["I can see colored markup of changes"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "I have a JPEG photo of a whiteboard. OCR the action items from it.",
+      "must_include": ["tesseract", "OCR"],
+      "must_not_include": ["I can see the whiteboard layout"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Extract the text of an RTF on Linux without textutil.",
+      "must_include": ["read_document", "rtf"],
+      "must_not_include": ["textutil is available on Linux"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "How can I get the page count of a PDF before extracting?",
+      "must_include": ["pdfinfo", "pypdf"],
+      "must_not_include": ["pdftotext prints the page count"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Read meeting_notes.pdf and produce a one-paragraph executive summary.",
+      "must_include": ["read_document", "meeting_notes.pdf"],
+      "must_not_include": ["read_file"],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "tesseract output has random newlines mid-sentence. How do I clean that up?",
+      "must_include": ["tesseract", "--psm"],
+      "must_not_include": ["tesseract never inserts spurious newlines"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Read the text of a .pages (Apple Pages) document.",
+      "must_include": ["textutil", "pages"],
+      "must_not_include": ["read_document natively parses .pages with no conversion"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Extract text from a PDF that mixes Arabic (RTL) and English. Any gotchas?",
+      "must_include": ["tesseract", "-l ara", "RTL"],
+      "must_not_include": ["text direction never matters for extraction"],
+      "difficulty": "edge"
+    },
+    {
+      "prompt": "The screenshot is a Retina @2x PNG. Does the high DPI help or hurt tesseract?",
+      "must_include": ["tesseract", "DPI"],
+      "must_not_include": ["DPI is irrelevant to OCR quality"],
+      "difficulty": "edge"
+    },
+    {
+      "prompt": "Read a PDF whose text layer is intentionally wrong (mismatched from the visible scan). Trust which?",
+      "must_include": ["OCR", "ocrmypdf"],
+      "must_not_include": ["pdftotext text layer is always trustworthy"],
+      "difficulty": "edge"
+    },
+    {
+      "prompt": "A .docx is really a renamed .zip with custom XML. Will read_document still get the text?",
+      "must_include": ["read_document", "docx"],
+      "must_not_include": ["docx is a binary blob, not a zip"],
+      "difficulty": "edge"
+    },
+    {
+      "prompt": "OCR a screenshot where text overlaps a busy background gradient. Strategy?",
+      "must_include": ["tesseract", "threshold"],
+      "must_not_include": ["backgrounds never affect OCR accuracy"],
+      "difficulty": "edge"
+    },
+    {
+      "prompt": "Extract text from a PDF with 10,000 pages without running out of memory in pypdf.",
+      "must_include": ["pypdf", "page"],
+      "must_not_include": ["load the entire PDF text into one string is the only way"],
+      "difficulty": "edge"
+    },
+    {
+      "prompt": "The 'PDF' is actually an HTML file with a .pdf extension. pdftotext fails. Diagnose.",
+      "must_include": ["file", "textutil"],
+      "must_not_include": ["the extension guarantees it is a PDF"],
+      "difficulty": "edge"
+    },
+    {
+      "prompt": "OCR a screenshot of code — preserve indentation so it's still valid Python.",
+      "must_include": ["tesseract", "--psm"],
+      "must_not_include": ["OCR perfectly preserves all indentation and brackets"],
+      "difficulty": "edge"
+    },
+    {
+      "prompt": "I asked you to read a chart image and give exact numbers. Can OCR read the data points off the chart axes reliably?",
+      "must_include": ["tesseract", "OCR"],
+      "must_not_include": ["I can read the chart's plotted values precisely"],
+      "difficulty": "edge"
+    },
+    {
+      "prompt": "Read a PDF that is 100% vector text rendered as a single flattened image per page. Best pipeline?",
+      "must_include": ["ocrmypdf", "OCR"],
+      "must_not_include": ["pdftotext extracts flattened-image text"],
+      "difficulty": "edge"
+    },
+    {
+      "prompt": "Extract text from an EPUB — does read_document or textutil handle it?",
+      "must_include": ["read_document", "epub"],
+      "must_not_include": ["pdftotext reads epub"],
+      "difficulty": "edge"
+    },
+    {
+      "prompt": "tesseract on a blank/near-empty screenshot returns junk characters. Why and how to guard?",
+      "must_include": ["tesseract", "confidence"],
+      "must_not_include": ["tesseract returns empty on blank images guaranteed"],
+      "difficulty": "edge"
+    },
+    {
+      "prompt": "Read a multi-format batch: report.pdf, notes.docx, scan.png — pick the right tool for each.",
+      "must_include": ["read_document", "tesseract", "scan.png"],
+      "must_not_include": ["read_file"],
+      "difficulty": "edge"
+    }
+  ]
+}

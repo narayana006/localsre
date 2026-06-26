@@ -1,0 +1,212 @@
+{
+  "model": "qwen3-coder:30b",
+  "per": 8,
+  "results": [
+    {
+      "skill": "ansible",
+      "n": 8,
+      "pass": 6,
+      "acc": 75,
+      "cov": 91.30434782608695,
+      "viol": 0
+    },
+    {
+      "skill": "atlassian",
+      "n": 8,
+      "pass": 5,
+      "acc": 62.5,
+      "cov": 83.33333333333334,
+      "viol": 0
+    },
+    {
+      "skill": "auth-sso",
+      "n": 8,
+      "pass": 4,
+      "acc": 50,
+      "cov": 80,
+      "viol": 0
+    },
+    {
+      "skill": "bigquery",
+      "n": 8,
+      "pass": 4,
+      "acc": 50,
+      "cov": 86.36363636363636,
+      "viol": 1
+    },
+    {
+      "skill": "datadog",
+      "n": 8,
+      "pass": 6,
+      "acc": 75,
+      "cov": 82.6086956521739,
+      "viol": 0
+    },
+    {
+      "skill": "dataflow-dataproc",
+      "n": 8,
+      "pass": 6,
+      "acc": 75,
+      "cov": 95.83333333333334,
+      "viol": 1
+    },
+    {
+      "skill": "docker",
+      "n": 8,
+      "pass": 5,
+      "acc": 62.5,
+      "cov": 85.71428571428571,
+      "viol": 0
+    },
+    {
+      "skill": "documents",
+      "n": 8,
+      "pass": 6,
+      "acc": 75,
+      "cov": 81.25,
+      "viol": 0
+    },
+    {
+      "skill": "gcp",
+      "n": 8,
+      "pass": 8,
+      "acc": 100,
+      "cov": 100,
+      "viol": 0
+    },
+    {
+      "skill": "github-actions",
+      "n": 8,
+      "pass": 8,
+      "acc": 100,
+      "cov": 100,
+      "viol": 0
+    },
+    {
+      "skill": "github-ops",
+      "n": 8,
+      "pass": 5,
+      "acc": 62.5,
+      "cov": 83.33333333333334,
+      "viol": 0
+    },
+    {
+      "skill": "helm",
+      "n": 8,
+      "pass": 7,
+      "acc": 87.5,
+      "cov": 94.44444444444444,
+      "viol": 0
+    },
+    {
+      "skill": "homebrew",
+      "n": 8,
+      "pass": 8,
+      "acc": 100,
+      "cov": 100,
+      "viol": 0
+    },
+    {
+      "skill": "incident-response",
+      "n": 8,
+      "pass": 1,
+      "acc": 12.5,
+      "cov": 62.5,
+      "viol": 0
+    },
+    {
+      "skill": "investigate",
+      "n": 8,
+      "pass": 2,
+      "acc": 25,
+      "cov": 42.30769230769231,
+      "viol": 0
+    },
+    {
+      "skill": "kubernetes",
+      "n": 8,
+      "pass": 7,
+      "acc": 87.5,
+      "cov": 94.44444444444444,
+      "viol": 0
+    },
+    {
+      "skill": "monitoring",
+      "n": 8,
+      "pass": 3,
+      "acc": 37.5,
+      "cov": 76.19047619047619,
+      "viol": 0
+    },
+    {
+      "skill": "office-docs",
+      "n": 8,
+      "pass": 7,
+      "acc": 87.5,
+      "cov": 95.83333333333334,
+      "viol": 0
+    },
+    {
+      "skill": "pagerduty",
+      "n": 8,
+      "pass": 2,
+      "acc": 25,
+      "cov": 85.71428571428571,
+      "viol": 2
+    },
+    {
+      "skill": "paper-review",
+      "n": 8,
+      "pass": 7,
+      "acc": 87.5,
+      "cov": 96.15384615384616,
+      "viol": 0
+    },
+    {
+      "skill": "python-env",
+      "n": 8,
+      "pass": 7,
+      "acc": 87.5,
+      "cov": 94.11764705882352,
+      "viol": 0
+    },
+    {
+      "skill": "scaffold",
+      "n": 8,
+      "pass": 5,
+      "acc": 62.5,
+      "cov": 89.65517241379311,
+      "viol": 0
+    },
+    {
+      "skill": "servicenow",
+      "n": 8,
+      "pass": 4,
+      "acc": 50,
+      "cov": 85.71428571428571,
+      "viol": 0
+    },
+    {
+      "skill": "shell",
+      "n": 8,
+      "pass": 4,
+      "acc": 50,
+      "cov": 52.17391304347826,
+      "viol": 0
+    },
+    {
+      "skill": "terraform",
+      "n": 8,
+      "pass": 3,
+      "acc": 37.5,
+      "cov": 72.22222222222221,
+      "viol": 1
+    }
+  ],
+  "overall": {
+    "strictPass": 0.65,
+    "coverage": 0.8444850914389234,
+    "hallucinations": 5,
+    "n": 200
+  }
+}

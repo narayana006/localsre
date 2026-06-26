@@ -1,0 +1,605 @@
+{
+  "skill": "docker",
+  "scenarios": [
+    {
+      "prompt": "Build a Docker image from the Dockerfile in the current directory and tag it as myapp:latest.",
+      "must_include": ["docker build", "-t myapp:latest", "."],
+      "must_not_include": ["docker make", "--build-now"],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "How do I run my myapp:latest image and map container port 8080 to host port 8080?",
+      "must_include": ["docker run", "-p 8080:8080", "myapp:latest"],
+      "must_not_include": ["--port-map", "docker start -p"],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "List all running containers.",
+      "must_include": ["docker ps", "CONTAINER ID"],
+      "must_not_include": ["docker list", "docker containers"],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "Show me all containers including stopped ones.",
+      "must_include": ["docker ps", "-a"],
+      "must_not_include": ["--all-stopped", "docker ps --dead"],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "View the logs of a container named web.",
+      "must_include": ["docker logs", "web"],
+      "must_not_include": ["docker tail", "--show-logs"],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "Follow the logs of my running container api in real time.",
+      "must_include": ["docker logs", "-f", "api"],
+      "must_not_include": ["--stream", "docker watch"],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "Open an interactive bash shell inside my running container named app.",
+      "must_include": ["docker exec", "-it", "app", "bash"],
+      "must_not_include": ["docker shell", "docker enter"],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "List all Docker images on my machine.",
+      "must_include": ["docker images", "REPOSITORY"],
+      "must_not_include": ["docker img ls", "docker show-images"],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "Stop the container with name worker.",
+      "must_include": ["docker stop", "worker"],
+      "must_not_include": ["docker kill --graceful", "docker halt"],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "Remove a stopped container named old-job.",
+      "must_include": ["docker rm", "old-job"],
+      "must_not_include": ["docker delete", "docker remove"],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "Delete the image myapp:old from my machine.",
+      "must_include": ["docker rmi", "myapp:old"],
+      "must_not_include": ["docker image delete", "docker drop"],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "Run a container in detached/background mode from nginx and name it proxy.",
+      "must_include": ["docker run", "-d", "--name proxy", "nginx"],
+      "must_not_include": ["--background", "--detached-mode"],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "Run an ubuntu container interactively so I can poke around the shell.",
+      "must_include": ["docker run", "-it", "ubuntu"],
+      "must_not_include": ["--interactive-shell", "docker run --tty-only"],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "Build an image but give it a custom tag of registry-name backend:v1.2.0.",
+      "must_include": ["docker build", "-t backend:v1.2.0", "."],
+      "must_not_include": ["--tag-version", "docker tag-build"],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "How do I see detailed low-level info on a container called db, like its IP and mounts?",
+      "must_include": ["docker inspect", "db"],
+      "must_not_include": ["docker describe", "docker details"],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "I'm on an Apple Silicon M3 Mac but my GKE nodes are amd64. Build my image for the right architecture.",
+      "must_include": ["docker build", "--platform linux/amd64", "-t"],
+      "must_not_include": ["--arch amd64", "--platform=arm64"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "On my M1 Mac, build and tag api:latest so it actually runs on our x86 production servers.",
+      "must_include": ["docker build", "--platform linux/amd64", "api:latest"],
+      "must_not_include": ["--platform linux/arm64", "--cpu amd64"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Authenticate Docker to push images to Google Artifact Registry in the us-central1 region.",
+      "must_include": ["gcloud auth configure-docker", "us-central1-docker.pkg.dev"],
+      "must_not_include": ["gcloud docker login", "gcr.io configure"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Tag my local image myapp:latest for Artifact Registry repo 'images' in project my-proj, region us-central1, then show the push command.",
+      "must_include": ["docker tag", "us-central1-docker.pkg.dev/my-proj/images/myapp:latest", "docker push"],
+      "must_not_include": ["gcr.io/my-proj", "docker.io/my-proj"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Push my image to the legacy GCR (gcr.io) for project acme-prod.",
+      "must_include": ["docker tag", "gcr.io/acme-prod/", "docker push"],
+      "must_not_include": ["us.gcr.io.pkg.dev", "registry.gcp.com"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "I need to configure docker auth for gcr.io specifically before pushing.",
+      "must_include": ["gcloud auth configure-docker", "gcr.io"],
+      "must_not_include": ["gcloud auth docker-login", "docker login gcloud"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Build my image using Cloud Build instead of locally and push it to Artifact Registry.",
+      "must_include": ["gcloud builds submit", "--tag", "-docker.pkg.dev"],
+      "must_not_include": ["gcloud build run", "gcloud cloudbuild submit"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Submit a Cloud Build using my cloudbuild.yaml config file in the current directory.",
+      "must_include": ["gcloud builds submit", "--config cloudbuild.yaml", "."],
+      "must_not_include": ["--file cloudbuild.yaml", "gcloud builds run --config"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Walk me through a multi-stage Dockerfile for a Go app that produces a tiny final image.",
+      "must_include": ["FROM golang", "AS build", "COPY --from=build"],
+      "must_not_include": ["STAGE build", "IMPORT --from"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Write a multi-stage Dockerfile for a Node app: build stage installs deps and compiles, runtime stage is slim.",
+      "must_include": ["FROM node", "AS build", "COPY --from=build", "npm"],
+      "must_not_include": ["FROM node AS runtime-only-magic", "yarn --from"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "My docker build fails with 'COPY failed: no source files were specified'. How do I debug it?",
+      "must_include": ["COPY", "build context", ".dockerignore"],
+      "must_not_include": ["docker build --repair", "--fix-copy"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Build is failing at 'apt-get install' with hash sum mismatch. What can I try?",
+      "must_include": ["--no-cache", "apt-get update", "docker build"],
+      "must_not_include": ["docker build --refresh-apt", "apt-get fix-hash"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Run my container but mount the host directory ./data to /app/data inside.",
+      "must_include": ["docker run", "-v", "/app/data"],
+      "must_not_include": ["--mount-dir", "docker run --volume-host"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Pass an environment variable ENV=production to a container at runtime.",
+      "must_include": ["docker run", "-e ENV=production"],
+      "must_not_include": ["--env-set", "docker run --variable"],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "Start my services using docker compose.",
+      "must_include": ["docker compose up", "docker-compose.yml"],
+      "must_not_include": ["docker-compose start-all", "docker stack up"],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "Bring up my compose stack in detached mode and rebuild images.",
+      "must_include": ["docker compose up", "-d", "--build"],
+      "must_not_include": ["--rebuild-images", "docker compose start --bg"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Tear down my docker compose stack and remove volumes.",
+      "must_include": ["docker compose down", "-v"],
+      "must_not_include": ["--delete-volumes", "docker compose destroy"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "View logs for the 'api' service in my compose project and follow them.",
+      "must_include": ["docker compose logs", "-f", "api"],
+      "must_not_include": ["docker compose tail", "--service api"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "My container exits immediately after starting. How do I find out why?",
+      "must_include": ["docker logs", "docker ps", "-a"],
+      "must_not_include": ["docker debug --auto", "--why-exit"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Check the exit code and status of a container that crashed, named batch.",
+      "must_include": ["docker inspect", "batch", "State"],
+      "must_not_include": ["docker exitcode", "docker status --crash"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "I got 'exec format error' when running my image on the cluster. What's wrong and how do I fix it?",
+      "must_include": ["--platform linux/amd64", "architecture", "docker build"],
+      "must_not_include": ["--fix-format", "docker run --force-arch"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Build a multi-arch image for both amd64 and arm64 and push it to Artifact Registry.",
+      "must_include": ["docker buildx build", "--platform linux/amd64,linux/arm64", "--push"],
+      "must_not_include": ["docker build --multi-arch", "--platforms"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Set up a buildx builder so I can do cross-platform builds.",
+      "must_include": ["docker buildx create", "--use"],
+      "must_not_include": ["docker buildx init", "docker builder new"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Copy a file report.csv out of a running container named worker to my current directory.",
+      "must_include": ["docker cp", "worker:", "."],
+      "must_not_include": ["docker copy-out", "docker extract"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Show real-time resource usage (CPU, memory) of my running containers.",
+      "must_include": ["docker stats", "MEM USAGE"],
+      "must_not_include": ["docker top --live", "docker usage"],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "Show the running processes inside a container called server.",
+      "must_include": ["docker top", "server"],
+      "must_not_include": ["docker ps --inside", "docker exec ps-all"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Remove all stopped containers, unused networks, and dangling images to free space.",
+      "must_include": ["docker system prune", "-f"],
+      "must_not_include": ["docker cleanup", "docker gc"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Prune all unused images including non-dangling ones.",
+      "must_include": ["docker image prune", "-a"],
+      "must_not_include": ["docker rmi --all-unused", "docker prune-images"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Build my image without using the cache to ensure a fresh build.",
+      "must_include": ["docker build", "--no-cache", "."],
+      "must_not_include": ["--fresh", "--ignore-cache"],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "Pass a build argument VERSION=2.3.1 into my docker build.",
+      "must_include": ["docker build", "--build-arg VERSION=2.3.1"],
+      "must_not_include": ["--arg VERSION", "--build-var"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "In my Dockerfile, how do I declare a build arg and use it as an env var?",
+      "must_include": ["ARG", "ENV"],
+      "must_not_include": ["BUILDARG", "SETENV"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Build only a specific stage named 'test' from my multi-stage Dockerfile.",
+      "must_include": ["docker build", "--target test"],
+      "must_not_include": ["--stage test", "--only-stage"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Specify a non-default Dockerfile path Dockerfile.prod when building.",
+      "must_include": ["docker build", "-f Dockerfile.prod"],
+      "must_not_include": ["--dockerfile-path", "--file-prod"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Restart a container called cache automatically if it crashes.",
+      "must_include": ["docker run", "--restart", "unless-stopped"],
+      "must_not_include": ["--auto-restart", "--restart-always-crash"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Run a container and automatically remove it when it exits.",
+      "must_include": ["docker run", "--rm"],
+      "must_not_include": ["--auto-remove", "--cleanup-on-exit"],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "Pull the postgres:16 image from Docker Hub.",
+      "must_include": ["docker pull", "postgres:16"],
+      "must_not_include": ["docker fetch", "docker get"],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "I pushed to us-central1-docker.pkg.dev but get 'denied: permission'. How do I fix the auth?",
+      "must_include": ["gcloud auth configure-docker", "us-central1-docker.pkg.dev", "roles/artifactregistry"],
+      "must_not_include": ["docker login --gcp", "gcloud iam grant-docker"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Create an Artifact Registry Docker repository named 'containers' in us-east1 for project foo.",
+      "must_include": ["gcloud artifacts repositories create containers", "--repository-format=docker", "--location=us-east1"],
+      "must_not_include": ["--format=docker-image", "gcloud artifacts create-repo"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "List the images in my Artifact Registry repo 'images' in us-central1 for project bar.",
+      "must_include": ["gcloud artifacts docker images list", "us-central1-docker.pkg.dev/bar/images"],
+      "must_not_include": ["gcloud artifacts list-images", "gcr.io/bar/images"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Tag image hash sha256 and push to Artifact Registry with both :latest and :v1 tags.",
+      "must_include": ["docker tag", "docker push", "-docker.pkg.dev"],
+      "must_not_include": ["--multi-tag", "docker push --all-tags-magic"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "My build hangs at 'sending build context to docker daemon' and uploads gigabytes. Fix it.",
+      "must_include": [".dockerignore", "build context"],
+      "must_not_include": ["docker build --no-context", "--skip-upload"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Write a .dockerignore that excludes node_modules, .git, and the dist folder.",
+      "must_include": ["node_modules", ".git", "dist"],
+      "must_not_include": ["!include", "IGNORE node_modules"],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "Run a one-off command 'python manage.py migrate' in a new container from myapp:latest.",
+      "must_include": ["docker run", "--rm", "myapp:latest", "python manage.py migrate"],
+      "must_not_include": ["docker exec myapp:latest", "--once"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Override the entrypoint of an image to run /bin/sh instead.",
+      "must_include": ["docker run", "--entrypoint", "/bin/sh"],
+      "must_not_include": ["--override-entry", "--cmd-override"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "My HEALTHCHECK keeps the container 'unhealthy'. How do I inspect the health status?",
+      "must_include": ["docker inspect", "Health", "docker ps"],
+      "must_not_include": ["docker healthcheck status", "--show-health"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Add a HEALTHCHECK to my Dockerfile that curls localhost:8080/healthz.",
+      "must_include": ["HEALTHCHECK", "CMD", "localhost:8080/healthz"],
+      "must_not_include": ["HEALTH-CHECK", "PROBE"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Limit a container to 512MB of memory and 1 CPU when running.",
+      "must_include": ["docker run", "--memory", "--cpus"],
+      "must_not_include": ["--ram-limit", "--cpu-max"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Connect two containers using a custom user-defined bridge network called appnet.",
+      "must_include": ["docker network create appnet", "--network appnet"],
+      "must_not_include": ["docker network add", "--net-bridge appnet"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "List all docker networks.",
+      "must_include": ["docker network ls", "bridge"],
+      "must_not_include": ["docker networks", "docker net list"],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "Create a named volume pgdata and use it for a postgres container's /var/lib/postgresql/data.",
+      "must_include": ["docker volume create pgdata", "-v pgdata:/var/lib/postgresql/data"],
+      "must_not_include": ["docker volume add", "--vol pgdata"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "My image is 1.8GB and I want it smaller. Give me strategies for the Dockerfile.",
+      "must_include": ["multi-stage", "alpine", "COPY --from"],
+      "must_not_include": ["docker build --compress-image", "--shrink"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Inspect the history of layers in image myapp:latest to see what's bloating it.",
+      "must_include": ["docker history", "myapp:latest"],
+      "must_not_include": ["docker layers", "docker inspect --history"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "My 'docker run' gives 'port is already allocated'. How do I resolve it?",
+      "must_include": ["docker ps", "-p", "port"],
+      "must_not_include": ["docker run --force-port", "--ignore-port-conflict"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Build, tag for Artifact Registry, and push, all in sequence for service auth-svc in project myco region europe-west1.",
+      "must_include": ["docker build", "docker tag", "europe-west1-docker.pkg.dev/myco/", "docker push"],
+      "must_not_include": ["eu.gcr.io", "europe-west1.pkg.gcp.dev"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "I need the full image path format for Artifact Registry. What does it look like?",
+      "must_include": ["LOCATION-docker.pkg.dev", "PROJECT", "REPOSITORY"],
+      "must_not_include": ["gcr.io/LOCATION", "pkg.dev/docker"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Run my container as a non-root user with UID 1000.",
+      "must_include": ["docker run", "--user", "1000"],
+      "must_not_include": ["--uid 1000", "--run-as-user"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "In my Dockerfile, switch to a non-root user appuser before the CMD for security.",
+      "must_include": ["USER appuser", "RUN", "useradd"],
+      "must_not_include": ["SETUSER appuser", "--non-root"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Tail the last 100 log lines of a container named ingest.",
+      "must_include": ["docker logs", "--tail 100", "ingest"],
+      "must_not_include": ["--last 100", "docker logs -n 100 --bottom"],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "Show logs with timestamps for container scheduler.",
+      "must_include": ["docker logs", "-t", "scheduler"],
+      "must_not_include": ["--with-time", "--timestamp-show"],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "Get a shell into a distroless/scratch container that has no bash. What are my options?",
+      "must_include": ["docker exec", "debug", "ephemeral"],
+      "must_not_include": ["docker exec -it scratch bash", "--inject-shell"],
+      "difficulty": "edge"
+    },
+    {
+      "prompt": "My multi-stage build's final image is missing CA certificates and HTTPS calls fail. Fix the Dockerfile.",
+      "must_include": ["ca-certificates", "COPY --from", "/etc/ssl/certs"],
+      "must_not_include": ["--add-certs", "INSTALL ssl"],
+      "difficulty": "edge"
+    },
+    {
+      "prompt": "Build with BuildKit explicitly enabled and output a cache to a registry for CI.",
+      "must_include": ["DOCKER_BUILDKIT=1", "--cache-to", "--cache-from"],
+      "must_not_include": ["--enable-buildkit", "--cache-export-magic"],
+      "difficulty": "edge"
+    },
+    {
+      "prompt": "On my Mac (arm64) the amd64 image build is super slow under emulation. Any way to speed up pushing to GKE?",
+      "must_include": ["gcloud builds submit", "--platform linux/amd64", "emulation"],
+      "must_not_include": ["--turbo-build", "--native-amd64-mac"],
+      "difficulty": "edge"
+    },
+    {
+      "prompt": "Show the exit status reason for a container OOM-killed by the kernel, named heavy.",
+      "must_include": ["docker inspect", "OOMKilled", "heavy"],
+      "must_not_include": ["docker oom-report", "--show-oom"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Run nginx but mount a read-only config file nginx.conf from host into the container.",
+      "must_include": ["docker run", "-v", ":ro", "nginx"],
+      "must_not_include": ["--read-only-mount", "-v --readonly"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Save my image myapp:latest to a tar file and load it on another machine.",
+      "must_include": ["docker save", "docker load", "myapp:latest"],
+      "must_not_include": ["docker export-image", "docker import --tar"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Difference between docker save and docker export, and when to use each?",
+      "must_include": ["docker save", "docker export", "layers"],
+      "must_not_include": ["docker backup", "docker save --container"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Commit a running container's current state to a new image named patched:1.",
+      "must_include": ["docker commit", "patched:1"],
+      "must_not_include": ["docker snapshot", "docker save --commit"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Run my image and override the default command to print env vars with 'env'.",
+      "must_include": ["docker run", "myapp", "env"],
+      "must_not_include": ["--run-cmd env", "docker run --command"],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "My CMD uses shell form and signals aren't reaching the app on SIGTERM. How do I fix graceful shutdown?",
+      "must_include": ["exec form", "CMD", "SIGTERM"],
+      "must_not_include": ["--forward-signals", "CMD --exec-mode"],
+      "difficulty": "edge"
+    },
+    {
+      "prompt": "Add an init process so zombie processes get reaped in my container.",
+      "must_include": ["docker run", "--init"],
+      "must_not_include": ["--reaper", "--zombie-kill"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Authenticate to Artifact Registry using a service account key file for CI without gcloud login.",
+      "must_include": ["docker login", "-docker.pkg.dev", "_json_key"],
+      "must_not_include": ["docker login --keyfile", "gcloud sa-login"],
+      "difficulty": "edge"
+    },
+    {
+      "prompt": "I want to use Workload Identity / ADC for Artifact Registry push from a GKE pod. What auth helper?",
+      "must_include": ["gcloud auth configure-docker", "-docker.pkg.dev", "credential"],
+      "must_not_include": ["docker login --workload-id", "--adc-flag"],
+      "difficulty": "edge"
+    },
+    {
+      "prompt": "My build fails with 'failed to solve: no match for platform in manifest'. What's the cause on Apple Silicon?",
+      "must_include": ["--platform", "linux/amd64", "manifest"],
+      "must_not_include": ["--ignore-manifest", "docker build --any-platform"],
+      "difficulty": "edge"
+    },
+    {
+      "prompt": "Rename a running container from temp123 to billing.",
+      "must_include": ["docker rename", "temp123", "billing"],
+      "must_not_include": ["docker mv", "docker container rename --new"],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "Restart a container named gateway without recreating it.",
+      "must_include": ["docker restart", "gateway"],
+      "must_not_include": ["docker reboot", "docker run --restart-now"],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "Force remove a running container named stuck immediately.",
+      "must_include": ["docker rm", "-f", "stuck"],
+      "must_not_include": ["docker rm --kill", "docker force-rm"],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "Scale the 'worker' service to 3 replicas in docker compose.",
+      "must_include": ["docker compose up", "--scale worker=3"],
+      "must_not_include": ["docker compose scale worker 3", "--replicas worker=3"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Run a single service 'db' from my compose file without starting the others.",
+      "must_include": ["docker compose up", "db"],
+      "must_not_include": ["--only db", "docker compose run-service db"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Execute a psql command inside the running compose 'db' service.",
+      "must_include": ["docker compose exec", "db", "psql"],
+      "must_not_include": ["docker compose run-in db", "--service-exec"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "My compose service can't reach another by hostname. How does service discovery work in compose?",
+      "must_include": ["service name", "network", "docker compose"],
+      "must_not_include": ["--enable-dns", "links: required"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Write a docker-compose.yml with a web service built from ./web and a redis service.",
+      "must_include": ["services:", "build: ./web", "image: redis"],
+      "must_not_include": ["version: 99", "containers:"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Validate and view the fully resolved configuration of my compose file.",
+      "must_include": ["docker compose config", "services:"],
+      "must_not_include": ["docker compose validate", "docker compose lint"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "My pushed image to Artifact Registry shows the wrong digest in GKE; how do I pull by digest to verify?",
+      "must_include": ["docker pull", "-docker.pkg.dev", "@sha256:"],
+      "must_not_include": ["docker pull --digest", "gcr.io@sha"],
+      "difficulty": "edge"
+    },
+    {
+      "prompt": "Verify which platform/architecture a pulled image was built for.",
+      "must_include": ["docker inspect", "Architecture"],
+      "must_not_include": ["docker arch", "docker inspect --platform-only"],
+      "difficulty": "hard"
+    }
+  ]
+}

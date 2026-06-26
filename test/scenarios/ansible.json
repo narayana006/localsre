@@ -1,0 +1,1241 @@
+{
+  "skill": "ansible",
+  "scenarios": [
+    {
+      "prompt": "How do I run a playbook called site.yml against my inventory file?",
+      "must_include": [
+        "ansible-playbook",
+        "site.yml",
+        "-i"
+      ],
+      "must_not_include": [
+        "ansible-pull --destroy",
+        "rm -rf"
+      ],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "I want to preview what changes a playbook would make without actually applying them. What flag do I use?",
+      "must_include": [
+        "--check",
+        "ansible-playbook"
+      ],
+      "must_not_include": [
+        "--force-apply",
+        "--commit"
+      ],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "Show me a dry run that also displays the actual file content differences for deploy.yml.",
+      "must_include": [
+        "--check",
+        "--diff",
+        "ansible-playbook",
+        "deploy.yml"
+      ],
+      "must_not_include": [
+        "--show-changes",
+        "--preview-only"
+      ],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "How can I encrypt a secrets file with Ansible Vault?",
+      "must_include": [
+        "ansible-vault encrypt",
+        "ansible-vault"
+      ],
+      "must_not_include": [
+        "ansible-vault lock",
+        "gpg --encrypt-vault"
+      ],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "I need to run an ad-hoc command to ping all hosts in my inventory.",
+      "must_include": [
+        "ansible",
+        "-m ping",
+        "all"
+      ],
+      "must_not_include": [
+        "-m icmp",
+        "ansible-ping"
+      ],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "Run an ad-hoc shell command to check disk usage on the webservers group.",
+      "must_include": [
+        "ansible webservers",
+        "-m shell",
+        "df -h"
+      ],
+      "must_not_include": [
+        "-m diskcheck",
+        "--destroy"
+      ],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "How do I limit a playbook run to only a single host named web01?",
+      "must_include": [
+        "--limit",
+        "web01",
+        "ansible-playbook"
+      ],
+      "must_not_include": [
+        "--only-host",
+        "--single"
+      ],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "I want to pass an extra variable env=staging to my playbook on the command line.",
+      "must_include": [
+        "-e",
+        "env=staging",
+        "ansible-playbook"
+      ],
+      "must_not_include": [
+        "--set-var",
+        "--variable"
+      ],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "How do I list all hosts that a playbook would target without running anything?",
+      "must_include": [
+        "--list-hosts",
+        "ansible-playbook"
+      ],
+      "must_not_include": [
+        "--dump-hosts",
+        "--show-hosts"
+      ],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "Show me how to run only tasks tagged with 'nginx' in my playbook.",
+      "must_include": [
+        "--tags",
+        "nginx",
+        "ansible-playbook"
+      ],
+      "must_not_include": [
+        "--only-tags",
+        "--filter-tags"
+      ],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "How do I skip tasks tagged 'slow' when running a playbook?",
+      "must_include": [
+        "--skip-tags",
+        "slow",
+        "ansible-playbook"
+      ],
+      "must_not_include": [
+        "--exclude-tags",
+        "--ignore-tags"
+      ],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "Decrypt a vault-encrypted file named group_vars/prod/secrets.yml so I can edit it.",
+      "must_include": [
+        "ansible-vault decrypt",
+        "secrets.yml"
+      ],
+      "must_not_include": [
+        "ansible-vault unlock",
+        "ansible-vault open"
+      ],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "I want to edit an encrypted vault file in place without decrypting it permanently.",
+      "must_include": [
+        "ansible-vault edit",
+        "ansible-vault"
+      ],
+      "must_not_include": [
+        "ansible-vault modify",
+        "vault-edit"
+      ],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "How do I view the contents of an encrypted vault file without editing?",
+      "must_include": [
+        "ansible-vault view"
+      ],
+      "must_not_include": [
+        "ansible-vault cat",
+        "ansible-vault show"
+      ],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "Run a playbook and prompt me for the vault password interactively.",
+      "must_include": [
+        "--ask-vault-pass",
+        "ansible-playbook"
+      ],
+      "must_not_include": [
+        "--vault-prompt",
+        "--ask-pass-vault"
+      ],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "How can I pass the vault password from a file instead of typing it each time?",
+      "must_include": [
+        "--vault-password-file",
+        "ansible-playbook"
+      ],
+      "must_not_include": [
+        "--vault-key-file",
+        "--password-from"
+      ],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "What command checks the syntax of a playbook before I run it for real?",
+      "must_include": [
+        "--syntax-check",
+        "ansible-playbook"
+      ],
+      "must_not_include": [
+        "--lint",
+        "--validate-syntax"
+      ],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "I need to increase verbosity to debug why a task is failing. Show me the most verbose option.",
+      "must_include": [
+        "-vvvv",
+        "ansible-playbook"
+      ],
+      "must_not_include": [
+        "--debug-level",
+        "--verbose=max"
+      ],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Run an ad-hoc command as root using privilege escalation on the dbservers group.",
+      "must_include": [
+        "ansible dbservers",
+        "--become",
+        "-m"
+      ],
+      "must_not_include": [
+        "--sudo",
+        "-m root"
+      ],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "How do I specify a different become user, say 'postgres', when running a task?",
+      "must_include": [
+        "--become-user",
+        "postgres",
+        "--become"
+      ],
+      "must_not_include": [
+        "--sudo-user",
+        "--run-as"
+      ],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "I keep getting 'sudo password required'. How do I make Ansible prompt for the become password?",
+      "must_include": [
+        "--ask-become-pass",
+        "-K"
+      ],
+      "must_not_include": [
+        "--ask-sudo-pass",
+        "--become-prompt"
+      ],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Write an ad-hoc command to install the nginx package using the apt module on Debian hosts.",
+      "must_include": [
+        "-m apt",
+        "name=nginx",
+        "state=present"
+      ],
+      "must_not_include": [
+        "-m yum-install",
+        "state=installed-now"
+      ],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Use the ansible copy module ad-hoc to push a file from local to /etc/motd on all hosts.",
+      "must_include": [
+        "-m copy",
+        "src=",
+        "dest=/etc/motd"
+      ],
+      "must_not_include": [
+        "-m scp",
+        "-m transfer"
+      ],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Restart the nginx service on web hosts with an ad-hoc command.",
+      "must_include": [
+        "-m service",
+        "name=nginx",
+        "state=restarted"
+      ],
+      "must_not_include": [
+        "-m systemctl",
+        "state=bounce"
+      ],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "How do I run a playbook with a specific inventory directory rather than a single file?",
+      "must_include": [
+        "-i",
+        "ansible-playbook"
+      ],
+      "must_not_include": [
+        "--inventory-dir-only",
+        "-I"
+      ],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "I want to encrypt only a single variable value inline, not a whole file. How?",
+      "must_include": [
+        "ansible-vault encrypt_string"
+      ],
+      "must_not_include": [
+        "ansible-vault encrypt-var",
+        "encrypt_value"
+      ],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Re-key an existing vault file to use a new password.",
+      "must_include": [
+        "ansible-vault rekey"
+      ],
+      "must_not_include": [
+        "ansible-vault rotate",
+        "ansible-vault changekey"
+      ],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Show me how to start a playbook run at a specific task named 'Configure firewall'.",
+      "must_include": [
+        "--start-at-task",
+        "Configure firewall",
+        "ansible-playbook"
+      ],
+      "must_not_include": [
+        "--begin-at",
+        "--resume-task"
+      ],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "I want Ansible to step through each task and ask me before running it. What flag?",
+      "must_include": [
+        "--step",
+        "ansible-playbook"
+      ],
+      "must_not_include": [
+        "--interactive",
+        "--confirm-each"
+      ],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "How do I run a playbook with 10 forks for more parallelism?",
+      "must_include": [
+        "--forks",
+        "10",
+        "ansible-playbook"
+      ],
+      "must_not_include": [
+        "--parallel=10",
+        "--threads"
+      ],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "My playbook uses roles. How do I install role dependencies from a requirements.yml file?",
+      "must_include": [
+        "ansible-galaxy",
+        "install",
+        "-r requirements.yml"
+      ],
+      "must_not_include": [
+        "ansible-galaxy fetch",
+        "--roles-file"
+      ],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Install a collection from Galaxy named community.general.",
+      "must_include": [
+        "ansible-galaxy collection install",
+        "community.general"
+      ],
+      "must_not_include": [
+        "ansible-galaxy add",
+        "ansible-collection install"
+      ],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Create the standard directory skeleton for a new role called 'webserver'.",
+      "must_include": [
+        "ansible-galaxy",
+        "init",
+        "webserver"
+      ],
+      "must_not_include": [
+        "ansible-galaxy new",
+        "ansible-role create"
+      ],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "How can I check which tasks would change something across the fleet without modifying anything, including diffs?",
+      "must_include": [
+        "--check",
+        "--diff",
+        "ansible-playbook"
+      ],
+      "must_not_include": [
+        "--apply-changes",
+        "--no-dry-run"
+      ],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "I have a task that's not idempotent because it always reports changed. How should a shell task be made idempotent?",
+      "must_include": [
+        "creates",
+        "changed_when"
+      ],
+      "must_not_include": [
+        "always_changed=true",
+        "force_idempotent"
+      ],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Write a playbook task using the template module to render nginx.conf.j2 to /etc/nginx/nginx.conf and notify a handler to restart nginx.",
+      "must_include": [
+        "template:",
+        "src: nginx.conf.j2",
+        "dest: /etc/nginx/nginx.conf",
+        "notify"
+      ],
+      "must_not_include": [
+        "module: jinja",
+        "restart: now"
+      ],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Show how to define a handler that restarts nginx and is triggered by a notify.",
+      "must_include": [
+        "handlers:",
+        "name:",
+        "service:",
+        "state: restarted"
+      ],
+      "must_not_include": [
+        "on_notify:",
+        "trigger:"
+      ],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "How do I reference group_vars and host_vars to set variables per inventory group and host?",
+      "must_include": [
+        "group_vars",
+        "host_vars"
+      ],
+      "must_not_include": [
+        "global_vars",
+        "node_vars"
+      ],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Write an ad-hoc command to gather facts from a single host and display them.",
+      "must_include": [
+        "-m setup",
+        "ansible"
+      ],
+      "must_not_include": [
+        "-m facts",
+        "-m gather"
+      ],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "I only want to filter setup facts to ansible_distribution. How?",
+      "must_include": [
+        "-m setup",
+        "filter=",
+        "ansible_distribution"
+      ],
+      "must_not_include": [
+        "-m setup --grep",
+        "facts_filter"
+      ],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "My playbook should fail fast on the first host error. Which flag aborts the whole play on any failure?",
+      "must_include": [
+        "any_errors_fatal",
+        "ansible-playbook"
+      ],
+      "must_not_include": [
+        "--abort-on-error",
+        "fail_fast=true"
+      ],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "How do I control how many hosts are updated at a time for a rolling deployment?",
+      "must_include": [
+        "serial:"
+      ],
+      "must_not_include": [
+        "batch_size:",
+        "rolling:"
+      ],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "I want to limit failures during a rolling update before aborting. Which play keyword sets the max failure percentage?",
+      "must_include": [
+        "max_fail_percentage"
+      ],
+      "must_not_include": [
+        "fail_threshold",
+        "max_errors_percent"
+      ],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Write a task that uses the lineinfile module to ensure a line exists in /etc/ssh/sshd_config setting PermitRootLogin no.",
+      "must_include": [
+        "lineinfile:",
+        "path: /etc/ssh/sshd_config",
+        "line:"
+      ],
+      "must_not_include": [
+        "-m editfile",
+        "replace_line:"
+      ],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Use the ansible file module to ensure a directory /opt/app exists with mode 0755 owned by appuser.",
+      "must_include": [
+        "file:",
+        "path: /opt/app",
+        "state: directory",
+        "mode:"
+      ],
+      "must_not_include": [
+        "-m mkdir",
+        "state: folder"
+      ],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "How do I delegate a task to run on localhost instead of the target host?",
+      "must_include": [
+        "delegate_to: localhost"
+      ],
+      "must_not_include": [
+        "run_on: local",
+        "local_action_only:"
+      ],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "I need a task to run only once across all hosts in the play. Which keyword?",
+      "must_include": [
+        "run_once: true"
+      ],
+      "must_not_include": [
+        "single_run:",
+        "once: yes"
+      ],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Write a task with a conditional that only runs when ansible_distribution equals Ubuntu.",
+      "must_include": [
+        "when:",
+        "ansible_distribution",
+        "Ubuntu"
+      ],
+      "must_not_include": [
+        "if:",
+        "condition:"
+      ],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "How do I loop over a list of package names to install them with one task?",
+      "must_include": [
+        "loop:",
+        "item"
+      ],
+      "must_not_include": [
+        "foreach:",
+        "with_loop:"
+      ],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Register the output of a command task and print it with debug.",
+      "must_include": [
+        "register:",
+        "debug:",
+        "var:"
+      ],
+      "must_not_include": [
+        "capture:",
+        "echo:"
+      ],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "What's the safest way to test a destructive-looking playbook before applying to production?",
+      "must_include": [
+        "--check",
+        "--diff",
+        "--limit"
+      ],
+      "must_not_include": [
+        "--force",
+        "run on prod first"
+      ],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "How do I run a playbook against the staging inventory but only the loadbalancers group with a check run?",
+      "must_include": [
+        "-i",
+        "--limit",
+        "loadbalancers",
+        "--check"
+      ],
+      "must_not_include": [
+        "--group-only",
+        "--prod"
+      ],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Someone committed a plaintext password to group_vars. How should secrets be stored going forward?",
+      "must_include": [
+        "ansible-vault",
+        "encrypt"
+      ],
+      "must_not_include": [
+        "base64 is enough",
+        "plaintext is fine"
+      ],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "I want to use multiple vault IDs, one for dev and one for prod. Show the syntax.",
+      "must_include": [
+        "--vault-id",
+        "@prompt"
+      ],
+      "must_not_include": [
+        "--vault-multi",
+        "--vault-namespace"
+      ],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "How can I check the syntax and list the tasks of a playbook without executing it?",
+      "must_include": [
+        "--list-tasks",
+        "ansible-playbook"
+      ],
+      "must_not_include": [
+        "--dump-tasks",
+        "--show-plays"
+      ],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "List all the tags available in a playbook.",
+      "must_include": [
+        "--list-tags",
+        "ansible-playbook"
+      ],
+      "must_not_include": [
+        "--show-tags",
+        "--dump-tags"
+      ],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "Run a playbook but override the remote SSH user to 'deploy'.",
+      "must_include": [
+        "-u deploy",
+        "ansible-playbook"
+      ],
+      "must_not_include": [
+        "--ssh-user",
+        "--login-as"
+      ],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "How do I specify a private SSH key file for connecting to hosts?",
+      "must_include": [
+        "--private-key",
+        "ansible-playbook"
+      ],
+      "must_not_include": [
+        "--ssh-key",
+        "--identity-file"
+      ],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "I'm getting 'host key verification failed'. What's the proper way to handle host key checking config?",
+      "must_include": [
+        "host_key_checking",
+        "ansible.cfg"
+      ],
+      "must_not_include": [
+        "StrictHostKeyChecking=force",
+        "rm ~/.ssh/known_hosts"
+      ],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Write an ad-hoc command to reboot all hosts in the patch group using the reboot module.",
+      "must_include": [
+        "-m reboot",
+        "--become"
+      ],
+      "must_not_include": [
+        "-m shell -a \"reboot now\"",
+        "-a 'shutdown -r'"
+      ],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "I need a task that gathers no facts to speed up the play. How do I disable fact gathering?",
+      "must_include": [
+        "gather_facts: false"
+      ],
+      "must_not_include": [
+        "facts: off",
+        "no_setup: true"
+      ],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "How do I encrypt a new file at creation time and supply the password from a file?",
+      "must_include": [
+        "ansible-vault encrypt",
+        "--vault-password-file"
+      ],
+      "must_not_include": [
+        "ansible-vault new",
+        "--key-file"
+      ],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Show me how to run a playbook and store the output to a log while keeping it on screen.",
+      "must_include": [
+        "ansible-playbook",
+        "tee"
+      ],
+      "must_not_include": [
+        "--logfile",
+        "--output-to"
+      ],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "What play-level keyword lets me set the order in which hosts are processed, e.g. sorted?",
+      "must_include": [
+        "order:"
+      ],
+      "must_not_include": [
+        "host_order:",
+        "sort_hosts:"
+      ],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "I want to import another playbook from within my main playbook. What's the correct directive?",
+      "must_include": [
+        "import_playbook:"
+      ],
+      "must_not_include": [
+        "include_playbook:",
+        "use_playbook:"
+      ],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "How do I include a task file dynamically only when a condition is met?",
+      "must_include": [
+        "include_tasks:",
+        "when:"
+      ],
+      "must_not_include": [
+        "import_tasks_dynamic:",
+        "load_tasks:"
+      ],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Write a task using the get_url module to download a file from a URL to /tmp with checksum verification.",
+      "must_include": [
+        "get_url:",
+        "url:",
+        "dest:",
+        "checksum:"
+      ],
+      "must_not_include": [
+        "-m wget",
+        "download:"
+      ],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Use the user module to create a system user 'svc' with no login shell.",
+      "must_include": [
+        "user:",
+        "name: svc",
+        "shell: /usr/sbin/nologin"
+      ],
+      "must_not_include": [
+        "-m adduser",
+        "create_user:"
+      ],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "How do I run a one-off command on hosts matching a pattern of two groups, web and api?",
+      "must_include": [
+        "ansible",
+        "web:api",
+        "-m"
+      ],
+      "must_not_include": [
+        "web+api",
+        "web,api,--both"
+      ],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "I want to target hosts in webservers but NOT in the canary group. What inventory pattern?",
+      "must_include": [
+        "webservers:!canary"
+      ],
+      "must_not_include": [
+        "webservers-canary",
+        "webservers EXCLUDE canary"
+      ],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "How do I target the intersection of two groups, datacenter1 and webservers?",
+      "must_include": [
+        "datacenter1:&webservers"
+      ],
+      "must_not_include": [
+        "datacenter1 AND webservers",
+        "datacenter1+&webservers"
+      ],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Write a task to copy a config and validate it before replacing using the validate parameter.",
+      "must_include": [
+        "copy:",
+        "validate:"
+      ],
+      "must_not_include": [
+        "verify_cmd:",
+        "check_config:"
+      ],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Run a playbook in check mode but force a specific task to actually run by marking it always run in check.",
+      "must_include": [
+        "check_mode: false",
+        "--check"
+      ],
+      "must_not_include": [
+        "always_run: yes",
+        "force_run:"
+      ],
+      "difficulty": "edge"
+    },
+    {
+      "prompt": "How do I tell Ansible to treat a task as not reporting changed when it runs a read-only command?",
+      "must_include": [
+        "changed_when: false"
+      ],
+      "must_not_include": [
+        "no_change: true",
+        "readonly: yes"
+      ],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "I need a task to fail based on a custom condition using failed_when.",
+      "must_include": [
+        "failed_when:"
+      ],
+      "must_not_include": [
+        "fail_if:",
+        "error_when:"
+      ],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "How do I retry a task until a condition is met, e.g. waiting for a service to be up?",
+      "must_include": [
+        "until:",
+        "retries:",
+        "delay:"
+      ],
+      "must_not_include": [
+        "repeat:",
+        "wait_for_condition:"
+      ],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Use the wait_for module to block until port 8080 is open on the host.",
+      "must_include": [
+        "wait_for:",
+        "port: 8080"
+      ],
+      "must_not_include": [
+        "-m portcheck",
+        "wait_port:"
+      ],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "How do I pass extra vars from a JSON or YAML file using @ on the command line?",
+      "must_include": [
+        "-e",
+        "@",
+        "ansible-playbook"
+      ],
+      "must_not_include": [
+        "--vars-file=",
+        "--load-vars"
+      ],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "What's the right way to reference a secret stored in a vault-encrypted vars file inside a playbook?",
+      "must_include": [
+        "vars_files",
+        "vault"
+      ],
+      "must_not_include": [
+        "decrypt_inline",
+        "plaintext_secret"
+      ],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "I want to encrypt an existing plaintext file group_vars/prod.yml and keep the same filename.",
+      "must_include": [
+        "ansible-vault encrypt",
+        "group_vars/prod.yml"
+      ],
+      "must_not_include": [
+        "ansible-vault encrypt --rename",
+        "mv to .vault"
+      ],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "How do I check whether Ansible can reach a host and report unreachable separately from failed?",
+      "must_include": [
+        "-m ping",
+        "UNREACHABLE"
+      ],
+      "must_not_include": [
+        "-m reach",
+        "ansible-ping --report"
+      ],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Write a task using the systemd module to enable and start a service named myapp.",
+      "must_include": [
+        "systemd:",
+        "name: myapp",
+        "enabled: true",
+        "state: started"
+      ],
+      "must_not_include": [
+        "-m systemctl",
+        "boot: on"
+      ],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "How do I run a playbook against hosts defined inline as a comma list without an inventory file?",
+      "must_include": [
+        "-i",
+        "ansible-playbook"
+      ],
+      "must_not_include": [
+        "--hosts-list",
+        "--adhoc-hosts"
+      ],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "What is the correct trailing comma syntax for a single host inventory passed inline?",
+      "must_include": [
+        "-i",
+        ","
+      ],
+      "must_not_include": [
+        "--single-host",
+        "-i host --one"
+      ],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "I want to verify idempotency: run a playbook twice and confirm second run reports no changes. How do I interpret the PLAY RECAP?",
+      "must_include": [
+        "PLAY RECAP",
+        "changed=0",
+        "ok="
+      ],
+      "must_not_include": [
+        "idempotent=true flag",
+        "--idempotency-check"
+      ],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Lint my playbook for best-practice issues. What tool do I use?",
+      "must_include": [
+        "ansible-lint"
+      ],
+      "must_not_include": [
+        "ansible-playbook --lint",
+        "yamllint --ansible"
+      ],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "How do I tag a block of tasks so they all share the tag 'config'?",
+      "must_include": [
+        "block:",
+        "tags:",
+        "config"
+      ],
+      "must_not_include": [
+        "group_tag:",
+        "tag_block:"
+      ],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Write a block with rescue and always sections for error handling.",
+      "must_include": [
+        "block:",
+        "rescue:",
+        "always:"
+      ],
+      "must_not_include": [
+        "try:",
+        "catch:",
+        "finally:"
+      ],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "How do I set environment variables for a single task, e.g. http_proxy?",
+      "must_include": [
+        "environment:",
+        "http_proxy"
+      ],
+      "must_not_include": [
+        "env_vars:",
+        "set_env:"
+      ],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "I need to run a command module task but only create a file if it doesn't already exist. Which arg makes it idempotent?",
+      "must_include": [
+        "command:",
+        "creates:"
+      ],
+      "must_not_include": [
+        "only_if_missing:",
+        "skip_existing:"
+      ],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Use the git module to clone a repo to /opt/app at a specific version tag.",
+      "must_include": [
+        "git:",
+        "repo:",
+        "dest:",
+        "version:"
+      ],
+      "must_not_include": [
+        "-m gitclone",
+        "branch_tag:"
+      ],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "How do I display only the changed tasks during a run to reduce noise? Which env or flag controls diff display?",
+      "must_include": [
+        "--diff"
+      ],
+      "must_not_include": [
+        "--changed-only",
+        "--quiet-ok"
+      ],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Set up an ansible.cfg to point to a default inventory and disable host key checking for a lab. What keys go in there?",
+      "must_include": [
+        "[defaults]",
+        "inventory",
+        "host_key_checking"
+      ],
+      "must_not_include": [
+        "[ssh]disable_all",
+        "skip_security=true"
+      ],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "How do I run an ad-hoc command with privilege escalation prompting for the sudo password on appservers?",
+      "must_include": [
+        "ansible appservers",
+        "--become",
+        "-K"
+      ],
+      "must_not_include": [
+        "--ask-sudo-pass",
+        "-s"
+      ],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Write a task that uses the cron module to schedule a backup job at 2am daily.",
+      "must_include": [
+        "cron:",
+        "name:",
+        "minute:",
+        "hour:"
+      ],
+      "must_not_include": [
+        "-m crontab",
+        "schedule:"
+      ],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "How do I check what a role would change before applying, given the playbook just imports the role?",
+      "must_include": [
+        "--check",
+        "--diff",
+        "ansible-playbook"
+      ],
+      "must_not_include": [
+        "--role-dryrun",
+        "--simulate-role"
+      ],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "I want to override a role's default variable at runtime. Where do role defaults live and how do I override?",
+      "must_include": [
+        "defaults/main.yml",
+        "-e"
+      ],
+      "must_not_include": [
+        "role_override.yml",
+        "--force-default"
+      ],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "How can I see only a summary of facts like OS and IP from many hosts quickly?",
+      "must_include": [
+        "-m setup",
+        "filter="
+      ],
+      "must_not_include": [
+        "-m osinfo",
+        "--facts-summary"
+      ],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "A teammate suggests running 'ansible all -m shell -a \"rm -rf /var/log/*\"' to clean logs. Is this safe and what's better?",
+      "must_include": [
+        "--check",
+        "find",
+        "-mtime"
+      ],
+      "must_not_include": [
+        "yes run rm -rf /var/log/*",
+        "looks fine"
+      ],
+      "difficulty": "edge"
+    },
+    {
+      "prompt": "How do I make sure my playbook never runs against production by accident when I forget --limit?",
+      "must_include": [
+        "--limit",
+        "hosts:"
+      ],
+      "must_not_include": [
+        "it's impossible to prevent",
+        "just be careful"
+      ],
+      "difficulty": "edge"
+    }
+  ]
+}

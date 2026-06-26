@@ -1,0 +1,52 @@
+{
+  "model": "qwen3-coder:30b",
+  "endpoint": "http://localhost:11434/v1",
+  "backends": [
+    "Raw Qwen3",
+    "LocalSRE v0.20"
+  ],
+  "results": {
+    "Raw Qwen3": [
+      {
+        "scores": {
+          "task_pass": 0,
+          "read_before_edit": null,
+          "hypothesis_first": 0,
+          "post_edit_verify": null,
+          "tool_count": 0,
+          "no_loop": 1,
+          "no_fabrication": 1
+        },
+        "events": [
+          {
+            "type": "error",
+            "text": "fetch failed"
+          }
+        ]
+      }
+    ],
+    "LocalSRE v0.20": [
+      {
+        "scores": {
+          "task_pass": 0,
+          "read_before_edit": null,
+          "hypothesis_first": 0,
+          "post_edit_verify": null,
+          "tool_count": 0,
+          "no_loop": 1,
+          "no_fabrication": 1
+        },
+        "events": [
+          {
+            "type": "status",
+            "text": "thinking…"
+          },
+          {
+            "type": "error",
+            "text": "fetch failed"
+          }
+        ]
+      }
+    ]
+  }
+}

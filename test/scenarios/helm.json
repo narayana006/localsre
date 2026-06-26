@@ -1,0 +1,605 @@
+{
+  "skill": "helm",
+  "scenarios": [
+    {
+      "prompt": "How do I add the Bitnami chart repo to Helm?",
+      "must_include": ["helm repo add", "bitnami", "helm repo update"],
+      "must_not_include": ["helm install --force", "apt install bitnami"],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "Add the prometheus-community repo and refresh my local cache.",
+      "must_include": ["helm repo add prometheus-community", "helm repo update"],
+      "must_not_include": ["helm repo delete", "--insecure-skip-tls-verify"],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "Install nginx from bitnami into the web namespace.",
+      "must_include": ["helm install", "bitnami/nginx", "-n web"],
+      "must_not_include": ["helm delete", "kubectl run nginx"],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "I want to list all the repos I currently have configured.",
+      "must_include": ["helm repo list", "repo"],
+      "must_not_include": ["helm list --repo", "helm search hub"],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "Show me all releases installed in the staging namespace.",
+      "must_include": ["helm list", "-n staging"],
+      "must_not_include": ["helm get all --everywhere", "kubectl get releases"],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "How do I update all my helm repositories to get the latest chart versions?",
+      "must_include": ["helm repo update", "repo"],
+      "must_not_include": ["helm upgrade --all", "helm repo refresh"],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "Search for redis charts available in my added repos.",
+      "must_include": ["helm search repo", "redis"],
+      "must_not_include": ["helm search hub redis --install", "apt search redis"],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "Search the Artifact Hub for a kafka chart.",
+      "must_include": ["helm search hub", "kafka"],
+      "must_not_include": ["helm search repo kafka", "--debug"],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "Uninstall the release named my-app from the prod namespace.",
+      "must_include": ["helm uninstall my-app", "-n prod"],
+      "must_not_include": ["helm delete --purge", "kubectl delete namespace prod"],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "I deployed an app called api. How do I see its release history?",
+      "must_include": ["helm history api", "-n"],
+      "must_not_include": ["helm log api", "git log"],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "What's the idempotent way to deploy or update a release in one command?",
+      "must_include": ["helm upgrade --install", "idempotent"],
+      "must_not_include": ["helm install || helm upgrade", "helm reinstall"],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "Deploy or upgrade the release 'checkout' from chart bitnami/nginx in namespace shop, creating the namespace if needed.",
+      "must_include": ["helm upgrade --install checkout", "bitnami/nginx", "-n shop", "--create-namespace"],
+      "must_not_include": ["kubectl create namespace shop", "helm install checkout"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Install a chart but only see what would be rendered against the live cluster, not actually apply it.",
+      "must_include": ["helm install", "--dry-run=server"],
+      "must_not_include": ["--dry-run=client", "helm template"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "I want a server-side dry run of upgrading my release so I can validate against admission webhooks. How?",
+      "must_include": ["helm upgrade", "--dry-run=server"],
+      "must_not_include": ["--dry-run=client", "plain --dry-run"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "How do I roll back release 'payments' to revision 3 in namespace prod?",
+      "must_include": ["helm rollback payments 3", "-n prod"],
+      "must_not_include": ["helm rollback payments --latest", "git revert"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "My latest upgrade broke things. Roll back to the previous working revision.",
+      "must_include": ["helm history", "helm rollback"],
+      "must_not_include": ["helm uninstall", "helm rollback --hard"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "How can I see the values that were actually used for the currently deployed release 'web'?",
+      "must_include": ["helm get values web", "-n"],
+      "must_not_include": ["helm show values web", "cat values.yaml"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "I want to see the full computed values including defaults for release 'web', not just my overrides.",
+      "must_include": ["helm get values web", "--all"],
+      "must_not_include": ["helm show values", "--defaults-only"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Render the chart templates locally to inspect the YAML without touching the cluster.",
+      "must_include": ["helm template", "local"],
+      "must_not_include": ["--dry-run=server", "helm install --apply"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Render templates for chart ./mychart with my custom values file and save to manifests.yaml.",
+      "must_include": ["helm template", "-f", "./mychart"],
+      "must_not_include": ["helm install --output", "kubectl apply -f ./mychart"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "What's the default chart values I can override before installing bitnami/postgresql?",
+      "must_include": ["helm show values", "bitnami/postgresql"],
+      "must_not_include": ["helm get values", "helm inspect"],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "I upgraded with -f new-values.yaml plus --reuse-values and some old values came back unexpectedly. What's going on?",
+      "must_include": ["--reuse-values", "--reset-values", "-f"],
+      "must_not_include": ["--reuse-values is always safe", "helm upgrade --force always"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "I only want to change image.tag on an existing release and keep everything else exactly as deployed. Best flag?",
+      "must_include": ["helm upgrade", "--reuse-values", "--set image.tag"],
+      "must_not_include": ["--reset-values", "reinstall the chart"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "When upgrading to a new chart version, I want defaults from the new chart applied and only my explicit overrides kept. Which values flag?",
+      "must_include": ["--reset-values", "-f"],
+      "must_not_include": ["--reuse-values", "--reset-then-reuse-values is the only option"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "My release is stuck in pending-upgrade state and helm won't let me upgrade again. How do I recover?",
+      "must_include": ["helm history", "helm rollback", "pending-upgrade"],
+      "must_not_include": ["helm uninstall --force then reinstall blindly", "kubectl delete secret randomly"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "A release is stuck in pending-install and never had a successful revision. How can I clean it up?",
+      "must_include": ["helm uninstall", "pending-install", "-n"],
+      "must_not_include": ["helm rollback to 0", "helm delete --purge"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Show me the full rendered manifest of what's currently deployed for release 'api'.",
+      "must_include": ["helm get manifest api", "-n"],
+      "must_not_include": ["helm template api", "helm show manifest"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "How do I get all the info (hooks, manifest, values, notes) for a deployed release in one command?",
+      "must_include": ["helm get all", "-n"],
+      "must_not_include": ["helm describe", "helm get everything"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Install chart and wait until all resources are ready before returning, with a 5 minute timeout.",
+      "must_include": ["helm install", "--wait", "--timeout 5m"],
+      "must_not_include": ["--wait-forever", "sleep 300"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Upgrade my release and automatically roll back if it fails.",
+      "must_include": ["helm upgrade", "--atomic"],
+      "must_not_include": ["--auto-rollback", "helm rollback --on-failure"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Install a specific chart version 12.1.0 of bitnami/redis.",
+      "must_include": ["helm install", "bitnami/redis", "--version 12.1.0"],
+      "must_not_include": ["--chart-version", "@12.1.0"],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "I need to override replicaCount to 3 and service.type to LoadBalancer at install time.",
+      "must_include": ["helm install", "--set replicaCount=3", "--set service.type=LoadBalancer"],
+      "must_not_include": ["--values replicaCount=3", "helm config set"],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "Install using two separate values files, base.yaml then env-prod.yaml, with prod overriding base.",
+      "must_include": ["helm install", "-f base.yaml", "-f env-prod.yaml"],
+      "must_not_include": ["--values base.yaml,env-prod.yaml only merges alphabetically", "helm merge"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "How do I pull and unpack a chart locally so I can inspect its files?",
+      "must_include": ["helm pull", "--untar"],
+      "must_not_include": ["helm download", "git clone the chart"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Lint my chart before packaging it.",
+      "must_include": ["helm lint", "chart"],
+      "must_not_include": ["helm validate", "yamllint only"],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "Package my chart directory ./mychart into a .tgz.",
+      "must_include": ["helm package", "./mychart"],
+      "must_not_include": ["tar -czf chart", "helm build"],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "Update the chart dependencies declared in Chart.yaml before installing.",
+      "must_include": ["helm dependency update", "Chart.yaml"],
+      "must_not_include": ["helm dep install --force", "npm install"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "I want to template my chart but also have helm validate the output against the cluster's API. Plain helm template won't catch CRDs. What should I do?",
+      "must_include": ["helm install", "--dry-run=server"],
+      "must_not_include": ["helm template --validate-crds is enough", "--dry-run=client"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Status of release 'frontend' in namespace ui please.",
+      "must_include": ["helm status frontend", "-n ui"],
+      "must_not_include": ["kubectl status frontend", "helm get status"],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "Remove a repo I no longer use called oldrepo.",
+      "must_include": ["helm repo remove oldrepo", "repo"],
+      "must_not_include": ["helm uninstall oldrepo", "rm -rf ~/.helm"],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "Install an OCI-based chart from oci://registry.example.com/charts/myapp version 1.2.3.",
+      "must_include": ["helm install", "oci://registry.example.com/charts/myapp", "--version 1.2.3"],
+      "must_not_include": ["helm repo add oci://", "docker pull"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Push my packaged chart myapp-1.2.3.tgz to oci://registry.example.com/charts.",
+      "must_include": ["helm push", "myapp-1.2.3.tgz", "oci://registry.example.com/charts"],
+      "must_not_include": ["helm publish", "docker push"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Show me the diff between what's deployed and what an upgrade would change before I apply it.",
+      "must_include": ["helm diff upgrade", "--dry-run=server"],
+      "must_not_include": ["git diff", "helm compare"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "I want to upgrade but force resource replacement through delete/recreate. Is that safe?",
+      "must_include": ["helm upgrade", "--force"],
+      "must_not_include": ["--force is always safe", "--recreate-everything"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "How do I list releases across ALL namespaces?",
+      "must_include": ["helm list", "--all-namespaces"],
+      "must_not_include": ["-n all", "helm list --global"],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "Also show me failed and superseded releases, not just deployed ones.",
+      "must_include": ["helm list", "--all"],
+      "must_not_include": ["--show-failed-only", "helm history --all"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Get just the user-supplied values for release 'cache' as YAML output.",
+      "must_include": ["helm get values cache", "-o yaml"],
+      "must_not_include": ["helm show values cache", "--format yaml"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Render only one template file, templates/deployment.yaml, from my chart.",
+      "must_include": ["helm template", "--show-only templates/deployment.yaml"],
+      "must_not_include": ["--only templates/deployment.yaml", "grep deployment.yaml"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "I need to install a chart but the release name should be generated automatically.",
+      "must_include": ["helm install", "--generate-name"],
+      "must_not_include": ["--random-name", "helm install --auto"],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "Roll back release 'orders' to the previous revision and wait for it to be healthy.",
+      "must_include": ["helm rollback orders", "--wait", "-n"],
+      "must_not_include": ["helm rollback orders --hard", "kubectl rollout undo"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Show me the notes that were printed when release 'web' was installed.",
+      "must_include": ["helm get notes web", "-n"],
+      "must_not_include": ["helm show notes", "cat NOTES.txt from cluster"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Before upgrading, I want to confirm the new chart version available in the bitnami repo.",
+      "must_include": ["helm search repo bitnami", "--versions"],
+      "must_not_include": ["helm upgrade --check-version", "helm list --available"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Install and set a value that contains a comma, like an annotation list. How do I escape it?",
+      "must_include": ["--set", "\\,"],
+      "must_not_include": ["commas can't be used in --set", "use --set-comma"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "I have a values file with sensitive data; how do I pass a string value without type coercion, e.g. a numeric-looking token?",
+      "must_include": ["--set-string", "helm upgrade"],
+      "must_not_include": ["--set-raw", "--no-coerce"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Pass the contents of a file as a single value (e.g. a config blob) into the chart.",
+      "must_include": ["--set-file", "helm install"],
+      "must_not_include": ["--set-from-file", "--file-value"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Inspect the Chart.yaml metadata (description, version, appVersion) for bitnami/nginx without installing.",
+      "must_include": ["helm show chart", "bitnami/nginx"],
+      "must_not_include": ["helm get chart", "cat Chart.yaml from repo"],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "Show the README for the bitnami/redis chart.",
+      "must_include": ["helm show readme", "bitnami/redis"],
+      "must_not_include": ["helm get readme", "curl the readme"],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "My upgrade hangs forever on --wait. The pods are CrashLooping. How do I debug and recover?",
+      "must_include": ["kubectl get pods", "-n", "helm rollback"],
+      "must_not_include": ["just rerun helm upgrade --force blindly", "delete the namespace"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "How do I see what hooks a chart will run, like pre-install jobs, for release 'db'?",
+      "must_include": ["helm get hooks db", "-n"],
+      "must_not_include": ["helm show hooks", "kubectl get hooks"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Install with a values file but also override one nested key on the CLI; CLI should win.",
+      "must_include": ["helm install", "-f", "--set"],
+      "must_not_include": ["values file always overrides --set", "can't combine -f and --set"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "I want to test an upgrade's rendered output with the deployed values reused, server-side validated.",
+      "must_include": ["helm upgrade", "--reuse-values", "--dry-run=server"],
+      "must_not_include": ["--dry-run=client", "--reset-values then reuse"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Delete a release but keep the history so I could roll back later. Is that possible?",
+      "must_include": ["helm uninstall", "--keep-history"],
+      "must_not_include": ["--keep-history is the default", "helm delete --soft"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Install chart with values rendered from a remote URL values file.",
+      "must_include": ["helm install", "-f https://"],
+      "must_not_include": ["helm can't read remote values", "curl then --set"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "How do I run helm's built-in release test hooks after installing release 'web'?",
+      "must_include": ["helm test web", "-n"],
+      "must_not_include": ["helm run-tests", "kubectl test web"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Create a brand new chart scaffold called mychart.",
+      "must_include": ["helm create mychart", "chart"],
+      "must_not_include": ["helm init mychart", "helm new mychart"],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "List all the plugins I have installed.",
+      "must_include": ["helm plugin list", "plugin"],
+      "must_not_include": ["helm list plugins", "helm plugins ls"],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "Install the helm-diff plugin.",
+      "must_include": ["helm plugin install", "plugin"],
+      "must_not_include": ["helm install plugin", "apt install helm-diff"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Verify my chart will deploy correctly with --dry-run=server but I'm getting 'cannot patch resource' — what could cause that in a server dry run?",
+      "must_include": ["--dry-run=server", "admission", "RBAC"],
+      "must_not_include": ["use --dry-run=client instead to avoid it", "ignore the error"],
+      "difficulty": "edge"
+    },
+    {
+      "prompt": "My helm list shows nothing but I know apps are deployed. What's the most likely cause?",
+      "must_include": ["-n", "--all-namespaces", "namespace"],
+      "must_not_include": ["helm is broken, reinstall", "the releases were deleted"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "I ran helm upgrade --install but it errored 'has no deployed releases'. How do I fix this stuck state?",
+      "must_include": ["has no deployed releases", "helm uninstall", "--keep-history"],
+      "must_not_include": ["this error is harmless", "helm rollback fixes it always"],
+      "difficulty": "edge"
+    },
+    {
+      "prompt": "How do I limit helm history to the last 5 revisions for release 'api'?",
+      "must_include": ["helm history api", "--max 5", "-n"],
+      "must_not_include": ["--limit 5", "helm history --tail 5"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Output helm list as JSON so I can parse it in a script.",
+      "must_include": ["helm list", "-o json"],
+      "must_not_include": ["--json", "helm list --format json"],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "I want to install but skip running CRDs install (CRDs already managed separately).",
+      "must_include": ["helm install", "--skip-crds"],
+      "must_not_include": ["--no-crds", "--exclude-crds"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Upgrade and explicitly wait for jobs to complete too, not just deployments.",
+      "must_include": ["helm upgrade", "--wait", "--wait-for-jobs"],
+      "must_not_include": ["--wait-jobs", "--wait=jobs"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "How do I tell helm to use a specific kubeconfig and context for an install?",
+      "must_include": ["--kube-context", "--kubeconfig"],
+      "must_not_include": ["--cluster", "export HELM_CONTEXT"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Render the chart with a fake/specific Kubernetes API version for capabilities, e.g. for templates gated on .Capabilities.",
+      "must_include": ["helm template", "--api-versions"],
+      "must_not_include": ["--kube-version-fake", "--capabilities"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Template the chart pretending the cluster is Kubernetes 1.27 for version-gated templates.",
+      "must_include": ["helm template", "--kube-version 1.27"],
+      "must_not_include": ["--k8s-version", "--cluster-version 1.27"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Get the manifest for a specific past revision (revision 2) of release 'api'.",
+      "must_include": ["helm get manifest api", "--revision 2", "-n"],
+      "must_not_include": ["--rev 2", "helm get manifest api 2 without flag"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Get the values that were used at a specific past revision 4 of release 'web'.",
+      "must_include": ["helm get values web", "--revision 4"],
+      "must_not_include": ["helm history --values 4", "--rev 4"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Install but show debug output to troubleshoot a templating error.",
+      "must_include": ["helm install", "--debug"],
+      "must_not_include": ["--verbose", "-vvv"],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "I'm seeing 'another operation (install/upgrade/rollback) is in progress'. How do I clear it safely?",
+      "must_include": ["in progress", "helm rollback", "helm history"],
+      "must_not_include": ["delete the helm release secret randomly", "restart the cluster"],
+      "difficulty": "edge"
+    },
+    {
+      "prompt": "How do I find the helm release storage (secrets) for release 'api' in namespace prod?",
+      "must_include": ["kubectl get secret", "-n prod", "owner=helm"],
+      "must_not_include": ["helm stores in configmaps by default in v3", "rm the secrets"],
+      "difficulty": "edge"
+    },
+    {
+      "prompt": "Upgrade a release and pass --history-max 10 to limit stored revisions.",
+      "must_include": ["helm upgrade", "--history-max 10"],
+      "must_not_include": ["--max-history 10", "--keep-history 10"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "How do I do a quick client-only render to check syntax when I have no cluster access at all?",
+      "must_include": ["helm template", "render"],
+      "must_not_include": ["--dry-run=server", "you must have a cluster"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "When is plain client-side dry run insufficient and I must use --dry-run=server instead?",
+      "must_include": ["--dry-run=server", "admission webhooks", "lookup"],
+      "must_not_include": ["client dry run validates webhooks", "they are identical"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Install chart 'app' and set the namespace label/annotation via post-renderer. What's the flag for a post-renderer?",
+      "must_include": ["helm install", "--post-renderer"],
+      "must_not_include": ["--postprocess", "--kustomize-after"],
+      "difficulty": "edge"
+    },
+    {
+      "prompt": "How do I add a private repo that needs a username and password?",
+      "must_include": ["helm repo add", "--username", "--password"],
+      "must_not_include": ["--user --pass", "embed creds in URL only"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Add a repo whose TLS cert is self-signed in my lab. What flag bypasses verification (lab only)?",
+      "must_include": ["helm repo add", "--insecure-skip-tls-verify"],
+      "must_not_include": ["--no-tls", "this is recommended for production"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "I want to upgrade and wait, but if it fails I do NOT want auto-rollback because I want to inspect the failure. What should I avoid?",
+      "must_include": ["helm upgrade", "--wait"],
+      "must_not_include": ["--atomic", "--cleanup-on-fail rolls back"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "On a failed upgrade, I want helm to delete newly created resources that won't be tracked. Which flag?",
+      "must_include": ["helm upgrade", "--cleanup-on-fail"],
+      "must_not_include": ["--gc-on-fail", "--delete-orphans"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Show me a diff of values between two revisions, 3 and 5, of release 'web' to understand what changed.",
+      "must_include": ["helm get values web", "--revision 3", "--revision 5"],
+      "must_not_include": ["helm diff revisions 3 5 is built in", "git diff"],
+      "difficulty": "edge"
+    },
+    {
+      "prompt": "How do I install a chart from a local .tgz file I downloaded?",
+      "must_include": ["helm install", ".tgz"],
+      "must_not_include": ["tar xzf then kubectl apply", "helm load"],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "Install a chart from a local unpacked directory ./charts/myapp.",
+      "must_include": ["helm install", "./charts/myapp"],
+      "must_not_include": ["helm install --dir", "cd into it first required"],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "I want helm to NOT hook-delete the test pods after running helm test so I can read logs.",
+      "must_include": ["helm test", "--logs"],
+      "must_not_include": ["--keep-pods", "--no-cleanup is a helm test flag"],
+      "difficulty": "edge"
+    },
+    {
+      "prompt": "Roll back but I'm not sure which revision was last good — walk me through it for release 'payments' in prod.",
+      "must_include": ["helm history payments", "-n prod", "helm rollback payments"],
+      "must_not_include": ["just rollback to 1 always", "helm rollback --auto"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "How do I dry-run a rollback to preview it server-side before committing?",
+      "must_include": ["helm rollback", "--dry-run"],
+      "must_not_include": ["helm rollback --preview", "rollback can't be dry-run"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "I changed Chart.yaml dependencies; how do I rebuild the charts/ directory from the existing lock file without re-resolving?",
+      "must_include": ["helm dependency build", "lock"],
+      "must_not_include": ["helm dependency update always", "npm ci"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "How can I verify a chart's provenance / signature when pulling?",
+      "must_include": ["helm pull", "--verify"],
+      "must_not_include": ["--check-signature", "gpg verify only manually"],
+      "difficulty": "edge"
+    },
+    {
+      "prompt": "Quick sanity: list releases in the default namespace only and show their chart versions.",
+      "must_include": ["helm list", "-n default"],
+      "must_not_include": ["--all-namespaces", "helm list --chart-version"],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "I want to upgrade '--install' a release and ensure if it's the very first install it also creates the namespace and waits.",
+      "must_include": ["helm upgrade --install", "--create-namespace", "--wait"],
+      "must_not_include": ["kubectl create ns first", "--install can't create namespaces"],
+      "difficulty": "medium"
+    }
+  ]
+}

@@ -1,0 +1,1137 @@
+{
+  "skill": "python-env",
+  "scenarios": [
+    {
+      "prompt": "How do I create a virtual environment in my project folder?",
+      "must_include": [
+        "python3 -m venv",
+        ".venv"
+      ],
+      "must_not_include": [
+        "conda create"
+      ],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "Create a venv called env and activate it on macOS.",
+      "must_include": [
+        "python3 -m venv env",
+        "source env/bin/activate"
+      ],
+      "must_not_include": [
+        "conda activate"
+      ],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "Set up a fresh Python virtual environment for a new project.",
+      "must_include": [
+        "python3 -m venv",
+        "source",
+        "activate"
+      ],
+      "must_not_include": [
+        "sudo pip install"
+      ],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "What's the command to make a virtual environment named venv?",
+      "must_include": [
+        "python3 -m venv venv",
+        "source venv/bin/activate"
+      ],
+      "must_not_include": [
+        "virtualenvwrapper mkvirtualenv"
+      ],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "I want an isolated Python environment for this repo. How?",
+      "must_include": [
+        "python3 -m venv .venv",
+        "source .venv/bin/activate"
+      ],
+      "must_not_include": [
+        "conda env create"
+      ],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "Create and activate a virtual environment in one go.",
+      "must_include": [
+        "python3 -m venv .venv",
+        "source .venv/bin/activate"
+      ],
+      "must_not_include": [
+        "pyenv virtualenv"
+      ],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "How can I make a Python sandbox so I don't pollute my system packages?",
+      "must_include": [
+        "python3 -m venv",
+        "activate"
+      ],
+      "must_not_include": [
+        "sudo pip"
+      ],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "New to Python venv \u2014 give me the basic create command.",
+      "must_include": [
+        "python3 -m venv",
+        "activate"
+      ],
+      "must_not_include": [
+        "npm install"
+      ],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "Make a virtual environment in the current directory.",
+      "must_include": [
+        "python3 -m venv .venv",
+        "source"
+      ],
+      "must_not_include": [
+        "conda"
+      ],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "Steps to spin up a venv and start using it.",
+      "must_include": [
+        "python3 -m venv",
+        "source",
+        "activate"
+      ],
+      "must_not_include": [
+        "mkvirtualenv"
+      ],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "Create a venv folder named myenv.",
+      "must_include": [
+        "python3 -m venv myenv",
+        "source myenv/bin/activate"
+      ],
+      "must_not_include": [
+        "sudo"
+      ],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "How do I initialize a virtual environment with the built-in venv module?",
+      "must_include": [
+        "python3 -m venv",
+        "activate"
+      ],
+      "must_not_include": [
+        "conda create"
+      ],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "How do I activate my virtual environment on macOS/Linux?",
+      "must_include": [
+        "source .venv/bin/activate",
+        "deactivate"
+      ],
+      "must_not_include": [
+        "activate.bat"
+      ],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "I created .venv but how do I turn it on?",
+      "must_include": [
+        "source .venv/bin/activate",
+        "deactivate"
+      ],
+      "must_not_include": [
+        "conda activate"
+      ],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "Activate the venv named env.",
+      "must_include": [
+        "source env/bin/activate",
+        "deactivate"
+      ],
+      "must_not_include": [
+        "workon env"
+      ],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "Command to enter my virtual environment.",
+      "must_include": [
+        "source",
+        "bin/activate"
+      ],
+      "must_not_include": [
+        "nvm use"
+      ],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "How do I activate a venv and confirm it's active?",
+      "must_include": [
+        "source .venv/bin/activate",
+        "which python"
+      ],
+      "must_not_include": [
+        "conda"
+      ],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "How do I leave/deactivate the virtual environment when I'm done?",
+      "must_include": [
+        "deactivate",
+        "source"
+      ],
+      "must_not_include": [
+        "conda deactivate"
+      ],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "Turn on my virtualenv called venv before installing stuff.",
+      "must_include": [
+        "source venv/bin/activate",
+        "pip install"
+      ],
+      "must_not_include": [
+        "sudo pip install"
+      ],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "After making .venv, what do I run to use it?",
+      "must_include": [
+        "source .venv/bin/activate",
+        "deactivate"
+      ],
+      "must_not_include": [
+        "mkvirtualenv"
+      ],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "How can I tell which Python my activated venv is using?",
+      "must_include": [
+        "which python",
+        "source"
+      ],
+      "must_not_include": [
+        "conda info"
+      ],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Activate the environment and then check the python version.",
+      "must_include": [
+        "source .venv/bin/activate",
+        "python --version"
+      ],
+      "must_not_include": [
+        "pyenv"
+      ],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Install the requests library with pip.",
+      "must_include": [
+        "pip install requests",
+        "import requests"
+      ],
+      "must_not_include": [
+        "sudo pip install"
+      ],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "How do I install numpy into my virtual environment?",
+      "must_include": [
+        "source",
+        "activate",
+        "pip install numpy"
+      ],
+      "must_not_include": [
+        "conda install numpy"
+      ],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "Install flask using pip.",
+      "must_include": [
+        "pip install flask",
+        "activate"
+      ],
+      "must_not_include": [
+        "sudo pip install flask"
+      ],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "How do I install a specific version of django, say 4.2?",
+      "must_include": [
+        "pip install django==4.2",
+        "pip install"
+      ],
+      "must_not_include": [
+        "conda install"
+      ],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Install multiple packages: requests, pandas, and numpy.",
+      "must_include": [
+        "pip install requests pandas numpy",
+        "pip install"
+      ],
+      "must_not_include": [
+        "sudo pip"
+      ],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "How do I install a package from pip at a minimum version like requests>=2.28?",
+      "must_include": [
+        "pip install",
+        "requests>=2.28"
+      ],
+      "must_not_include": [
+        "sudo"
+      ],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Install the latest version of pytest.",
+      "must_include": [
+        "pip install pytest",
+        "pip list"
+      ],
+      "must_not_include": [
+        "apt-get install"
+      ],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "How do I install a package and pin the exact version of scipy 1.11.0?",
+      "must_include": [
+        "pip install scipy==1.11.0",
+        "pip install"
+      ],
+      "must_not_include": [
+        "conda"
+      ],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Install black the code formatter with pip.",
+      "must_include": [
+        "pip install black",
+        "activate"
+      ],
+      "must_not_include": [
+        "brew install black"
+      ],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "How do I install a package only if it isn't already installed, in my venv?",
+      "must_include": [
+        "source",
+        "activate",
+        "pip install"
+      ],
+      "must_not_include": [
+        "sudo pip install"
+      ],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Install boto3 into my project's virtual environment.",
+      "must_include": [
+        "source",
+        "activate",
+        "pip install boto3"
+      ],
+      "must_not_include": [
+        "conda install boto3"
+      ],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "How do I do an editable/development install of my local package?",
+      "must_include": [
+        "pip install -e .",
+        "activate"
+      ],
+      "must_not_include": [
+        "sudo pip install -e"
+      ],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Install a package from a Git repository URL with pip.",
+      "must_include": [
+        "pip install git+",
+        "source"
+      ],
+      "must_not_include": [
+        "conda install git"
+      ],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "How do I install a wheel file directly with pip?",
+      "must_include": [
+        "pip install",
+        ".whl"
+      ],
+      "must_not_include": [
+        "sudo"
+      ],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Install fastapi and uvicorn together in my venv.",
+      "must_include": [
+        "source",
+        "activate",
+        "pip install fastapi uvicorn"
+      ],
+      "must_not_include": [
+        "sudo pip"
+      ],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "How do I reinstall a package, forcing it even if already present?",
+      "must_include": [
+        "pip install --force-reinstall",
+        "pip install"
+      ],
+      "must_not_include": [
+        "conda"
+      ],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "How do I install everything from a requirements.txt file?",
+      "must_include": [
+        "pip install -r requirements.txt",
+        "activate"
+      ],
+      "must_not_include": [
+        "sudo pip install -r"
+      ],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "Generate a requirements.txt of my installed packages.",
+      "must_include": [
+        "pip freeze",
+        "requirements.txt"
+      ],
+      "must_not_include": [
+        "conda env export"
+      ],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "How do I freeze my current venv packages into requirements.txt?",
+      "must_include": [
+        "pip freeze > requirements.txt",
+        "pip freeze"
+      ],
+      "must_not_include": [
+        "conda list --export"
+      ],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Install dependencies from requirements.txt into a new venv.",
+      "must_include": [
+        "python3 -m venv",
+        "source",
+        "activate",
+        "pip install -r requirements.txt"
+      ],
+      "must_not_include": [
+        "conda"
+      ],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "How do I set up a project from scratch: venv plus requirements.txt?",
+      "must_include": [
+        "python3 -m venv .venv",
+        "source .venv/bin/activate",
+        "pip install -r requirements.txt"
+      ],
+      "must_not_include": [
+        "sudo pip"
+      ],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Recreate my environment on a new machine from requirements.txt.",
+      "must_include": [
+        "python3 -m venv",
+        "activate",
+        "pip install -r requirements.txt"
+      ],
+      "must_not_include": [
+        "conda env create -f"
+      ],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "How do I export only top-level deps, not pip freeze's full list?",
+      "must_include": [
+        "pip freeze",
+        "requirements.txt"
+      ],
+      "must_not_include": [
+        "conda"
+      ],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Install dev requirements from a requirements-dev.txt file.",
+      "must_include": [
+        "pip install -r requirements-dev.txt",
+        "activate"
+      ],
+      "must_not_include": [
+        "sudo pip"
+      ],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "How do I upgrade all packages listed in requirements.txt?",
+      "must_include": [
+        "pip install -r requirements.txt",
+        "--upgrade"
+      ],
+      "must_not_include": [
+        "conda update --all"
+      ],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Pin my dependencies to a lockfile-style requirements.txt.",
+      "must_include": [
+        "pip freeze > requirements.txt",
+        "requirements.txt"
+      ],
+      "must_not_include": [
+        "poetry lock"
+      ],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "How do I install from requirements.txt but ignore the cache?",
+      "must_include": [
+        "pip install -r requirements.txt",
+        "--no-cache-dir"
+      ],
+      "must_not_include": [
+        "sudo"
+      ],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Add a new package and update requirements.txt afterward.",
+      "must_include": [
+        "pip install",
+        "pip freeze > requirements.txt"
+      ],
+      "must_not_include": [
+        "conda"
+      ],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "How do I create a venv and install a requirements file in CI?",
+      "must_include": [
+        "python3 -m venv",
+        "pip install -r requirements.txt"
+      ],
+      "must_not_include": [
+        "sudo pip install"
+      ],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Install requirements from a constraints file plus requirements.txt.",
+      "must_include": [
+        "pip install -r requirements.txt",
+        "-c"
+      ],
+      "must_not_include": [
+        "conda"
+      ],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "How do I make a requirements.txt with hashes for reproducibility?",
+      "must_include": [
+        "pip freeze",
+        "requirements.txt"
+      ],
+      "must_not_include": [
+        "conda env export"
+      ],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Set up the project: venv, activate, then -r requirements.txt.",
+      "must_include": [
+        "python3 -m venv .venv",
+        "source .venv/bin/activate",
+        "-r requirements.txt"
+      ],
+      "must_not_include": [
+        "sudo"
+      ],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "My 'pip' command isn't found but python3 works. How do I install requests?",
+      "must_include": [
+        "python3 -m pip install requests",
+        "python3 -m pip"
+      ],
+      "must_not_include": [
+        "sudo pip install"
+      ],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "pip points to the wrong Python. How do I install for python3 specifically?",
+      "must_include": [
+        "python3 -m pip install",
+        "python3 -m pip"
+      ],
+      "must_not_include": [
+        "conda install"
+      ],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "'pip: command not found' \u2014 what's the reliable way to run pip?",
+      "must_include": [
+        "python3 -m pip",
+        "install"
+      ],
+      "must_not_include": [
+        "apt install pip"
+      ],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "How do I make sure I'm using the pip tied to my active interpreter?",
+      "must_include": [
+        "python3 -m pip",
+        "which python"
+      ],
+      "must_not_include": [
+        "sudo pip"
+      ],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Install a package using the module form of pip.",
+      "must_include": [
+        "python3 -m pip install",
+        "install"
+      ],
+      "must_not_include": [
+        "conda"
+      ],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "I have multiple Pythons. Use python3 -m pip to install pandas.",
+      "must_include": [
+        "python3 -m pip install pandas",
+        "python3 -m pip"
+      ],
+      "must_not_include": [
+        "sudo pip install pandas"
+      ],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "How do I check pip's version using the python module invocation?",
+      "must_include": [
+        "python3 -m pip --version",
+        "python3 -m pip"
+      ],
+      "must_not_include": [
+        "pip3 --version only"
+      ],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Upgrade pip itself using the python3 module form.",
+      "must_include": [
+        "python3 -m pip install --upgrade pip",
+        "python3 -m pip"
+      ],
+      "must_not_include": [
+        "sudo pip install --upgrade"
+      ],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Run pip via python3 to list installed packages.",
+      "must_include": [
+        "python3 -m pip list",
+        "python3 -m pip"
+      ],
+      "must_not_include": [
+        "conda list"
+      ],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "'pip' is missing in my fresh venv. Install setuptools/pip safely.",
+      "must_include": [
+        "python3 -m pip",
+        "install"
+      ],
+      "must_not_include": [
+        "sudo apt-get install python3-pip"
+      ],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "How can I install a package when only py launcher / python3 is on PATH?",
+      "must_include": [
+        "python3 -m pip install",
+        "python3 -m pip"
+      ],
+      "must_not_include": [
+        "choco install"
+      ],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Use the module form to install from requirements.txt.",
+      "must_include": [
+        "python3 -m pip install -r requirements.txt",
+        "requirements.txt"
+      ],
+      "must_not_include": [
+        "sudo pip"
+      ],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "I get 'error: externally-managed-environment' when running pip install. How to fix?",
+      "must_include": [
+        "python3 -m venv",
+        "source",
+        "activate",
+        "pip install"
+      ],
+      "must_not_include": [
+        "--break-system-packages",
+        "sudo pip install"
+      ],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "pip install fails with externally-managed-environment on Debian. What's the right fix?",
+      "must_include": [
+        "python3 -m venv",
+        "activate"
+      ],
+      "must_not_include": [
+        "--break-system-packages"
+      ],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Homebrew Python blocks pip install with externally-managed-environment. Help.",
+      "must_include": [
+        "python3 -m venv .venv",
+        "source .venv/bin/activate",
+        "pip install"
+      ],
+      "must_not_include": [
+        "sudo pip",
+        "--break-system-packages"
+      ],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "How do I install a package globally when I hit externally-managed-environment, without breaking the OS?",
+      "must_include": [
+        "--user",
+        "pip install"
+      ],
+      "must_not_include": [
+        "--break-system-packages",
+        "sudo pip install"
+      ],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "externally-managed-environment error \u2014 I can't use a venv here, what's safest?",
+      "must_include": [
+        "python3 -m pip install --user",
+        "--user"
+      ],
+      "must_not_include": [
+        "--break-system-packages",
+        "sudo"
+      ],
+      "difficulty": "edge"
+    },
+    {
+      "prompt": "My system pip is locked down (PEP 668). Recommend the proper approach.",
+      "must_include": [
+        "python3 -m venv",
+        "activate"
+      ],
+      "must_not_include": [
+        "--break-system-packages"
+      ],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Should I use --break-system-packages to get past externally-managed-environment?",
+      "must_include": [
+        "python3 -m venv",
+        "activate"
+      ],
+      "must_not_include": [
+        "--break-system-packages"
+      ],
+      "difficulty": "edge"
+    },
+    {
+      "prompt": "Ubuntu 24.04 pip says externally-managed-environment. Give me the venv-based fix.",
+      "must_include": [
+        "python3 -m venv .venv",
+        "source .venv/bin/activate",
+        "pip install"
+      ],
+      "must_not_include": [
+        "sudo pip install",
+        "--break-system-packages"
+      ],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "I just want to install one CLI tool but get externally-managed-environment. Options?",
+      "must_include": [
+        "--user",
+        "pip install"
+      ],
+      "must_not_include": [
+        "--break-system-packages",
+        "sudo pip"
+      ],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "What does externally-managed-environment mean and how do I work around it correctly?",
+      "must_include": [
+        "python3 -m venv",
+        "activate"
+      ],
+      "must_not_include": [
+        "sudo pip install -U"
+      ],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "pipx vs venv aside, fix externally-managed-environment for a project dependency.",
+      "must_include": [
+        "python3 -m venv",
+        "source",
+        "activate",
+        "pip install"
+      ],
+      "must_not_include": [
+        "--break-system-packages"
+      ],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Can I install with --user to avoid the externally-managed error?",
+      "must_include": [
+        "python3 -m pip install --user",
+        "--user"
+      ],
+      "must_not_include": [
+        "--break-system-packages"
+      ],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "My macOS system Python refuses pip install. Best practice fix?",
+      "must_include": [
+        "python3 -m venv",
+        "source",
+        "activate"
+      ],
+      "must_not_include": [
+        "sudo pip install",
+        "--break-system-packages"
+      ],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "After externally-managed-environment, I made a venv but still get the error. Why?",
+      "must_include": [
+        "source",
+        "activate",
+        "which python"
+      ],
+      "must_not_include": [
+        "--break-system-packages"
+      ],
+      "difficulty": "edge"
+    },
+    {
+      "prompt": "How do I upgrade pip to the latest version?",
+      "must_include": [
+        "pip install --upgrade pip",
+        "python3 -m pip"
+      ],
+      "must_not_include": [
+        "sudo pip install --upgrade pip"
+      ],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "pip warns it's outdated. How do I update it inside my venv?",
+      "must_include": [
+        "source",
+        "activate",
+        "pip install --upgrade pip"
+      ],
+      "must_not_include": [
+        "conda update pip"
+      ],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Upgrade pip, setuptools, and wheel together.",
+      "must_include": [
+        "pip install --upgrade pip setuptools wheel",
+        "--upgrade"
+      ],
+      "must_not_include": [
+        "sudo pip"
+      ],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "What's the safest way to upgrade pip itself?",
+      "must_include": [
+        "python3 -m pip install --upgrade pip",
+        "--upgrade pip"
+      ],
+      "must_not_include": [
+        "sudo pip install -U pip"
+      ],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Update pip before installing my requirements.",
+      "must_include": [
+        "pip install --upgrade pip",
+        "pip install -r requirements.txt"
+      ],
+      "must_not_include": [
+        "conda"
+      ],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "How do I upgrade an already-installed package like requests to the latest?",
+      "must_include": [
+        "pip install --upgrade requests",
+        "--upgrade"
+      ],
+      "must_not_include": [
+        "conda update requests"
+      ],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "Bump pip in a fresh venv right after creating it.",
+      "must_include": [
+        "python3 -m venv",
+        "activate",
+        "pip install --upgrade pip"
+      ],
+      "must_not_include": [
+        "sudo"
+      ],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Upgrade pip using the python module form to avoid PATH issues.",
+      "must_include": [
+        "python3 -m pip install --upgrade pip",
+        "python3 -m pip"
+      ],
+      "must_not_include": [
+        "sudo pip install --upgrade"
+      ],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "How do I verify that numpy installed correctly?",
+      "must_include": [
+        "python -c",
+        "import numpy"
+      ],
+      "must_not_include": [
+        "conda list numpy"
+      ],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Confirm requests is importable after installing it.",
+      "must_include": [
+        "python -c",
+        "import requests"
+      ],
+      "must_not_include": [
+        "pip check only"
+      ],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Check that pandas is installed and print its version.",
+      "must_include": [
+        "python -c",
+        "import pandas",
+        "__version__"
+      ],
+      "must_not_include": [
+        "conda"
+      ],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "How can I list everything installed in my virtual environment?",
+      "must_include": [
+        "pip list",
+        "source"
+      ],
+      "must_not_include": [
+        "conda list"
+      ],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "Verify a package is present without importing \u2014 just show it.",
+      "must_include": [
+        "pip show",
+        "pip list"
+      ],
+      "must_not_include": [
+        "conda info"
+      ],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "After install, how do I make sure flask works by importing it?",
+      "must_include": [
+        "python -c",
+        "import flask"
+      ],
+      "must_not_include": [
+        "conda"
+      ],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "List installed packages and confirm scipy is among them.",
+      "must_include": [
+        "pip list",
+        "scipy"
+      ],
+      "must_not_include": [
+        "conda list"
+      ],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "How do I check the installed version of a specific package like django?",
+      "must_include": [
+        "pip show django",
+        "pip list"
+      ],
+      "must_not_include": [
+        "conda search django"
+      ],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "pip install fails with a dependency conflict (ResolutionImpossible). How do I diagnose?",
+      "must_include": [
+        "pip install",
+        "pip check"
+      ],
+      "must_not_include": [
+        "conda"
+      ],
+      "difficulty": "edge"
+    },
+    {
+      "prompt": "Two packages need conflicting versions of the same lib. How do I resolve in a venv?",
+      "must_include": [
+        "python3 -m venv",
+        "pip install",
+        "pip check"
+      ],
+      "must_not_include": [
+        "conda env"
+      ],
+      "difficulty": "edge"
+    },
+    {
+      "prompt": "After installing, I get ModuleNotFoundError even though pip said success. Why?",
+      "must_include": [
+        "which python",
+        "source",
+        "activate",
+        "pip list"
+      ],
+      "must_not_include": [
+        "sudo pip install"
+      ],
+      "difficulty": "edge"
+    },
+    {
+      "prompt": "How do I check for broken dependencies in my environment?",
+      "must_include": [
+        "pip check",
+        "pip list"
+      ],
+      "must_not_include": [
+        "conda doctor"
+      ],
+      "difficulty": "hard"
+    }
+  ]
+}

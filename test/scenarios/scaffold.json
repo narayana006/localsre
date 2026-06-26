@@ -1,0 +1,605 @@
+{
+  "skill": "scaffold",
+  "scenarios": [
+    {
+      "prompt": "Scaffold a new React app using Vite called my-app.",
+      "must_include": ["npm create vite@latest", "--template react", "npm install", "npm run dev"],
+      "must_not_include": ["create-react-app"],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "Create a React + TypeScript project with Vite.",
+      "must_include": ["npm create vite@latest", "--template react-ts", "npm install", "npm run dev"],
+      "must_not_include": ["--template react-typescript"],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "Build me a basic Vue 3 app with Vite.",
+      "must_include": ["npm create vite@latest", "--template vue", "npm install", "npm run dev"],
+      "must_not_include": ["vue create"],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "Scaffold a Vue + TypeScript project using Vite.",
+      "must_include": ["npm create vite@latest", "--template vue-ts", "npm install", "npm run dev"],
+      "must_not_include": ["--template vue-typescript"],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "Spin up a new Next.js app named web.",
+      "must_include": ["create-next-app", "npm run dev", "localhost:3000"],
+      "must_not_include": ["next init"],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "Create a Next.js project with TypeScript non-interactively.",
+      "must_include": ["create-next-app", "--typescript", "npm run dev"],
+      "must_not_include": ["create-next-app@interactive"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Scaffold an Angular application called dashboard.",
+      "must_include": ["@angular/cli", "ng new", "ng serve"],
+      "must_not_include": ["angular create"],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "Create a new Angular app without prompts (no routing, CSS).",
+      "must_include": ["ng new", "--routing=false", "--style=css", "ng serve"],
+      "must_not_include": ["ng generate app"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Set up a FastAPI service with a /health endpoint.",
+      "must_include": ["pip install fastapi", "uvicorn main:app", "/health"],
+      "must_not_include": ["fastapi new"],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "Create a Flask hello world app and run it.",
+      "must_include": ["pip install flask", "Flask(__name__)", "flask run"],
+      "must_not_include": ["flask new project"],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "Scaffold a Streamlit data app.",
+      "must_include": ["pip install streamlit", "streamlit run", "import streamlit"],
+      "must_not_include": ["streamlit create"],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "Create a Node + Express API server.",
+      "must_include": ["npm install express", "app.listen", "node "],
+      "must_not_include": ["express-generator --interactive"],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "Build a React app with TailwindCSS configured.",
+      "must_include": ["npm create vite@latest", "--template react", "tailwindcss", "npm run dev"],
+      "must_not_include": ["tailwind init-now"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Scaffold a Next.js app with Tailwind and the app router.",
+      "must_include": ["create-next-app", "--tailwind", "--app", "npm run dev"],
+      "must_not_include": ["--pages-router-only"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Create a FastAPI project with uvicorn auto-reload for development.",
+      "must_include": ["pip install fastapi", "pip install uvicorn", "uvicorn main:app", "--reload"],
+      "must_not_include": ["uvicorn --watch-all"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Set up a Flask app with a virtual environment.",
+      "must_include": ["python -m venv", "pip install flask", "flask run"],
+      "must_not_include": ["flask venv create"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Scaffold a Vue app with the router included via Vite.",
+      "must_include": ["npm create vite@latest", "--template vue", "vue-router", "npm run dev"],
+      "must_not_include": ["vue add router-now"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Create an Express app in TypeScript.",
+      "must_include": ["npm install express", "npm install", "typescript", "app.listen"],
+      "must_not_include": ["express --ts init"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Build a React app and show me the local dev URL.",
+      "must_include": ["npm create vite@latest", "npm run dev", "localhost:5173"],
+      "must_not_include": ["localhost:3000 for vite default"],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "Scaffold a Streamlit dashboard with a title and a chart.",
+      "must_include": ["pip install streamlit", "st.title", "streamlit run"],
+      "must_not_include": ["streamlit.dashboard()"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Create a Next.js app using src directory layout.",
+      "must_include": ["create-next-app", "--src-dir", "npm run dev"],
+      "must_not_include": ["--source-folder"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Scaffold an Angular app with SCSS styling, no prompts.",
+      "must_include": ["ng new", "--style=scss", "ng serve"],
+      "must_not_include": ["--style=sass-scss"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Set up a FastAPI app with a Pydantic model and a POST endpoint.",
+      "must_include": ["pip install fastapi", "from pydantic import BaseModel", "uvicorn main:app"],
+      "must_not_include": ["pydantic.create_model_auto"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Create a React app with TypeScript and ESLint set up.",
+      "must_include": ["npm create vite@latest", "--template react-ts", "eslint", "npm run dev"],
+      "must_not_include": ["eslint --auto-magic"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Scaffold a Flask REST API with a GET /api/items route.",
+      "must_include": ["pip install flask", "@app.route", "/api/items", "flask run"],
+      "must_not_include": ["flask rest scaffold"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Build a Vue 3 + TS + Pinia app with Vite.",
+      "must_include": ["npm create vite@latest", "--template vue-ts", "pinia", "npm run dev"],
+      "must_not_include": ["vuex@5-pinia"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Create a Next.js project with TypeScript, Tailwind, ESLint, and the app router non-interactively.",
+      "must_include": ["create-next-app", "--typescript", "--tailwind", "--eslint", "--app"],
+      "must_not_include": ["--all-flags"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Scaffold an Express server with nodemon for hot reload.",
+      "must_include": ["npm install express", "nodemon", "app.listen"],
+      "must_not_include": ["express hot-reload --on"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Set up a Streamlit app and pin it to a specific port.",
+      "must_include": ["pip install streamlit", "streamlit run", "--server.port"],
+      "must_not_include": ["streamlit run --port-only"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Create a FastAPI app and run it on port 8080.",
+      "must_include": ["pip install fastapi", "uvicorn main:app", "--port 8080"],
+      "must_not_include": ["uvicorn --listen 8080"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Scaffold a React app and add React Router.",
+      "must_include": ["npm create vite@latest", "--template react", "react-router-dom", "npm run dev"],
+      "must_not_include": ["react-router @builtin"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Build a Flask app that serves JSON and run with debug mode.",
+      "must_include": ["pip install flask", "jsonify", "--debug"],
+      "must_not_include": ["flask --debug-magic"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Create an Angular app with routing enabled and serve it on port 4300.",
+      "must_include": ["ng new", "--routing=true", "ng serve", "--port 4300"],
+      "must_not_include": ["ng serve --listen 4300"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Scaffold a Vite vanilla JavaScript project.",
+      "must_include": ["npm create vite@latest", "--template vanilla", "npm run dev"],
+      "must_not_include": ["--template plain-js"],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "Create a Vite vanilla TypeScript project.",
+      "must_include": ["npm create vite@latest", "--template vanilla-ts", "npm run dev"],
+      "must_not_include": ["--template ts-vanilla"],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "Set up a FastAPI service with CORS middleware enabled.",
+      "must_include": ["pip install fastapi", "CORSMiddleware", "uvicorn main:app"],
+      "must_not_include": ["fastapi.enable_cors()"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Scaffold a Next.js app that uses the pages router.",
+      "must_include": ["create-next-app", "--no-app", "npm run dev"],
+      "must_not_include": ["--router=pages-legacy"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Create a Next.js app with pnpm non-interactively.",
+      "must_include": ["create-next-app", "--use-pnpm", "pnpm dev"],
+      "must_not_include": ["--pkg-manager pnpm-auto"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Build a FastAPI app with SQLModel for the database layer.",
+      "must_include": ["pip install fastapi", "sqlmodel", "uvicorn main:app"],
+      "must_not_include": ["fastapi-orm install"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Scaffold a Flask app using the application factory pattern.",
+      "must_include": ["pip install flask", "create_app", "flask run"],
+      "must_not_include": ["flask factory init"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Create a Streamlit multipage app.",
+      "must_include": ["pip install streamlit", "pages/", "streamlit run"],
+      "must_not_include": ["streamlit run --multipage"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Set up an Express app with a /api/health route returning status ok.",
+      "must_include": ["npm install express", "/api/health", "app.listen"],
+      "must_not_include": ["express add-route /health"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Scaffold an Angular standalone-components app, skip tests.",
+      "must_include": ["ng new", "--standalone", "--skip-tests", "ng serve"],
+      "must_not_include": ["--no-spec-files"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Create a React + Vite app and verify it builds for production.",
+      "must_include": ["npm create vite@latest", "--template react", "npm run build", "npm run dev"],
+      "must_not_include": ["npm run compile-prod"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Build a FastAPI app and freeze dependencies to requirements.txt.",
+      "must_include": ["pip install fastapi", "requirements.txt", "uvicorn main:app"],
+      "must_not_include": ["pip export-deps"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Scaffold a Vue app and run the production preview server.",
+      "must_include": ["npm create vite@latest", "--template vue", "npm run build", "npm run preview"],
+      "must_not_include": ["npm run prod-serve"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Create a Next.js TypeScript app and run the build then start.",
+      "must_include": ["create-next-app", "--typescript", "npm run build", "npm start"],
+      "must_not_include": ["next launch-prod"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Set up a Streamlit app with a sidebar and a button.",
+      "must_include": ["pip install streamlit", "st.sidebar", "st.button", "streamlit run"],
+      "must_not_include": ["st.add_sidebar()"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Scaffold a React app with Vite, make sure not to use the deprecated create-react-app.",
+      "must_include": ["npm create vite@latest", "--template react", "npm run dev"],
+      "must_not_include": ["create-react-app", "npx cra"],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "Create a FastAPI service with automatic OpenAPI docs and tell me the docs URL.",
+      "must_include": ["pip install fastapi", "uvicorn main:app", "/docs"],
+      "must_not_include": ["/swagger-auto-ui"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Build a Flask app and expose it on host 0.0.0.0.",
+      "must_include": ["pip install flask", "flask run", "--host 0.0.0.0"],
+      "must_not_include": ["flask run --bind-all"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Scaffold an Express + TypeScript app with ts-node-dev.",
+      "must_include": ["npm install express", "ts-node-dev", "app.listen"],
+      "must_not_include": ["express-ts hotstart"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Create an Angular app with the latest CLI using npx.",
+      "must_include": ["npx @angular/cli", "ng new", "ng serve"],
+      "must_not_include": ["npx angular-cli@new"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Set up a React app with Vite and Vitest for testing.",
+      "must_include": ["npm create vite@latest", "--template react", "vitest", "npm run dev"],
+      "must_not_include": ["vite test --builtin"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Scaffold a FastAPI app with a router module separated into routers/.",
+      "must_include": ["pip install fastapi", "APIRouter", "uvicorn main:app"],
+      "must_not_include": ["fastapi.split_routers()"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Create a Streamlit app reading a CSV with pandas and displaying a dataframe.",
+      "must_include": ["pip install streamlit", "st.dataframe", "pandas", "streamlit run"],
+      "must_not_include": ["st.show_csv()"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Build a Next.js app with Tailwind, import alias @/*, and app router.",
+      "must_include": ["create-next-app", "--tailwind", "--import-alias", "--app"],
+      "must_not_include": ["--alias-magic"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Scaffold a Vue 3 app with Vitest and run a sample test.",
+      "must_include": ["npm create vite@latest", "--template vue", "vitest", "npm run test"],
+      "must_not_include": ["vue test:unit --builtin"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Create a minimal Flask app, install via pip, and confirm it runs at 127.0.0.1:5000.",
+      "must_include": ["pip install flask", "flask run", "127.0.0.1:5000"],
+      "must_not_include": ["flask serves on :8000 by default"],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "Set up an Express app and add a JSON body parser middleware.",
+      "must_include": ["npm install express", "express.json()", "app.listen"],
+      "must_not_include": ["body-parser is required in express 5"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Scaffold a React app with Vite and add axios for HTTP calls.",
+      "must_include": ["npm create vite@latest", "--template react", "axios", "npm run dev"],
+      "must_not_include": ["vite-axios plugin"],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "Create a FastAPI app with an async endpoint and run with uvicorn.",
+      "must_include": ["pip install fastapi", "async def", "uvicorn main:app"],
+      "must_not_include": ["uvicorn --async-mode"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Build a Next.js app, scaffold non-interactively with --yes to skip prompts.",
+      "must_include": ["create-next-app", "--yes", "npm run dev"],
+      "must_not_include": ["create-next-app --interactive"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Scaffold an Angular app skipping the git init and serve it.",
+      "must_include": ["ng new", "--skip-git", "ng serve"],
+      "must_not_include": ["--no-vcs-init"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Create a React app with Vite, install deps, and report the dev server URL.",
+      "must_include": ["npm create vite@latest", "--template react", "npm install", "localhost:5173"],
+      "must_not_include": ["the app runs at port 8080"],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "Set up a Streamlit app and disable the usage stats prompt for headless run.",
+      "must_include": ["pip install streamlit", "streamlit run", "--server.headless"],
+      "must_not_include": ["streamlit run --no-prompt-magic"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Scaffold a FastAPI app with python-dotenv for env config.",
+      "must_include": ["pip install fastapi", "python-dotenv", "uvicorn main:app"],
+      "must_not_include": ["fastapi.load_env()"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Create a Flask app with Blueprint-based routing.",
+      "must_include": ["pip install flask", "Blueprint", "flask run"],
+      "must_not_include": ["flask blueprint generate"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Build a Vue app with Vite and add the official ESLint config.",
+      "must_include": ["npm create vite@latest", "--template vue", "eslint", "npm run dev"],
+      "must_not_include": ["vue lint --auto-setup"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Scaffold a Next.js app using the experimental Turbopack dev server.",
+      "must_include": ["create-next-app", "next dev", "--turbo"],
+      "must_not_include": ["next dev --turbopack-only-flag-fake"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Create an Express app and serve static files from a public folder.",
+      "must_include": ["npm install express", "express.static", "app.listen"],
+      "must_not_include": ["express serve-static --auto"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Set up a React app with Vite, TypeScript, and absolute imports via tsconfig paths.",
+      "must_include": ["npm create vite@latest", "--template react-ts", "tsconfig", "npm run dev"],
+      "must_not_include": ["vite alias --magic-paths"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Scaffold a FastAPI app with a background task example.",
+      "must_include": ["pip install fastapi", "BackgroundTasks", "uvicorn main:app"],
+      "must_not_include": ["fastapi.run_async_task()"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Create a Streamlit app with caching via st.cache_data.",
+      "must_include": ["pip install streamlit", "st.cache_data", "streamlit run"],
+      "must_not_include": ["st.cache()"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Build a Next.js app with TypeScript, Tailwind, src dir, and pnpm, fully non-interactive.",
+      "must_include": ["create-next-app", "--typescript", "--tailwind", "--src-dir", "--use-pnpm"],
+      "must_not_include": ["--all"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Scaffold an Angular app, choose CSS, no routing, no tests, skip git.",
+      "must_include": ["ng new", "--style=css", "--routing=false", "--skip-tests"],
+      "must_not_include": ["--minimal-everything"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Create a React app and add a simple counter component, then run dev.",
+      "must_include": ["npm create vite@latest", "--template react", "useState", "npm run dev"],
+      "must_not_include": ["react.createCounter()"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Set up a FastAPI app with Gunicorn + Uvicorn workers for production.",
+      "must_include": ["pip install fastapi", "gunicorn", "uvicorn.workers.UvicornWorker"],
+      "must_not_include": ["gunicorn --fastapi-mode"],
+      "difficulty": "edge"
+    },
+    {
+      "prompt": "Scaffold a Flask app served by gunicorn instead of the dev server.",
+      "must_include": ["pip install flask", "gunicorn", "app:app"],
+      "must_not_include": ["flask run --production"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Create a React app with Vite using a specific Vite version pinned to 5.",
+      "must_include": ["npm create vite@latest", "--template react", "vite@5"],
+      "must_not_include": ["vite --version=5-only-fake-flag"],
+      "difficulty": "edge"
+    },
+    {
+      "prompt": "Build a Next.js app in an existing non-empty directory and handle the conflict.",
+      "must_include": ["create-next-app", ".", "npm run dev"],
+      "must_not_include": ["create-next-app --force-overwrite-all"],
+      "difficulty": "edge"
+    },
+    {
+      "prompt": "Scaffold a Vue app where the project name has to be the current directory.",
+      "must_include": ["npm create vite@latest", ".", "--template vue", "npm run dev"],
+      "must_not_include": ["npm create vite@latest --here"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Create a FastAPI app and write a Dockerfile to containerize it.",
+      "must_include": ["pip install fastapi", "Dockerfile", "uvicorn main:app"],
+      "must_not_include": ["fastapi dockerize"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Set up a Streamlit app and containerize it with Docker.",
+      "must_include": ["pip install streamlit", "Dockerfile", "streamlit run"],
+      "must_not_include": ["streamlit docker build"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Scaffold an Express app with a Dockerfile and expose port 3000.",
+      "must_include": ["npm install express", "Dockerfile", "EXPOSE 3000"],
+      "must_not_include": ["docker run express --auto"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Build a Next.js app and configure environment variables in .env.local.",
+      "must_include": ["create-next-app", ".env.local", "npm run dev"],
+      "must_not_include": ["next env set --auto"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Scaffold a FastAPI app and add a WebSocket endpoint.",
+      "must_include": ["pip install fastapi", "websocket", "uvicorn main:app"],
+      "must_not_include": ["fastapi.add_websocket_auto()"],
+      "difficulty": "edge"
+    },
+    {
+      "prompt": "Create a Flask app with SQLAlchemy and a simple model.",
+      "must_include": ["pip install flask", "SQLAlchemy", "flask run"],
+      "must_not_include": ["flask db scaffold"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Set up an Angular app and immediately run the unit tests.",
+      "must_include": ["ng new", "ng test"],
+      "must_not_include": ["ng run-tests --auto"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Scaffold a React + Vite app, install deps with npm ci using a lockfile.",
+      "must_include": ["npm create vite@latest", "--template react", "npm install", "npm run dev"],
+      "must_not_include": ["npm ci before any lockfile exists"],
+      "difficulty": "edge"
+    },
+    {
+      "prompt": "Build a FastAPI app, pin fastapi and uvicorn versions in requirements.txt.",
+      "must_include": ["fastapi==", "uvicorn==", "uvicorn main:app"],
+      "must_not_include": ["pip install fastapi@latest-pinned"],
+      "difficulty": "edge"
+    },
+    {
+      "prompt": "Scaffold a Next.js app using a custom port 3001 for the dev server.",
+      "must_include": ["create-next-app", "next dev", "-p 3001"],
+      "must_not_include": ["next dev --listen 3001"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Create a Vue app, add Vue Router and Pinia, run dev, and report the URL.",
+      "must_include": ["npm create vite@latest", "--template vue", "vue-router", "pinia"],
+      "must_not_include": ["vue add router+pinia --auto"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Set up an Express + TypeScript app with a build step compiling to dist.",
+      "must_include": ["npm install express", "tsc", "dist", "app.listen"],
+      "must_not_include": ["express build --ts-auto"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Scaffold a React app with Vite and Material UI installed.",
+      "must_include": ["npm create vite@latest", "--template react", "@mui/material", "npm run dev"],
+      "must_not_include": ["mui create-app"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Create a FastAPI app with a SQLite database via SQLAlchemy and an items table.",
+      "must_include": ["pip install fastapi", "sqlalchemy", "sqlite", "uvicorn main:app"],
+      "must_not_include": ["fastapi.connect_db()"],
+      "difficulty": "edge"
+    },
+    {
+      "prompt": "Build a Streamlit app with plotly charts and run it.",
+      "must_include": ["pip install streamlit", "plotly", "st.plotly_chart", "streamlit run"],
+      "must_not_include": ["st.chart_plotly()"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Scaffold an Angular workspace with multiple projects (a lib and an app).",
+      "must_include": ["ng new", "--create-application=false", "ng generate library", "ng generate application"],
+      "must_not_include": ["ng new --monorepo-auto"],
+      "difficulty": "edge"
+    },
+    {
+      "prompt": "Create a Next.js app with TypeScript and add a /api/hello route handler.",
+      "must_include": ["create-next-app", "--typescript", "/api/hello", "npm run dev"],
+      "must_not_include": ["next add-api hello"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Set up a minimal Node HTTP server without Express and run it.",
+      "must_include": ["http.createServer", "server.listen", "node "],
+      "must_not_include": ["npm install express"],
+      "difficulty": "medium"
+    }
+  ]
+}

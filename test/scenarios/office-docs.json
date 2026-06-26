@@ -1,0 +1,605 @@
+{
+  "skill": "office-docs",
+  "scenarios": [
+    {
+      "prompt": "Make a simple 5-slide PowerPoint deck introducing our new product.",
+      "must_include": ["python-pptx", "Presentation()", ".save("],
+      "must_not_include": ["import pptx_writer", "edit the .pptx binary directly"],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "Create a one-page Word document that says 'Welcome to the team'.",
+      "must_include": ["python-docx", "Document()", ".save("],
+      "must_not_include": ["import wordlib", "msword module"],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "Build an Excel spreadsheet with columns Name, Age, City and three rows of data.",
+      "must_include": ["openpyxl", "Workbook()", ".save("],
+      "must_not_include": ["import xlsxmagic", "write the xlsx bytes by hand"],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "Generate a basic PDF that contains the text 'Hello PDF'.",
+      "must_include": ["reportlab", "canvas", ".save()"],
+      "must_not_include": ["import pdfmaker", "write raw PDF stream manually"],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "Turn this markdown file notes.md into a PDF.",
+      "must_include": ["pandoc", "notes.md", "-o"],
+      "must_not_include": ["pandoc.exe only works on Windows", "markdown2pdf library"],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "I have python-pptx not installed. How do I install it before writing my deck?",
+      "must_include": ["pip install", "python-pptx", "from pptx import"],
+      "must_not_include": ["pip install pptx-python", "apt-get install python-pptx"],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "Create a Word doc with a heading 'Report' and a paragraph below it.",
+      "must_include": ["python-docx", "add_heading", "add_paragraph"],
+      "must_not_include": ["doc.insert_title()", "Document.write_html()"],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "Make an Excel file and put the value 42 in cell B2.",
+      "must_include": ["openpyxl", "Workbook()", "['B2']"],
+      "must_not_include": ["sheet.poke(", "cell coordinates are 0-indexed"],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "Build a PDF using fpdf2 with a single line of centered text.",
+      "must_include": ["fpdf", "FPDF()", "cell"],
+      "must_not_include": ["from pyfpdf import", "fpdf cannot center text"],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "Create a PowerPoint with a title slide using the title and subtitle placeholders.",
+      "must_include": ["python-pptx", "slide_layouts", "placeholders"],
+      "must_not_include": ["slide.set_title_text()", "pptx auto-detects subtitles"],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "Write a Python script that creates a 10-slide deck about climate change, one bullet list per slide.",
+      "must_include": ["python-pptx", "slide_layouts", "text_frame"],
+      "must_not_include": ["deck.generate_slides(10)", "import climate_template"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Generate a Word report with a table of 4 columns and 5 rows of project data.",
+      "must_include": ["python-docx", "add_table", "rows=", "cols="],
+      "must_not_include": ["table.fill_from_csv()", "docx tables max at 3 columns"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Make an Excel sheet from this list of dicts and bold the header row.",
+      "must_include": ["openpyxl", "Font", "bold=True"],
+      "must_not_include": ["cell.make_bold()", "openpyxl has no styling"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Create a multi-page PDF report with reportlab using Platypus flowables.",
+      "must_include": ["reportlab", "SimpleDocTemplate", "Paragraph", "build("],
+      "must_not_include": ["doc.add_page_break()", "Platypus is deprecated"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Convert this Word document report.docx into a PDF.",
+      "must_include": ["pandoc", "report.docx", "-o"],
+      "must_not_include": ["docx2pdf is built into Word on Linux", "rename .docx to .pdf"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Add an image logo.png to the first slide of a new PowerPoint.",
+      "must_include": ["python-pptx", "add_picture", "logo.png"],
+      "must_not_include": ["slide.embed_image()", "pptx only supports svg"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "In a Word doc, set the font of a run to Calibri size 14 and make it italic.",
+      "must_include": ["python-docx", "font.name", "font.size", "italic"],
+      "must_not_include": ["run.set_css(", "docx uses points*2 for size"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Build an Excel workbook with two sheets named 'Summary' and 'Data'.",
+      "must_include": ["openpyxl", "create_sheet", "title"],
+      "must_not_include": ["wb.new_tab(", "workbooks allow only one sheet"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Generate a PDF table of sales figures using reportlab's Table flowable.",
+      "must_include": ["reportlab", "Table", "TableStyle"],
+      "must_not_include": ["GridTable class", "reportlab tables need HTML"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Turn an HTML file invoice.html into a styled PDF that preserves CSS.",
+      "must_include": ["weasyprint", "HTML(", "write_pdf"],
+      "must_not_include": ["weasyprint ignores all CSS", "html2pdf builtin module"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Write the full workflow: install python-pptx, write a script to make a deck, run it, and confirm the file exists.",
+      "must_include": ["pip install python-pptx", "Presentation()", "python ", "os.path.exists"],
+      "must_not_include": ["no need to verify the output", "pptx self-validates"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Create a deck where each slide has a chart built from data.",
+      "must_include": ["python-pptx", "add_chart", "CategoryChartData", "XL_CHART_TYPE"],
+      "must_not_include": ["slide.add_graph()", "pptx cannot embed charts"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Generate a Word doc with a header, footer, and page numbers.",
+      "must_include": ["python-docx", "header", "footer"],
+      "must_not_include": ["doc.set_page_numbers(True)", "headers unsupported in docx"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Make an Excel report with a bar chart referencing a data range.",
+      "must_include": ["openpyxl", "BarChart", "Reference", "add_chart"],
+      "must_not_include": ["sheet.plot()", "openpyxl charts need matplotlib"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Create a PDF with reportlab that has a custom page size of A5 and page numbers in the footer.",
+      "must_include": ["reportlab", "A5", "onPage"],
+      "must_not_include": ["A5 is not a valid size", "footers require LaTeX"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Convert markdown to a PDF with a custom font and margins using pandoc and a LaTeX engine.",
+      "must_include": ["pandoc", "--pdf-engine", "-V"],
+      "must_not_include": ["pandoc has no pdf engine option", "fonts are baked in"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Add speaker notes to every slide in a generated PowerPoint.",
+      "must_include": ["python-pptx", "notes_slide", "notes_text_frame"],
+      "must_not_include": ["slide.notes = 'text'", "notes are read-only"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Merge cells A1 to C1 in an Excel sheet and center the title text.",
+      "must_include": ["openpyxl", "merge_cells", "Alignment", "horizontal"],
+      "must_not_include": ["sheet.join_cells()", "merged cells lose data always"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Create a Word document and apply a built-in style 'Title' to the first paragraph.",
+      "must_include": ["python-docx", "add_paragraph", "style"],
+      "must_not_include": ["paragraph.css_class", "styles must be defined in XML by hand"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Build an xlsx where a column of numbers is formatted as currency.",
+      "must_include": ["openpyxl", "number_format"],
+      "must_not_include": ["cell.currency = True", "openpyxl can't format numbers"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Make a PDF from a pandas DataFrame, rendering it as a table.",
+      "must_include": ["reportlab", "Table", "df.values.tolist()"],
+      "must_not_include": ["df.to_pdf()", "pandas exports pdf natively"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Generate a deck and set the background color of a slide to dark blue.",
+      "must_include": ["python-pptx", "RGBColor", "fill", "solid()"],
+      "must_not_include": ["slide.bg_color = 'blue'", "backgrounds are immutable"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Create a Word doc with a bulleted list and a numbered list.",
+      "must_include": ["python-docx", "List Bullet", "List Number"],
+      "must_not_include": ["doc.add_bullets([...])", "lists need manual XML only"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Freeze the top row of an Excel sheet so headers stay visible when scrolling.",
+      "must_include": ["openpyxl", "freeze_panes"],
+      "must_not_include": ["sheet.pin_header()", "freezing isn't possible in xlsx"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Produce a PDF invoice with a logo at the top and an itemized table below.",
+      "must_include": ["reportlab", "Image", "Table", "build("],
+      "must_not_include": ["invoice_pdf module", "images can't mix with tables"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "I need to install everything to convert docx to pdf with pandoc on a fresh machine.",
+      "must_include": ["pandoc", "pip install", "--pdf-engine"],
+      "must_not_include": ["pandoc ships in the python stdlib", "no extra engine needed for pdf"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Set column widths in an Excel sheet so the data isn't cut off.",
+      "must_include": ["openpyxl", "column_dimensions", "width"],
+      "must_not_include": ["sheet.autofit_all()", "widths are fixed in xlsx"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Create a presentation with a two-content layout showing text on the left and an image on the right.",
+      "must_include": ["python-pptx", "slide_layouts", "add_picture", "placeholders"],
+      "must_not_include": ["layout index is always 0", "two-content layout doesn't exist"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Add a hyperlink in a Word paragraph pointing to https://example.com.",
+      "must_include": ["python-docx", "https://example.com"],
+      "must_not_include": ["run.set_link()", "docx can't store hyperlinks"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Generate an Excel sheet with conditional formatting that highlights values over 100 in red.",
+      "must_include": ["openpyxl", "conditional_formatting", "CellIsRule"],
+      "must_not_include": ["sheet.highlight_if()", "conditional formatting needs Excel macros"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Make a landscape-orientation PDF with reportlab.",
+      "must_include": ["reportlab", "landscape", "letter"],
+      "must_not_include": ["orientation='wide'", "reportlab is portrait only"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Create a 3-slide deck and save it, then verify by reopening it with python-pptx and counting slides.",
+      "must_include": ["python-pptx", "Presentation()", "len(", "slides"],
+      "must_not_include": ["count_slides() builtin", "you cannot reopen a pptx"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Build a Word doc and insert a page break between two sections.",
+      "must_include": ["python-docx", "add_page_break"],
+      "must_not_include": ["doc.new_page()", "page breaks aren't supported"],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "Write rows from a CSV into an existing xlsx using openpyxl, appending to a sheet.",
+      "must_include": ["openpyxl", "load_workbook", "append", "csv"],
+      "must_not_include": ["wb.import_csv()", "openpyxl can't open existing files"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Generate a PDF certificate with a decorative border and centered name.",
+      "must_include": ["reportlab", "canvas", "drawCentredString", "rect"],
+      "must_not_include": ["certificate_template lib", "borders need an image only"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Turn a markdown file into a Word document using pandoc.",
+      "must_include": ["pandoc", "-o", ".docx"],
+      "must_not_include": ["pandoc only outputs pdf", "md2docx pip package"],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "Set the title and author metadata of a generated PDF with reportlab.",
+      "must_include": ["reportlab", "setTitle", "setAuthor"],
+      "must_not_include": ["pdf.metadata = {}", "reportlab has no metadata"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Create a deck with a table on a slide containing 3 columns and 4 rows.",
+      "must_include": ["python-pptx", "add_table", "Inches"],
+      "must_not_include": ["slide.add_grid()", "pptx tables aren't supported"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Apply cell background fill colors in an Excel sheet.",
+      "must_include": ["openpyxl", "PatternFill", "fill"],
+      "must_not_include": ["cell.bg = 'yellow'", "fills require a theme file"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Make a Word doc where one paragraph is right-aligned and another is justified.",
+      "must_include": ["python-docx", "alignment", "WD_ALIGN_PARAGRAPH"],
+      "must_not_include": ["paragraph.align='right'", "alignment is css-only"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Generate a PDF with multiple paragraphs and custom paragraph styles using reportlab stylesheets.",
+      "must_include": ["reportlab", "getSampleStyleSheet", "ParagraphStyle"],
+      "must_not_include": ["styles.css import", "reportlab has no stylesheet"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Build an Excel sheet that includes a formula summing a column.",
+      "must_include": ["openpyxl", "=SUM(", "Workbook()"],
+      "must_not_include": ["openpyxl evaluates formulas itself", "formulas must be precomputed in python"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Create a slide deck from an outline string where '#' marks titles and '-' marks bullets.",
+      "must_include": ["python-pptx", "slide_layouts", "text_frame", "add_paragraph"],
+      "must_not_include": ["Presentation.from_outline()", "pptx parses markdown natively"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Insert a chart image generated by matplotlib into a Word document.",
+      "must_include": ["python-docx", "add_picture", "matplotlib", "savefig"],
+      "must_not_include": ["doc.add_plot()", "matplotlib outputs docx"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Produce a PDF where text uses a custom TTF font registered with reportlab.",
+      "must_include": ["reportlab", "registerFont", "TTFont"],
+      "must_not_include": ["canvas.loadFont()", "reportlab only supports Helvetica"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Save an Excel workbook with a data validation dropdown list in a column.",
+      "must_include": ["openpyxl", "DataValidation", "add_data_validation"],
+      "must_not_include": ["cell.dropdown = [...]", "validations are read-only"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Create a PowerPoint and change the font size of all title text to 40pt.",
+      "must_include": ["python-pptx", "Pt", "font.size"],
+      "must_not_include": ["font.size = '40px'", "sizes are in pixels"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Generate a Word document with a 2-level nested list structure.",
+      "must_include": ["python-docx", "List Bullet", "level"],
+      "must_not_include": ["nested lists impossible in docx", "doc.add_tree()"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Make a PDF from markdown using pandoc with a table of contents.",
+      "must_include": ["pandoc", "--toc", "-o"],
+      "must_not_include": ["--table-of-contents-on", "pandoc can't make a toc"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Add an Excel hyperlink from a cell to an external URL.",
+      "must_include": ["openpyxl", "hyperlink"],
+      "must_not_include": ["cell.link_to()", "xlsx can't hold hyperlinks"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Create a deck where slide 1 has a gradient or colored shape rectangle.",
+      "must_include": ["python-pptx", "shapes.add_shape", "MSO_SHAPE"],
+      "must_not_include": ["slide.draw_rect()", "shapes need svg files"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Write a script that builds a quarterly Word report with sections, a summary table, and a conclusion.",
+      "must_include": ["python-docx", "add_heading", "add_table", "save("],
+      "must_not_include": ["report_builder.generate()", "docx max 3 sections"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Generate a PDF with page headers and footers on every page using reportlab onPage callbacks.",
+      "must_include": ["reportlab", "onFirstPage", "onLaterPages"],
+      "must_not_include": ["doc.header = 'x'", "headers require canvas only mode"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Build an Excel pivot-style summary by writing grouped totals with openpyxl.",
+      "must_include": ["openpyxl", "append", "Workbook()"],
+      "must_not_include": ["wb.create_pivot()", "openpyxl makes native pivot tables"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Add a slide transition or set slide size to 16:9 widescreen in python-pptx.",
+      "must_include": ["python-pptx", "slide_width", "slide_height", "Inches"],
+      "must_not_include": ["prs.set_widescreen(True)", "aspect ratio is fixed"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Create a Word document protected with a section that is landscape oriented.",
+      "must_include": ["python-docx", "orientation", "WD_ORIENT"],
+      "must_not_include": ["section.landscape = True only", "orientation can't change mid-doc"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Make a PDF receipt with fpdf2 including a multi_cell wrapped paragraph.",
+      "must_include": ["fpdf", "FPDF()", "multi_cell"],
+      "must_not_include": ["from fpdf3 import", "multi_cell doesn't wrap"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Read an existing deck template.pptx and add a new slide to it.",
+      "must_include": ["python-pptx", "Presentation('template.pptx')", "slide_layouts"],
+      "must_not_include": ["Presentation.open_existing()", "templates can't be modified"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Generate an xlsx where dates are stored as real date values and formatted as YYYY-MM-DD.",
+      "must_include": ["openpyxl", "datetime", "number_format"],
+      "must_not_include": ["dates must be strings only", "cell.date_format()"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Convert an HTML report to PDF preserving page breaks and a custom @page size with weasyprint.",
+      "must_include": ["weasyprint", "write_pdf", "HTML("],
+      "must_not_include": ["weasyprint ignores @page", "page breaks need js"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Create a deck with bullet points at different indentation levels on one slide.",
+      "must_include": ["python-pptx", "paragraph", "level"],
+      "must_not_include": ["bullet.indent('tab')", "all bullets share one level"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Build a Word doc and add a centered image scaled to 3 inches wide.",
+      "must_include": ["python-docx", "add_picture", "Inches"],
+      "must_not_include": ["picture width is in pixels", "doc.add_image_url()"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Generate a PDF with reportlab containing an ordered list and a bullet list.",
+      "must_include": ["reportlab", "ListFlowable", "ListItem"],
+      "must_not_include": ["reportlab can't do lists", "<ol> tags directly"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Apply a border to a range of cells in an Excel sheet.",
+      "must_include": ["openpyxl", "Border", "Side"],
+      "must_not_include": ["cell.border = 'solid'", "borders need a stylesheet xml"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Create a presentation and replace placeholder text in an existing template's title.",
+      "must_include": ["python-pptx", "placeholders", "text"],
+      "must_not_include": ["slide.replace_text()", "placeholders are read-only"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Generate a PDF combining text and a QR code image.",
+      "must_include": ["reportlab", "qrcode", "drawImage"],
+      "must_not_include": ["reportlab.qr builtin", "qr codes can't embed in pdf"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Write a script that installs openpyxl, builds a 1000-row xlsx, runs it, and prints the row count to verify.",
+      "must_include": ["pip install openpyxl", "Workbook()", "max_row"],
+      "must_not_include": ["openpyxl caps at 256 rows", "no verification needed"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Make a Word document with a table and shade alternating rows.",
+      "must_include": ["python-docx", "add_table", "shading"],
+      "must_not_include": ["table.zebra_stripe()", "row shading impossible"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Generate a deck and embed a hyperlink on a text run that opens a website.",
+      "must_include": ["python-pptx", "hyperlink", "address"],
+      "must_not_include": ["run.url = 'x'", "pptx links need html export"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Create an Excel file and protect a sheet so cells can't be edited.",
+      "must_include": ["openpyxl", "protection", "sheet"],
+      "must_not_include": ["sheet.lock()", "protection needs a password always"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Build a simple PDF from a string of text with fpdf2, multiple pages.",
+      "must_include": ["fpdf", "add_page", "output"],
+      "must_not_include": ["fpdf.save_pdf()", "fpdf2 is single page only"],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "Make a deck about Q3 results with a title slide and 4 content slides with bullets.",
+      "must_include": ["python-pptx", "Presentation()", "slide_layouts", "text_frame"],
+      "must_not_include": ["pptx.make_deck(title, slides)", "decks max at 3 slides"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Generate a Word doc and set 1-inch margins on all sides.",
+      "must_include": ["python-docx", "sections", "margin", "Inches"],
+      "must_not_include": ["doc.set_margins(1)", "margins are CSS in docx"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Write a script to build an xlsx with a line chart trending monthly revenue.",
+      "must_include": ["openpyxl", "LineChart", "Reference"],
+      "must_not_include": ["sheet.line_plot()", "line charts need plotly"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Convert markdown to PDF and ensure code blocks are syntax-highlighted via pandoc.",
+      "must_include": ["pandoc", "--highlight-style", "-o"],
+      "must_not_include": ["pandoc has no highlighting", "--syntax-color flag"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Create a deck and set the text color of a bullet to red.",
+      "must_include": ["python-pptx", "RGBColor", "font.color.rgb"],
+      "must_not_include": ["font.color = 'red'", "colors must be hex strings on .color"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Generate an xlsx and wrap text within cells that contain long strings.",
+      "must_include": ["openpyxl", "Alignment", "wrap_text=True"],
+      "must_not_include": ["cell.wrap()", "wrapping needs row height hacks only"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Add multiple images in a grid on a single PowerPoint slide.",
+      "must_include": ["python-pptx", "add_picture", "Inches"],
+      "must_not_include": ["slide.add_gallery()", "one image per slide max"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Create a Word doc, then convert it to PDF with pandoc, verifying the PDF was produced.",
+      "must_include": ["python-docx", "pandoc", ".pdf", "os.path.exists"],
+      "must_not_include": ["docx.to_pdf()", "skip verification, pandoc never fails"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Generate an xlsx with numbers formatted as percentages.",
+      "must_include": ["openpyxl", "number_format", "0%"],
+      "must_not_include": ["cell.percent = True", "openpyxl multiplies by 100 itself"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Build a PDF brochure with two columns of text using reportlab frames.",
+      "must_include": ["reportlab", "Frame", "PageTemplate"],
+      "must_not_include": ["columns='2'", "reportlab is single column"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Create a deck and add an autoshape arrow connecting two ideas.",
+      "must_include": ["python-pptx", "add_shape", "MSO_SHAPE"],
+      "must_not_include": ["slide.add_arrow()", "arrows need image files"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Generate an Excel sheet with images embedded next to data rows.",
+      "must_include": ["openpyxl", "Image", "add_image"],
+      "must_not_include": ["openpyxl can't embed images", "cell.set_image()"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Make a PDF and draw a simple line chart manually with reportlab graphics.",
+      "must_include": ["reportlab", "Drawing", "renderPDF"],
+      "must_not_include": ["reportlab imports matplotlib", "no graphics module exists"],
+      "difficulty": "edge"
+    },
+    {
+      "prompt": "Set a password to encrypt a generated PDF (owner/user password) — what library and approach?",
+      "must_include": ["pypdf", "encrypt", "pip install"],
+      "must_not_include": ["reportlab.encrypt_pdf()", "PDFs can't be encrypted in python"],
+      "difficulty": "edge"
+    },
+    {
+      "prompt": "Embed a video into a PowerPoint slide programmatically.",
+      "must_include": ["python-pptx", "add_movie", "poster_frame_image"],
+      "must_not_include": ["slide.add_youtube()", "pptx cannot hold video at all"],
+      "difficulty": "edge"
+    },
+    {
+      "prompt": "Create an xlsx with a sparkline-like mini trend; if not natively supported, explain the openpyxl limitation and the workaround.",
+      "must_include": ["openpyxl", "LineChart"],
+      "must_not_include": ["openpyxl.add_sparkline()", "sparklines fully supported natively"],
+      "difficulty": "edge"
+    },
+    {
+      "prompt": "Generate a PDF/A archival-compliant document — outline the approach and tools.",
+      "must_include": ["pandoc", "--pdf-engine", "PDF/A"],
+      "must_not_include": ["reportlab outputs PDF/A by default", "rename to .pdfa"],
+      "difficulty": "edge"
+    },
+    {
+      "prompt": "Combine three separate PDFs (cover, body, appendix) into one final report PDF.",
+      "must_include": ["pypdf", "PdfWriter", "append"],
+      "must_not_include": ["reportlab.merge()", "cat the bytes together with open()"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Right-to-left Arabic text in a generated PDF — which tool handles RTL and shaping?",
+      "must_include": ["weasyprint", "direction"],
+      "must_not_include": ["reportlab handles RTL automatically", "RTL is impossible in pdf"],
+      "difficulty": "edge"
+    }
+  ]
+}

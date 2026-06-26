@@ -1,0 +1,605 @@
+{
+  "skill": "github-actions",
+  "scenarios": [
+    {
+      "prompt": "Write a minimal GitHub Actions workflow that runs on every push and prints 'hello'.",
+      "must_include": ["on:", "push", "runs-on:", "jobs:"],
+      "must_not_include": ["circleci", "travis"],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "Create a CI workflow that checks out the repo and runs `npm test` on ubuntu-latest.",
+      "must_include": ["actions/checkout@v4", "runs-on: ubuntu-latest", "npm test", "steps:"],
+      "must_not_include": ["actions/checkout@v1"],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "How do I make a workflow that I can trigger manually from the Actions tab?",
+      "must_include": ["workflow_dispatch", "on:"],
+      "must_not_include": ["cron only", "schedule is required"],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "Add a scheduled trigger so my workflow runs every day at 6am UTC.",
+      "must_include": ["schedule:", "cron:", "0 6 * * *"],
+      "must_not_include": ["workflow_dispatch is required for schedule"],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "Set up a Node.js workflow that installs dependencies and runs lint and test steps.",
+      "must_include": ["actions/setup-node@v4", "node-version", "npm ci", "run:"],
+      "must_not_include": ["setup-node@v1"],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "Write a workflow that only runs on pushes to the main branch.",
+      "must_include": ["on:", "push:", "branches:", "main"],
+      "must_not_include": ["branches-ignore: main"],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "Create a workflow that runs on pull requests targeting main.",
+      "must_include": ["pull_request:", "branches:", "main"],
+      "must_not_include": ["pull_request_target"],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "Build a test matrix that runs across Node 18, 20, and 22.",
+      "must_include": ["strategy:", "matrix:", "node-version: [18, 20, 22]", "matrix.node-version"],
+      "must_not_include": ["node-version: 18, 20, 22 without brackets"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Run my tests on ubuntu, macos, and windows in a matrix.",
+      "must_include": ["strategy:", "matrix:", "os: [ubuntu-latest, macos-latest, windows-latest]", "runs-on: ${{ matrix.os }}"],
+      "must_not_include": ["runs-on: all"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "How do I reference a secret called API_TOKEN inside a workflow step?",
+      "must_include": ["${{ secrets.API_TOKEN }}", "env:"],
+      "must_not_include": ["plaintext token", "hardcode the token"],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "Add caching for npm dependencies to speed up my Node CI.",
+      "must_include": ["actions/cache@v4", "key:", "~/.npm", "hashFiles('**/package-lock.json')"],
+      "must_not_include": ["cache: never"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Cache pip dependencies for a Python workflow.",
+      "must_include": ["actions/cache@v4", "~/.cache/pip", "hashFiles('**/requirements.txt')", "key:"],
+      "must_not_include": ["pip cache off"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Use the built-in cache option of setup-node instead of actions/cache.",
+      "must_include": ["actions/setup-node@v4", "cache: 'npm'", "with:"],
+      "must_not_include": ["cache: true only"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Authenticate to Google Cloud from GitHub Actions using Workload Identity Federation (keyless).",
+      "must_include": ["google-github-actions/auth", "workload_identity_provider", "id-token: write", "permissions:"],
+      "must_not_include": ["credentials_json", "service-account-key.json", "SA_KEY"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Set up keyless OIDC auth to GCP and then run a gcloud command to list buckets.",
+      "must_include": ["google-github-actions/auth", "workload_identity_provider", "service_account", "google-github-actions/setup-gcloud", "id-token: write"],
+      "must_not_include": ["credentials_json", "export the SA key"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "What permissions block do I need at the job level for OIDC token minting to GCP?",
+      "must_include": ["permissions:", "id-token: write", "contents: read"],
+      "must_not_include": ["permissions: write-all is required"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Create a reusable workflow that other workflows can call to run tests.",
+      "must_include": ["on:", "workflow_call:", "jobs:"],
+      "must_not_include": ["workflow_dispatch is required to be reusable"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Call a reusable workflow located at .github/workflows/test.yml from another workflow.",
+      "must_include": ["uses: ./.github/workflows/test.yml", "jobs:", "with:"],
+      "must_not_include": ["run: ./.github/workflows/test.yml"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Pass secrets into a reusable workflow when calling it.",
+      "must_include": ["secrets:", "uses:", "workflow_call:"],
+      "must_not_include": ["secrets are inherited automatically without declaration"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Use `secrets: inherit` to forward all secrets to a called reusable workflow.",
+      "must_include": ["secrets: inherit", "uses:"],
+      "must_not_include": ["secrets: all"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Create a composite action in my repo that sets up and builds the project.",
+      "must_include": ["runs:", "using: \"composite\"", "steps:", "shell: bash"],
+      "must_not_include": ["using: node12", "using: docker"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "In a composite action, why do my run steps fail without a shell, and how do I fix it?",
+      "must_include": ["shell: bash", "using: \"composite\"", "run:"],
+      "must_not_include": ["shell is optional in composite"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "My workflow run failed. How do I view only the failed step logs using the gh CLI?",
+      "must_include": ["gh run view", "--log-failed"],
+      "must_not_include": ["gh logs failed"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Re-run only the failed jobs of a workflow run from the CLI.",
+      "must_include": ["gh run rerun", "--failed"],
+      "must_not_include": ["gh run retry"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Watch a running workflow live from the terminal until it completes.",
+      "must_include": ["gh run watch", "gh run list"],
+      "must_not_include": ["gh run tail"],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "Download artifacts produced by a workflow run using the gh CLI.",
+      "must_include": ["gh run download", "gh run view"],
+      "must_not_include": ["gh artifact get"],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "Upload build output as an artifact and download it in a later job.",
+      "must_include": ["actions/upload-artifact@v4", "actions/download-artifact@v4", "name:", "path:"],
+      "must_not_include": ["upload-artifact@v1"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Make job B depend on job A so it only runs after A succeeds.",
+      "must_include": ["needs:", "jobs:"],
+      "must_not_include": ["depends_on:", "after:"],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "Add a step that only runs when the previous steps succeeded and the branch is main.",
+      "must_include": ["if:", "github.ref == 'refs/heads/main'", "success()"],
+      "must_not_include": ["when: on_success"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Run a cleanup step even if earlier steps failed.",
+      "must_include": ["if: always()", "run:"],
+      "must_not_include": ["if: failure() only"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Run a notification step only when the job fails.",
+      "must_include": ["if: failure()", "steps:"],
+      "must_not_include": ["if: always() for failure-only"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Set an environment variable for the whole workflow and another just for one step.",
+      "must_include": ["env:", "steps:"],
+      "must_not_include": ["environment: for env vars"],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "Pass a value from one step to a later step using GITHUB_OUTPUT.",
+      "must_include": ["echo \"", ">> \"$GITHUB_OUTPUT\"", "id:", "steps."],
+      "must_not_include": ["set-output", "::set-output"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "I'm using ::set-output and getting a deprecation warning. What's the modern replacement?",
+      "must_include": ["$GITHUB_OUTPUT", ">>"],
+      "must_not_include": ["::set-output is fine", "set-env"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Add a job-level timeout of 15 minutes.",
+      "must_include": ["timeout-minutes: 15", "jobs:"],
+      "must_not_include": ["timeout: 15m"],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "Set the default shell to bash with pipefail for all run steps.",
+      "must_include": ["defaults:", "run:", "shell: bash"],
+      "must_not_include": ["shell: pipefail"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Configure a matrix that excludes a specific combination (windows + node 18).",
+      "must_include": ["matrix:", "exclude:", "os: windows-latest", "node-version: 18"],
+      "must_not_include": ["skip:"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Add an extra matrix entry using include with custom variables.",
+      "must_include": ["matrix:", "include:", "strategy:"],
+      "must_not_include": ["append:"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Stop the whole matrix from cancelling other jobs when one fails.",
+      "must_include": ["strategy:", "fail-fast: false"],
+      "must_not_include": ["continue-matrix: true"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Limit how many matrix jobs run at once to 2.",
+      "must_include": ["strategy:", "max-parallel: 2"],
+      "must_not_include": ["concurrency: 2 for matrix"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Cancel in-progress runs of the same workflow when a new commit is pushed.",
+      "must_include": ["concurrency:", "group:", "cancel-in-progress: true"],
+      "must_not_include": ["max-parallel for cancellation"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Deploy to a 'production' environment that requires manual approval.",
+      "must_include": ["environment:", "production", "jobs:"],
+      "must_not_include": ["approval: required as a key"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Reference an environment-scoped secret in a deploy job.",
+      "must_include": ["environment:", "secrets.", "${{"],
+      "must_not_include": ["env-secrets:"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Build and push a Docker image to GitHub Container Registry from Actions.",
+      "must_include": ["docker/login-action", "docker/build-push-action", "ghcr.io", "secrets.GITHUB_TOKEN"],
+      "must_not_include": ["docker-push-action made up", "password in plaintext"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Log in to GHCR using the automatic GITHUB_TOKEN with correct permissions.",
+      "must_include": ["docker/login-action", "registry: ghcr.io", "packages: write", "GITHUB_TOKEN"],
+      "must_not_include": ["personal access token required for ghcr"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Set up QEMU and Buildx to build a multi-arch Docker image.",
+      "must_include": ["docker/setup-qemu-action", "docker/setup-buildx-action", "platforms:"],
+      "must_not_include": ["docker/multiarch-action"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Authenticate to Google Artifact Registry and push a container using WIF.",
+      "must_include": ["google-github-actions/auth", "workload_identity_provider", "id-token: write", "docker/login-action"],
+      "must_not_include": ["credentials_json key", "_json_key"],
+      "difficulty": "edge"
+    },
+    {
+      "prompt": "Deploy to Cloud Run from GitHub Actions using keyless auth.",
+      "must_include": ["google-github-actions/auth", "workload_identity_provider", "google-github-actions/deploy-cloudrun", "id-token: write"],
+      "must_not_include": ["credentials_json", "service account key file"],
+      "difficulty": "edge"
+    },
+    {
+      "prompt": "What's the correct format for the workload_identity_provider value?",
+      "must_include": ["projects/", "/locations/global/workloadIdentityPools/", "/providers/"],
+      "must_not_include": ["just the pool name", "service account email as provider"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "My OIDC auth to GCP fails with 'Unable to acquire impersonated credentials'. What should I check first?",
+      "must_include": ["id-token: write", "service_account", "workload_identity_provider", "attribute"],
+      "must_not_include": ["switch to a JSON key", "use credentials_json instead"],
+      "difficulty": "edge"
+    },
+    {
+      "prompt": "Migrate a Jenkins declarative pipeline with stages Build, Test, Deploy to GitHub Actions.",
+      "must_include": ["jobs:", "needs:", "runs-on:", "steps:"],
+      "must_not_include": ["stage {", "pipeline {"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "In Jenkins I use `agent { label 'linux' }`. What's the GitHub Actions equivalent?",
+      "must_include": ["runs-on:", "ubuntu-latest"],
+      "must_not_include": ["agent:", "label:"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "My Jenkinsfile uses `environment { FOO = 'bar' }`. How do I express that in Actions?",
+      "must_include": ["env:", "FOO:"],
+      "must_not_include": ["environment { }"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Jenkins has `post { always { ... } }`. Translate that to GitHub Actions.",
+      "must_include": ["if: always()", "steps:"],
+      "must_not_include": ["post:", "always { }"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Jenkins uses credentials() binding for secrets. How do secrets work in Actions?",
+      "must_include": ["${{ secrets.", "env:"],
+      "must_not_include": ["credentials('id')", "withCredentials"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "My Jenkins pipeline runs stages in parallel. How do I parallelize jobs in Actions?",
+      "must_include": ["jobs:", "needs:"],
+      "must_not_include": ["parallel { }", "stage parallel"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Convert a Jenkins cron trigger `H 2 * * *` to a GitHub Actions schedule.",
+      "must_include": ["schedule:", "cron:", "2 * * *"],
+      "must_not_include": ["H 2 * * *", "triggers { cron"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Trigger a workflow when a tag matching v*.*.* is pushed.",
+      "must_include": ["on:", "push:", "tags:", "v*.*.*"],
+      "must_not_include": ["branches: v*"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Run a workflow only when files under src/ change.",
+      "must_include": ["paths:", "src/**", "on:"],
+      "must_not_include": ["paths-ignore: src for inclusion"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Skip the workflow when only markdown docs change.",
+      "must_include": ["paths-ignore:", "**.md"],
+      "must_not_include": ["paths: **.md for ignore"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Add workflow_dispatch inputs so users can pick an environment when triggering.",
+      "must_include": ["workflow_dispatch:", "inputs:", "type: choice", "options:"],
+      "must_not_include": ["input-type:"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Read a workflow_dispatch input value inside a step.",
+      "must_include": ["${{ inputs.", "workflow_dispatch:", "inputs:"],
+      "must_not_include": ["github.event.input."],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Set up a Python project with setup-python and a version matrix.",
+      "must_include": ["actions/setup-python@v5", "python-version", "matrix:", "${{ matrix.python-version }}"],
+      "must_not_include": ["setup-python@v1"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Set up Go and cache modules for a CI build.",
+      "must_include": ["actions/setup-go@v5", "go-version", "cache:"],
+      "must_not_include": ["setup-golang"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Set up the JDK with Temurin distribution for a Java build.",
+      "must_include": ["actions/setup-java@v4", "distribution: 'temurin'", "java-version"],
+      "must_not_include": ["distribution: oracle-only"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "My checkout only grabs the latest commit but I need full git history. How do I fix it?",
+      "must_include": ["actions/checkout@v4", "fetch-depth: 0", "with:"],
+      "must_not_include": ["fetch-all: true"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Check out a different repository in addition to the current one.",
+      "must_include": ["actions/checkout@v4", "repository:", "path:", "token:"],
+      "must_not_include": ["clone:"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "A step needs write access to push commits back. What permissions do I set?",
+      "must_include": ["permissions:", "contents: write"],
+      "must_not_include": ["permissions: write-all required"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Restrict the default GITHUB_TOKEN to read-only for the whole workflow.",
+      "must_include": ["permissions:", "contents: read"],
+      "must_not_include": ["permissions: none disables checkout always"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Pin a third-party action to a full commit SHA for supply-chain security.",
+      "must_include": ["uses:", "@"],
+      "must_not_include": ["@main is safest", "@latest"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "My workflow says 'workflow_call' inputs are undefined in the caller. How do I declare typed inputs in the reusable workflow?",
+      "must_include": ["workflow_call:", "inputs:", "type:", "required:"],
+      "must_not_include": ["inputs are implicit"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Output a value from a reusable workflow back to the caller.",
+      "must_include": ["workflow_call:", "outputs:", "jobs.", "outputs:"],
+      "must_not_include": ["return:"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "A matrix job needs different runner per entry; map runner via matrix include.",
+      "must_include": ["matrix:", "include:", "runs-on: ${{ matrix."],
+      "must_not_include": ["runs-on: dynamic"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Write a step that fails the job explicitly if a condition is met.",
+      "must_include": ["run:", "exit 1"],
+      "must_not_include": ["fail: true"],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "Continue the workflow even if a specific step fails.",
+      "must_include": ["continue-on-error: true", "steps:"],
+      "must_not_include": ["ignore-error: true"],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "Mask a computed secret value in the logs.",
+      "must_include": ["::add-mask::", "echo"],
+      "must_not_include": ["::set-output", "secrets are auto-masked when computed"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Add a job summary that shows up in the run's summary page.",
+      "must_include": [">> \"$GITHUB_STEP_SUMMARY\"", "run:"],
+      "must_not_include": ["::summary::"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Run a job inside a container image instead of directly on the runner.",
+      "must_include": ["container:", "image:", "jobs:"],
+      "must_not_include": ["docker-image:"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Add a Postgres service container for integration tests.",
+      "must_include": ["services:", "postgres:", "image:", "ports:"],
+      "must_not_include": ["service-container:"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Wait for the Postgres service to be healthy before tests run.",
+      "must_include": ["services:", "options:", "--health-cmd", "pg_isready"],
+      "must_not_include": ["wait-for: postgres made up"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Trigger one workflow when another workflow completes.",
+      "must_include": ["on:", "workflow_run:", "types:", "completed"],
+      "must_not_include": ["on: workflow_finished"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "My PR workflow can't access secrets on forked PRs. Explain why and a safe pattern.",
+      "must_include": ["pull_request", "secrets", "pull_request_target"],
+      "must_not_include": ["just use pull_request_target and run untrusted code"],
+      "difficulty": "edge"
+    },
+    {
+      "prompt": "Set up a release workflow that creates a GitHub Release from a tag.",
+      "must_include": ["on:", "tags:", "softprops/action-gh-release", "permissions:"],
+      "must_not_include": ["actions/create-release deprecated as recommended"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Use the gh CLI inside a workflow to comment on a PR.",
+      "must_include": ["gh pr comment", "GH_TOKEN", "secrets.GITHUB_TOKEN"],
+      "must_not_include": ["gh comment add"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Trigger a workflow_dispatch on another repo from a workflow using the gh CLI.",
+      "must_include": ["gh workflow run", "--repo"],
+      "must_not_include": ["gh dispatch"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Disable a noisy scheduled workflow temporarily from the CLI.",
+      "must_include": ["gh workflow disable", "gh workflow enable"],
+      "must_not_include": ["gh workflow stop"],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "Debug: a run shows 'startup_failure'. What does that usually mean and how do I inspect it?",
+      "must_include": ["gh run view", "YAML", "syntax"],
+      "must_not_include": ["it means the runner is offline always"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "My job is stuck 'Waiting for a runner'. List likely causes.",
+      "must_include": ["runs-on:", "label", "self-hosted"],
+      "must_not_include": ["GitHub is always down"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Show the full logs of the most recent run for the current branch.",
+      "must_include": ["gh run view", "--log"],
+      "must_not_include": ["gh run logs"],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "Add an annotation error message that appears on a specific file and line.",
+      "must_include": ["::error", "file=", "line="],
+      "must_not_include": ["::annotate"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Group log lines into a collapsible section in the run output.",
+      "must_include": ["::group::", "::endgroup::"],
+      "must_not_include": ["::collapse::"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Run a self-hosted runner job with a custom label 'gpu'.",
+      "must_include": ["runs-on:", "self-hosted", "gpu"],
+      "must_not_include": ["runner: gpu"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Reuse setup logic across 3 jobs without duplicating YAML. What's the best approach?",
+      "must_include": ["composite", "uses: ./", "runs:"],
+      "must_not_include": ["copy-paste is the only way"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Pass inputs to a composite action and use them in steps.",
+      "must_include": ["inputs:", "using: \"composite\"", "${{ inputs."],
+      "must_not_include": ["with: inside runs.steps to read inputs"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Authenticate to GCP via WIF then run Terraform plan keylessly.",
+      "must_include": ["google-github-actions/auth", "workload_identity_provider", "id-token: write", "terraform"],
+      "must_not_include": ["GOOGLE_CREDENTIALS json key", "credentials_json"],
+      "difficulty": "edge"
+    },
+    {
+      "prompt": "I currently store a GCP service account JSON key in a secret. How do I move to WIF and what do I delete?",
+      "must_include": ["workload_identity_provider", "google-github-actions/auth", "id-token: write", "service_account"],
+      "must_not_include": ["keep the JSON key as backup in secrets", "credentials_json"],
+      "difficulty": "edge"
+    },
+    {
+      "prompt": "Restrict which GitHub repo/branch can impersonate the GCP service account via attribute condition. What goes in the workflow side?",
+      "must_include": ["workload_identity_provider", "id-token: write", "google-github-actions/auth"],
+      "must_not_include": ["set the attribute condition in the workflow YAML", "credentials_json"],
+      "difficulty": "edge"
+    },
+    {
+      "prompt": "Run a step conditionally based on a matrix value (only deploy on the production entry).",
+      "must_include": ["if:", "matrix.", "steps:"],
+      "must_not_include": ["when: matrix"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Use needs outputs from a build job inside a deploy job.",
+      "must_include": ["needs:", "needs.", "outputs:", "${{"],
+      "must_not_include": ["jobs.build.result only"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Convert a Jenkins shared library call to a reusable GitHub Actions workflow concept.",
+      "must_include": ["workflow_call:", "uses:", "with:"],
+      "must_not_include": ["@Library", "vars/"],
+      "difficulty": "hard"
+    }
+  ]
+}

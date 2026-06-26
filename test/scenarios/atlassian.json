@@ -1,0 +1,605 @@
+{
+  "skill": "atlassian",
+  "scenarios": [
+    {
+      "prompt": "Search Jira for all open bugs in project PROJ using JQL.",
+      "must_include": ["/rest/api/3/search/jql", "jql", "project = PROJ"],
+      "must_not_include": ["/rest/api/3/search\"", "/rest/api/2/search/jql"],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "What's the current endpoint to run a JQL search in Jira Cloud?",
+      "must_include": ["/rest/api/3/search/jql", "GET", "jql"],
+      "must_not_include": ["/rest/api/3/search?", "deprecated endpoint is correct"],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "List all issues assigned to me that aren't done.",
+      "must_include": ["/rest/api/3/search/jql", "assignee = currentUser()", "statusCategory != Done"],
+      "must_not_include": ["/rest/api/3/search\"", "assignee = me"],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "Create a new Task in project PROJ titled 'Update SSL certs'.",
+      "must_include": ["/rest/api/3/issue", "POST", "\"summary\""],
+      "must_not_include": ["/rest/api/2/issue", "/rest/api/3/issues"],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "How do I add a comment to issue PROJ-123?",
+      "must_include": ["/rest/api/3/issue/PROJ-123/comment", "POST", "ADF"],
+      "must_not_include": ["/rest/api/3/issue/PROJ-123/comments", "plain string body"],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "Show me how to authenticate to the Atlassian REST API with an API token.",
+      "must_include": ["Basic", "email", "ATLASSIAN_API_TOKEN"],
+      "must_not_include": ["Bearer ATLASSIAN_API_TOKEN", "username and password"],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "Transition issue PROJ-45 to Done.",
+      "must_include": ["/rest/api/3/issue/PROJ-45/transitions", "POST", "transition"],
+      "must_not_include": ["status field update directly", "/rest/api/3/issue/PROJ-45/status"],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "How do I find the available transitions for an issue before transitioning it?",
+      "must_include": ["GET", "/rest/api/3/issue/", "/transitions"],
+      "must_not_include": ["PUT /transitions", "set status name directly"],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "Assign issue PROJ-9 to a user.",
+      "must_include": ["/rest/api/3/issue/PROJ-9/assignee", "PUT", "accountId"],
+      "must_not_include": ["\"name\":", "username field"],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "Create a Confluence page in space ENG.",
+      "must_include": ["/wiki/rest/api/content", "POST", "\"space\""],
+      "must_not_include": ["/rest/api/3/content", "/wiki/api/content"],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "Get the details of Jira issue PROJ-77.",
+      "must_include": ["/rest/api/3/issue/PROJ-77", "GET"],
+      "must_not_include": ["/rest/api/2/issue/PROJ-77", "/rest/api/3/issues/PROJ-77"],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "Which base URL do I use for Jira Cloud REST calls?",
+      "must_include": ["https://", ".atlassian.net", "/rest/api/3"],
+      "must_not_include": ["api.atlassian.com/jira", "/rest/api/latest is required"],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "Search for issues updated in the last 7 days in project OPS.",
+      "must_include": ["/rest/api/3/search/jql", "updated >= -7d", "project = OPS"],
+      "must_not_include": ["/rest/api/3/search\"", "updated > 7 days"],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "How should the body of a Jira comment be formatted?",
+      "must_include": ["ADF", "Atlassian Document Format", "\"type\": \"doc\""],
+      "must_not_include": ["plain text string", "wiki markup is required"],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "Where do I generate an Atlassian API token?",
+      "must_include": ["id.atlassian.com", "API token", "ATLASSIAN_API_TOKEN"],
+      "must_not_include": ["OAuth client secret only", "settings.atlassian.net/tokens"],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "List all high priority unresolved issues in PROJ.",
+      "must_include": ["/rest/api/3/search/jql", "priority = High", "resolution = Unresolved"],
+      "must_not_include": ["/rest/api/3/search\"", "priority == High"],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "Update the summary of issue PROJ-12.",
+      "must_include": ["/rest/api/3/issue/PROJ-12", "PUT", "\"fields\""],
+      "must_not_include": ["POST to update", "/rest/api/3/issue/PROJ-12/summary"],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "Get a Confluence page by its ID 123456.",
+      "must_include": ["/wiki/rest/api/content/123456", "GET"],
+      "must_not_include": ["/rest/api/3/content/123456", "/wiki/pages/123456"],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "How do I delete a Jira issue?",
+      "must_include": ["DELETE", "/rest/api/3/issue/"],
+      "must_not_include": ["POST with action=delete", "/rest/api/3/issue/delete"],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "Find all issues with the label 'security' in any project.",
+      "must_include": ["/rest/api/3/search/jql", "labels = security", "jql"],
+      "must_not_include": ["/rest/api/3/search\"", "label == security"],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "Create a Bug in PROJ with a description containing reproduction steps.",
+      "must_include": ["/rest/api/3/issue", "POST", "\"issuetype\"", "ADF"],
+      "must_not_include": ["/rest/api/2/issue", "description as plain string"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Search Jira but only return the summary and status fields to reduce payload.",
+      "must_include": ["/rest/api/3/search/jql", "fields", "jql"],
+      "must_not_include": ["/rest/api/3/search\"", "expand=all required"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Paginate through a large JQL result set. How does pagination work on the new search endpoint?",
+      "must_include": ["/rest/api/3/search/jql", "nextPageToken", "maxResults"],
+      "must_not_include": ["startAt", "offset parameter"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "I want to count how many issues match a JQL query without fetching them all.",
+      "must_include": ["/rest/api/3/search/approximate-count", "POST", "jql"],
+      "must_not_include": ["/rest/api/3/search/count", "total field from /search"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Set the assignee to unassigned on PROJ-3.",
+      "must_include": ["/rest/api/3/issue/PROJ-3/assignee", "PUT", "\"accountId\": null"],
+      "must_not_include": ["\"name\": \"-1\"", "DELETE assignee"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Transition PROJ-8 to In Progress and set a resolution at the same time.",
+      "must_include": ["/rest/api/3/issue/PROJ-8/transitions", "transition", "\"fields\""],
+      "must_not_include": ["/rest/api/3/issue/PROJ-8/status", "two separate status writes"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Update a Confluence page — I keep getting a version conflict.",
+      "must_include": ["/wiki/rest/api/content/", "version", "number"],
+      "must_not_include": ["version not required", "/rest/api/3/content"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Add a comment to a Confluence page.",
+      "must_include": ["/wiki/rest/api/content", "POST", "\"type\": \"comment\""],
+      "must_not_include": ["/wiki/rest/api/comment", "/rest/api/3/content/comment"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Search Confluence content using CQL.",
+      "must_include": ["/wiki/rest/api/content/search", "cql", "GET"],
+      "must_not_include": ["jql for Confluence", "/wiki/rest/api/search/cql"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "How do I look up a user's accountId by email to assign them?",
+      "must_include": ["/rest/api/3/user/search", "query", "accountId"],
+      "must_not_include": ["/rest/api/3/user?username=", "search by username"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Create an issue and link it as 'blocks' another issue.",
+      "must_include": ["/rest/api/3/issue", "/rest/api/3/issueLink", "\"type\""],
+      "must_not_include": ["/rest/api/3/issue/link", "links field in create only"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Add a watcher to issue PROJ-22.",
+      "must_include": ["/rest/api/3/issue/PROJ-22/watchers", "POST", "accountId"],
+      "must_not_include": ["/rest/api/3/issue/PROJ-22/watch", "username in body"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Attach a file to a Jira issue.",
+      "must_include": ["/rest/api/3/issue/", "/attachments", "X-Atlassian-Token: no-check"],
+      "must_not_include": ["JSON body for the file", "/rest/api/3/attachment/upload"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Why am I getting a 410 Gone from /rest/api/3/search? How do I fix it?",
+      "must_include": ["deprecated", "/rest/api/3/search/jql", "migrate"],
+      "must_not_include": ["use /rest/api/2/search", "add a trailing slash to /search"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Get all comments on issue PROJ-30.",
+      "must_include": ["/rest/api/3/issue/PROJ-30/comment", "GET"],
+      "must_not_include": ["/rest/api/3/issue/PROJ-30/comments", "/rest/api/2/issue/PROJ-30/comment"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Bulk-fetch fields for issues matching a JQL but I need the changelog too.",
+      "must_include": ["/rest/api/3/search/jql", "expand", "changelog"],
+      "must_not_include": ["/rest/api/3/search\"", "expand=changelog on the deprecated endpoint"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "List the projects I can access in Jira.",
+      "must_include": ["/rest/api/3/project/search", "GET"],
+      "must_not_include": ["/rest/api/3/projects", "/rest/api/2/project/search"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Add a label to an existing issue without overwriting the others.",
+      "must_include": ["/rest/api/3/issue/", "\"update\"", "\"labels\""],
+      "must_not_include": ["\"fields\": {\"labels\"", "replaces all labels"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "How do I set a custom field value when creating an issue?",
+      "must_include": ["/rest/api/3/issue", "customfield_", "\"fields\""],
+      "must_not_include": ["custom field by display name", "/rest/api/3/customfield"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Find issues in epic PROJ-100 (its child issues).",
+      "must_include": ["/rest/api/3/search/jql", "parent = PROJ-100", "jql"],
+      "must_not_include": ["/rest/api/3/search\"", "\"Epic Link\" = PROJ-100 only"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Get the list of fields available, including custom fields and their IDs.",
+      "must_include": ["/rest/api/3/field", "GET"],
+      "must_not_include": ["/rest/api/3/fields", "/rest/api/3/customfields"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Create a subtask under PROJ-5.",
+      "must_include": ["/rest/api/3/issue", "\"parent\"", "\"issuetype\""],
+      "must_not_include": ["/rest/api/3/issue/PROJ-5/subtask", "subtask via transitions"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Get the storage-format body of a Confluence page.",
+      "must_include": ["/wiki/rest/api/content/", "expand=body.storage", "GET"],
+      "must_not_include": ["body.adf", "expand=body.view only works"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "How do I find child pages of a Confluence page?",
+      "must_include": ["/wiki/rest/api/content/", "/child/page", "GET"],
+      "must_not_include": ["/wiki/rest/api/content/children", "/rest/api/3/content/child"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Search Jira for issues due before next Monday.",
+      "must_include": ["/rest/api/3/search/jql", "duedate", "jql"],
+      "must_not_include": ["/rest/api/3/search\"", "due_date field name"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Reopen a closed issue PROJ-60 by transitioning it.",
+      "must_include": ["/rest/api/3/issue/PROJ-60/transitions", "POST", "transition"],
+      "must_not_include": ["set status to Open directly", "/rest/api/3/issue/PROJ-60/reopen"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Get myself — the current authenticated user's accountId.",
+      "must_include": ["/rest/api/3/myself", "GET", "accountId"],
+      "must_not_include": ["/rest/api/3/user/current", "currentUser endpoint"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Order JQL search results by created date descending.",
+      "must_include": ["/rest/api/3/search/jql", "ORDER BY created DESC", "jql"],
+      "must_not_include": ["/rest/api/3/search\"", "sort=created"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Add multiple components to an issue at creation time.",
+      "must_include": ["/rest/api/3/issue", "\"components\"", "\"id\""],
+      "must_not_include": ["components as comma string", "/rest/api/3/issue/components"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Delete a comment from issue PROJ-15.",
+      "must_include": ["/rest/api/3/issue/PROJ-15/comment/", "DELETE"],
+      "must_not_include": ["/rest/api/3/issue/PROJ-15/comments/", "POST with delete flag"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "I have a 401 Unauthorized calling the Jira API with my token. What's wrong?",
+      "must_include": ["Basic", "email:token", "base64"],
+      "must_not_include": ["Bearer token", "token alone in Authorization"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "How do I avoid hitting Jira rate limits in a bulk script?",
+      "must_include": ["429", "Retry-After", "backoff"],
+      "must_not_include": ["no rate limits on Cloud", "X-RateLimit-Reset is mandatory header"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Search for issues mentioning 'timeout' in the summary or description.",
+      "must_include": ["/rest/api/3/search/jql", "text ~", "jql"],
+      "must_not_include": ["/rest/api/3/search\"", "summary = timeout"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Move a Jira issue to a different project. Is that possible via the API?",
+      "must_include": ["bulk", "move", "/rest/api/3/bulk/issues/move"],
+      "must_not_include": ["PUT project field on the issue", "/rest/api/3/issue/PROJ-1/move"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Bulk-create 50 issues in one call.",
+      "must_include": ["/rest/api/3/issue/bulk", "POST", "\"issueUpdates\""],
+      "must_not_include": ["/rest/api/3/issues/bulk", "loop one POST per issue is the only way"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Transition an issue that requires a comment and a resolution in the transition screen.",
+      "must_include": ["/transitions", "\"update\"", "\"comment\"", "\"resolution\""],
+      "must_not_include": ["comment via separate /comment first", "resolution set in /transitions not supported"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Convert HTML to ADF — do I need to? How do I post rich text to a comment?",
+      "must_include": ["ADF", "\"type\": \"doc\"", "\"version\": 1"],
+      "must_not_include": ["post HTML directly", "wiki markup auto-converts in v3"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "I need to search across more than 5000 results. The new endpoint caps things — how?",
+      "must_include": ["/rest/api/3/search/jql", "nextPageToken", "isLast"],
+      "must_not_include": ["startAt beyond 10000", "/rest/api/3/search supports deep paging"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Set a parent epic on an existing company-managed issue.",
+      "must_include": ["/rest/api/3/issue/", "PUT", "\"parent\""],
+      "must_not_include": ["Epic Link customfield is the only way", "/rest/api/3/epic/PROJ-1/issue"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Create a Confluence page using the new v2 API instead of the old one.",
+      "must_include": ["/wiki/api/v2/pages", "POST", "spaceId"],
+      "must_not_include": ["/wiki/rest/api/v2/content", "spaceKey in v2 body"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Get a Confluence page with the v2 API and its body in storage format.",
+      "must_include": ["/wiki/api/v2/pages/", "body-format=storage", "GET"],
+      "must_not_include": ["expand=body.storage in v2", "/wiki/rest/api/v2/pages"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Build a JQL that finds issues in PROJ that are blocked by another open issue.",
+      "must_include": ["/rest/api/3/search/jql", "issueLinkType", "jql"],
+      "must_not_include": ["/rest/api/3/search\"", "blockedBy operator"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Add a worklog entry to an issue.",
+      "must_include": ["/rest/api/3/issue/", "/worklog", "timeSpent"],
+      "must_not_include": ["/rest/api/3/worklog", "logwork field on issue"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Get the edit metadata to know which fields are editable on an issue.",
+      "must_include": ["/rest/api/3/issue/", "/editmeta", "GET"],
+      "must_not_include": ["/rest/api/3/issue/meta", "createmeta for editing"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Get create metadata for project PROJ to know required fields for a Bug.",
+      "must_include": ["/rest/api/3/issue/createmeta", "projectKeys", "issuetypeNames"],
+      "must_not_include": ["/rest/api/3/createmeta", "editmeta for creation"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Use the new createmeta endpoints since the old one's field expansion was removed.",
+      "must_include": ["/rest/api/3/issue/createmeta/", "/issuetypes", "/issuetypes/"],
+      "must_not_include": ["expand=projects.issuetypes.fields still works", "/rest/api/3/createmeta/fields"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Restrict a Confluence page so only certain users can view it.",
+      "must_include": ["/wiki/rest/api/content/", "/restriction", "\"read\""],
+      "must_not_include": ["/wiki/rest/api/restrictions", "permission field in page body"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "I want to use OAuth 2.0 (3LO) instead of an API token for a Jira integration.",
+      "must_include": ["api.atlassian.com/ex/jira/", "Bearer", "cloudId"],
+      "must_not_include": ["Basic auth with OAuth token", ".atlassian.net for OAuth calls"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "How do I find my cloudId for the OAuth ex/jira base URL?",
+      "must_include": ["api.atlassian.com/oauth/token/accessible-resources", "cloudId", "Bearer"],
+      "must_not_include": ["cloudId in the API token", "/rest/api/3/cloudid"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Validate a JQL query string before running it.",
+      "must_include": ["/rest/api/3/jql/parse", "POST", "queries"],
+      "must_not_include": ["/rest/api/3/jql/validate", "validation only via /search"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Get autocomplete suggestions for JQL field values.",
+      "must_include": ["/rest/api/3/jql/autocompletedata", "GET"],
+      "must_not_include": ["/rest/api/3/jql/suggestions", "autocomplete via /search"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Add a remote link (web link) to a Jira issue.",
+      "must_include": ["/rest/api/3/issue/", "/remotelink", "\"url\""],
+      "must_not_include": ["/rest/api/3/remotelink", "remote link via issueLink"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Set an issue's priority by transition is failing — set it via update instead.",
+      "must_include": ["/rest/api/3/issue/", "PUT", "\"priority\""],
+      "must_not_include": ["priority must be set in transition", "/rest/api/3/issue/PROJ-1/priority"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Notify users about an issue via the API.",
+      "must_include": ["/rest/api/3/issue/", "/notify", "POST"],
+      "must_not_include": ["/rest/api/3/notify", "notification via comment mention only"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Get a Confluence space's pages.",
+      "must_include": ["/wiki/api/v2/spaces/", "/pages", "GET"],
+      "must_not_include": ["/wiki/rest/api/space/pages", "/rest/api/3/space"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Mention a user in a Jira comment using ADF.",
+      "must_include": ["\"type\": \"mention\"", "\"id\"", "accountId"],
+      "must_not_include": ["[~username]", "@mention plain text"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Add a code block with syntax highlighting in a Jira comment.",
+      "must_include": ["ADF", "\"type\": \"codeBlock\"", "\"language\""],
+      "must_not_include": ["{code} wiki markup", "<pre> HTML in comment"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Search issues and request the rendered (HTML) field values.",
+      "must_include": ["/rest/api/3/search/jql", "expand", "renderedFields"],
+      "must_not_include": ["/rest/api/3/search\"", "expand=renderedBody"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Archive a Confluence page using the v2 API.",
+      "must_include": ["/wiki/api/v2/pages/", "status", "archived"],
+      "must_not_include": ["DELETE archives the page", "/wiki/rest/api/content/archive"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Update only a single custom field on an issue without touching others.",
+      "must_include": ["/rest/api/3/issue/", "PUT", "customfield_"],
+      "must_not_include": ["must send all fields", "/rest/api/3/issue/field"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Get the changelog (history) of an issue via the dedicated endpoint.",
+      "must_include": ["/rest/api/3/issue/", "/changelog", "GET"],
+      "must_not_include": ["/rest/api/3/changelog", "history field on /issue without expand"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Create a version in a project and assign it as fixVersion.",
+      "must_include": ["/rest/api/3/version", "POST", "\"fixVersions\""],
+      "must_not_include": ["/rest/api/3/project/version", "fixVersion as string name only"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Use a sprint field in JQL to find issues in the active sprint.",
+      "must_include": ["/rest/api/3/search/jql", "sprint in openSprints()", "jql"],
+      "must_not_include": ["/rest/api/3/search\"", "sprint = active"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "The Agile board data isn't in core API. Which base path do I use for sprints?",
+      "must_include": ["/rest/agile/1.0", "sprint", "board"],
+      "must_not_include": ["/rest/api/3/sprint", "/rest/agile/3.0"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Add an issue to a sprint via the Agile API.",
+      "must_include": ["/rest/agile/1.0/sprint/", "/issue", "POST"],
+      "must_not_include": ["/rest/api/3/sprint", "sprint field PUT on /rest/api/3/issue is the only way"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "I keep getting 'comment body must be of type doc'. What format does the v3 comment body need?",
+      "must_include": ["ADF", "\"type\": \"doc\"", "\"content\""],
+      "must_not_include": ["plain string body works in v3", "use /rest/api/2 to send a string"],
+      "difficulty": "edge"
+    },
+    {
+      "prompt": "Why does GET /rest/api/3/search return only 'Use POST /rest/api/3/search/jql'? Explain the new contract.",
+      "must_include": ["/rest/api/3/search/jql", "deprecated", "nextPageToken"],
+      "must_not_include": ["just add ?jql= to /search", "startAt still works on /search/jql"],
+      "difficulty": "edge"
+    },
+    {
+      "prompt": "My JQL search returns issues but the fields object is empty. What changed in the new endpoint?",
+      "must_include": ["/rest/api/3/search/jql", "fields", "explicitly request"],
+      "must_not_include": ["fields default to *all", "/rest/api/3/search returns all fields"],
+      "difficulty": "edge"
+    },
+    {
+      "prompt": "I tried assigning by username and it failed with 400. GDPR strict mode — what do I send?",
+      "must_include": ["accountId", "/rest/api/3/issue/", "/assignee"],
+      "must_not_include": ["\"name\"", "username is still accepted"],
+      "difficulty": "edge"
+    },
+    {
+      "prompt": "Searching with a custom field by its name in JQL fails intermittently across instances. Best practice?",
+      "must_include": ["/rest/api/3/search/jql", "cf[", "customfield"],
+      "must_not_include": ["/rest/api/3/search\"", "always use display name"],
+      "difficulty": "edge"
+    },
+    {
+      "prompt": "An attachment upload returns XSRF check failed. What header fixes it?",
+      "must_include": ["X-Atlassian-Token: no-check", "/attachments", "multipart"],
+      "must_not_include": ["Content-Type: application/json", "X-XSRF-TOKEN header"],
+      "difficulty": "edge"
+    },
+    {
+      "prompt": "I get 404 on /wiki/rest/api/content when the page exists. Could it be the v2 migration?",
+      "must_include": ["/wiki/api/v2/pages", "deprecat", "spaceId"],
+      "must_not_include": ["/wiki/rest/api/v3/content", "content endpoint never existed"],
+      "difficulty": "edge"
+    },
+    {
+      "prompt": "My transition POST succeeds but the issue didn't move. What's the likely cause and how do I debug?",
+      "must_include": ["/rest/api/3/issue/", "/transitions", "transition id"],
+      "must_not_include": ["use the status name as the id", "/transitions doesn't validate workflow"],
+      "difficulty": "edge"
+    },
+    {
+      "prompt": "I want to set a Date custom field but get format errors. What format does Jira expect?",
+      "must_include": ["customfield_", "yyyy-MM-dd", "\"fields\""],
+      "must_not_include": ["epoch milliseconds", "MM/dd/yyyy"],
+      "difficulty": "edge"
+    },
+    {
+      "prompt": "Confluence page update keeps returning 409. How do I correctly bump the version?",
+      "must_include": ["version", "number", "+ 1"],
+      "must_not_include": ["omit version to auto-bump", "version is a string timestamp"],
+      "difficulty": "edge"
+    },
+    {
+      "prompt": "I need both the issue and its comments in one round trip from the issue endpoint.",
+      "must_include": ["/rest/api/3/issue/", "fields=comment", "GET"],
+      "must_not_include": ["comments included by default", "/rest/api/3/issue/PROJ-1?expand=comments"],
+      "difficulty": "edge"
+    },
+    {
+      "prompt": "My script uses /rest/api/2 endpoints. Are they fine, and what's the comment-body gotcha vs v3?",
+      "must_include": ["/rest/api/2", "ADF", "/rest/api/3"],
+      "must_not_include": ["v2 requires ADF too", "v2 is fully removed"],
+      "difficulty": "edge"
+    },
+    {
+      "prompt": "JQL with reserved word as a value (e.g., status = 'In Progress') sometimes errors. How to quote safely?",
+      "must_include": ["/rest/api/3/search/jql", "quotes", "\"In Progress\""],
+      "must_not_include": ["/rest/api/3/search\"", "reserved words need no quoting"],
+      "difficulty": "edge"
+    },
+    {
+      "prompt": "Bulk move via /rest/api/3/bulk/issues/move is async. How do I check it finished?",
+      "must_include": ["/rest/api/3/bulk/issues/move", "taskId", "/rest/api/3/task/"],
+      "must_not_include": ["response is synchronous", "/rest/api/3/bulk/status"],
+      "difficulty": "edge"
+    },
+    {
+      "prompt": "Adding a label via fields wipes existing labels. Show the correct verb-based update payload.",
+      "must_include": ["\"update\"", "\"labels\"", "\"add\""],
+      "must_not_include": ["\"fields\": {\"labels\": [", "set is the same as add"],
+      "difficulty": "edge"
+    }
+  ]
+}

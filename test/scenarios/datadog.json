@@ -1,0 +1,1203 @@
+{
+  "skill": "datadog",
+  "scenarios": [
+    {
+      "prompt": "Which HTTP headers do I need to authenticate a Datadog API request?",
+      "must_include": [
+        "DD-API-KEY",
+        "DD-APPLICATION-KEY"
+      ],
+      "must_not_include": [
+        "Authorization: Bearer",
+        "X-Datadog-Key"
+      ],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "Show me the curl command to query the average system CPU user time over the last hour with the Datadog timeseries API.",
+      "must_include": [
+        "/api/v1/query",
+        "DD-API-KEY",
+        "from",
+        "to"
+      ],
+      "must_not_include": [
+        "/api/v2/timeseries/query/now"
+      ],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "How do I list all monitors in my Datadog org via the API?",
+      "must_include": [
+        "/api/v1/monitor",
+        "DD-API-KEY",
+        "DD-APPLICATION-KEY"
+      ],
+      "must_not_include": [
+        "/api/v1/monitors/all"
+      ],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "What endpoint do I use to search logs in Datadog?",
+      "must_include": [
+        "/api/v2/logs/events/search",
+        "DD-APPLICATION-KEY"
+      ],
+      "must_not_include": [
+        "/api/v1/logs/search"
+      ],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "Give me the dog CLI command to post a metric value.",
+      "must_include": [
+        "dogshell",
+        "metric",
+        "post"
+      ],
+      "must_not_include": [
+        "dog send metric"
+      ],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "I need to fetch a single monitor's current status by ID. What does the response field for alert state look like?",
+      "must_include": [
+        "/api/v1/monitor",
+        "overall_state"
+      ],
+      "must_not_include": [
+        "monitor_health"
+      ],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Write a query to get the p95 latency for service web-store grouped by endpoint over the past 4 hours.",
+      "must_include": [
+        "/api/v1/query",
+        "service:web-store",
+        "p95",
+        "by {"
+      ],
+      "must_not_include": [
+        "percentile(95)"
+      ],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "How do I list all dashboards in my account?",
+      "must_include": [
+        "/api/v1/dashboard",
+        "DD-API-KEY",
+        "DD-APPLICATION-KEY"
+      ],
+      "must_not_include": [
+        "/api/v1/dashboards/list/all"
+      ],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "Query the sum of trace request hits for service checkout filtered to the prod environment in the last 30 minutes.",
+      "must_include": [
+        "/api/v1/query",
+        "service:checkout",
+        "env:prod"
+      ],
+      "must_not_include": [
+        "environment="
+      ],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "What is the API base URL difference for an EU Datadog site versus US1?",
+      "must_include": [
+        "datadoghq.eu",
+        "datadoghq.com"
+      ],
+      "must_not_include": [
+        "datadog.io"
+      ],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Show me how to search Datadog events for deployments in the last day.",
+      "must_include": [
+        "/api/v1/events",
+        "start",
+        "end"
+      ],
+      "must_not_include": [
+        "/api/v1/event/search/all"
+      ],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "A monitor shows status 'No Data'. Is the service healthy?",
+      "must_include": [
+        "No Data",
+        "not",
+        "healthy"
+      ],
+      "must_not_include": [
+        "No Data means healthy",
+        "treat as OK"
+      ],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Build a logs search payload that filters status:error for service payments over the last 15 minutes.",
+      "must_include": [
+        "/api/v2/logs/events/search",
+        "service:payments",
+        "status:error",
+        "filter"
+      ],
+      "must_not_include": [
+        "level:error"
+      ],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "How can I list only monitors that are currently in Alert state?",
+      "must_include": [
+        "/api/v1/monitor",
+        "Alert",
+        "monitor_tags"
+      ],
+      "must_not_include": [
+        "state=firing"
+      ],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "What time format does the v1 query API expect for from and to?",
+      "must_include": [
+        "Unix",
+        "seconds",
+        "from",
+        "to"
+      ],
+      "must_not_include": [
+        "milliseconds",
+        "ISO 8601 only"
+      ],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Give the curl to query average kubernetes.cpu.usage.total by pod_name over the last hour.",
+      "must_include": [
+        "/api/v1/query",
+        "kubernetes.cpu.usage.total",
+        "by {pod_name}"
+      ],
+      "must_not_include": [
+        "groupBy="
+      ],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "How do I retrieve the details of one dashboard given its dashboard ID?",
+      "must_include": [
+        "/api/v1/dashboard/",
+        "DD-API-KEY",
+        "DD-APPLICATION-KEY"
+      ],
+      "must_not_include": [
+        "/api/v1/dashboard/get?id="
+      ],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "I want the count of logs grouped by status for service api-gateway in the last hour. Which logs endpoint aggregates?",
+      "must_include": [
+        "/api/v2/logs/analytics/aggregate",
+        "service:api-gateway",
+        "group_by"
+      ],
+      "must_not_include": [
+        "/api/v2/logs/events/search/aggregate"
+      ],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Datadog query returned an empty pointlist. What does that indicate and should I assume the metric is zero?",
+      "must_include": [
+        "pointlist",
+        "no data",
+        "not",
+        "zero"
+      ],
+      "must_not_include": [
+        "empty means zero"
+      ],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Show the dog CLI command to search for monitors by name.",
+      "must_include": [
+        "dogshell",
+        "monitor",
+        "show_all"
+      ],
+      "must_not_include": [
+        "dog monitor find"
+      ],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "How do I mute a monitor via the API?",
+      "must_include": [
+        "/api/v1/monitor/",
+        "/mute",
+        "POST"
+      ],
+      "must_not_include": [
+        "/api/v1/monitor/silence"
+      ],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Construct a query for the rate of nginx 5xx responses per second for service edge over 2 hours.",
+      "must_include": [
+        "/api/v1/query",
+        "service:edge",
+        "5xx"
+      ],
+      "must_not_include": [
+        "per_second()"
+      ],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "What does overall_state vs overall_state_modified mean in a monitor response?",
+      "must_include": [
+        "overall_state",
+        "overall_state_modified"
+      ],
+      "must_not_include": [
+        "last_triggered_state"
+      ],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "I'm investigating an incident. Show me how to correlate a metric spike with recent events in the same window.",
+      "must_include": [
+        "/api/v1/query",
+        "/api/v1/events",
+        "start",
+        "end"
+      ],
+      "must_not_include": [
+        "/api/v1/incidents/correlate"
+      ],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Give me a logs query that finds traces with a specific trace_id across all services.",
+      "must_include": [
+        "/api/v2/logs/events/search",
+        "trace_id",
+        "filter"
+      ],
+      "must_not_include": [
+        "traceID:"
+      ],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "How do I list all events of type 'error' in the last 6 hours?",
+      "must_include": [
+        "/api/v1/events",
+        "start",
+        "end"
+      ],
+      "must_not_include": [
+        "/api/v1/events/type/error"
+      ],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "What's the difference between an API key and an application key in Datadog?",
+      "must_include": [
+        "DD-API-KEY",
+        "DD-APPLICATION-KEY",
+        "application key"
+      ],
+      "must_not_include": [
+        "both are interchangeable"
+      ],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "Query average memory usage for host web-01 over the last 3 hours.",
+      "must_include": [
+        "/api/v1/query",
+        "host:web-01"
+      ],
+      "must_not_include": [
+        "hostname=web-01"
+      ],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "Show me how to validate that my Datadog API key works.",
+      "must_include": [
+        "/api/v1/validate",
+        "DD-API-KEY"
+      ],
+      "must_not_include": [
+        "/api/v1/auth/check"
+      ],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "Write the search filter to find logs containing 'OutOfMemoryError' for the java service in production.",
+      "must_include": [
+        "/api/v2/logs/events/search",
+        "OutOfMemoryError",
+        "service:",
+        "env:prod"
+      ],
+      "must_not_include": [
+        "grep OutOfMemoryError"
+      ],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "A user asks: is monitor 12345 firing right now? Show the exact API call and which field to read.",
+      "must_include": [
+        "/api/v1/monitor/12345",
+        "overall_state"
+      ],
+      "must_not_include": [
+        "is_firing"
+      ],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "How do I create a new dashboard via the API? Which method and endpoint?",
+      "must_include": [
+        "POST",
+        "/api/v1/dashboard",
+        "DD-APPLICATION-KEY"
+      ],
+      "must_not_include": [
+        "PUT /api/v1/dashboard/new"
+      ],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Get the maximum disk utilization across all hosts tagged role:db in the last hour.",
+      "must_include": [
+        "/api/v1/query",
+        "role:db",
+        "max:"
+      ],
+      "must_not_include": [
+        "maximum()"
+      ],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "What field in the v1 query response holds the actual data points?",
+      "must_include": [
+        "series",
+        "pointlist"
+      ],
+      "must_not_include": [
+        "data.values",
+        "points.array"
+      ],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Show how to paginate through monitor search results.",
+      "must_include": [
+        "/api/v1/monitor/search",
+        "page",
+        "per_page"
+      ],
+      "must_not_include": [
+        "offset=&cursor=both"
+      ],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "I need logs aggregated into a timeseries by 5-minute buckets for error counts. What aggregation request?",
+      "must_include": [
+        "/api/v2/logs/analytics/aggregate",
+        "compute",
+        "timeseries"
+      ],
+      "must_not_include": [
+        "/api/v2/logs/timeseries"
+      ],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "How do I downtime/schedule a downtime for a monitor via the API?",
+      "must_include": [
+        "/api/v1/downtime",
+        "POST",
+        "monitor_id"
+      ],
+      "must_not_include": [
+        "/api/v1/monitor/downtime"
+      ],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Query the 99th percentile of trace.http.request.duration for service auth in env staging, last hour.",
+      "must_include": [
+        "/api/v1/query",
+        "service:auth",
+        "env:staging",
+        "p99"
+      ],
+      "must_not_include": [
+        "percentile:99"
+      ],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "A metric query returns 200 OK but status:'error' in the JSON body. What should I check?",
+      "must_include": [
+        "status",
+        "error",
+        "error message"
+      ],
+      "must_not_include": [
+        "200 means success ignore body"
+      ],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "List monitors filtered by tag team:payments.",
+      "must_include": [
+        "/api/v1/monitor",
+        "monitor_tags",
+        "team:payments"
+      ],
+      "must_not_include": [
+        "?tag=team:payments"
+      ],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Show how to fetch events scoped to a specific tag like env:prod in the last 12 hours.",
+      "must_include": [
+        "/api/v1/events",
+        "tags",
+        "env:prod"
+      ],
+      "must_not_include": [
+        "?tag_filter=env:prod"
+      ],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Give the arithmetic to compute error rate as errors divided by total requests in a Datadog metric query.",
+      "must_include": [
+        "/api/v1/query",
+        "/",
+        "service:"
+      ],
+      "must_not_include": [
+        "divide()"
+      ],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "How do I set the Datadog site for the dog CLI to EU?",
+      "must_include": [
+        "datadoghq.eu",
+        "DATADOG_HOST"
+      ],
+      "must_not_include": [
+        "DD_REGION=eu-west"
+      ],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Search logs for a host pattern host:web-* with status warn in the last hour.",
+      "must_include": [
+        "/api/v2/logs/events/search",
+        "host:web-*",
+        "status:warn"
+      ],
+      "must_not_include": [
+        "hostname:web-*"
+      ],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "How do I get the list of metrics that are actively reporting?",
+      "must_include": [
+        "/api/v1/metrics",
+        "from"
+      ],
+      "must_not_include": [
+        "/api/v1/metrics/list/active"
+      ],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Show me an authenticated curl that queries avg system.load.1 over the last 15 minutes including both required headers.",
+      "must_include": [
+        "/api/v1/query",
+        "DD-API-KEY",
+        "DD-APPLICATION-KEY",
+        "system.load.1"
+      ],
+      "must_not_include": [
+        "api_key="
+      ],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "What does the 'group' field within series in a query response represent?",
+      "must_include": [
+        "series",
+        "scope",
+        "tag"
+      ],
+      "must_not_include": [
+        "group is the metric name"
+      ],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "How do I unmute all monitors that I previously muted?",
+      "must_include": [
+        "/api/v1/monitor/unmute_all",
+        "POST"
+      ],
+      "must_not_include": [
+        "/api/v1/monitor/mute?value=false"
+      ],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Build a query to compare this week's request count to last week's using timeshift.",
+      "must_include": [
+        "/api/v1/query",
+        "timeshift",
+        "week_before"
+      ],
+      "must_not_include": [
+        "offset(-7d)"
+      ],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Investigate: CPU is high. Show metric query then how to pull the top processes via the process API.",
+      "must_include": [
+        "/api/v1/query",
+        "system.cpu",
+        "/api/v2/processes"
+      ],
+      "must_not_include": [
+        "/api/v1/top/processes"
+      ],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "How do I list all SLOs (service level objectives) via the API?",
+      "must_include": [
+        "/api/v1/slo",
+        "DD-API-KEY",
+        "DD-APPLICATION-KEY"
+      ],
+      "must_not_include": [
+        "/api/v1/slos/all"
+      ],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Show how to get the status/history of a specific SLO by ID.",
+      "must_include": [
+        "/api/v1/slo/",
+        "/history",
+        "from_ts",
+        "to_ts"
+      ],
+      "must_not_include": [
+        "/api/v1/slo/status"
+      ],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Query the count of distinct hosts reporting for a service using a metric tag.",
+      "must_include": [
+        "/api/v1/query",
+        "service:",
+        "count"
+      ],
+      "must_not_include": [
+        "count_distinct()"
+      ],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "I need to find which monitors reference a specific metric. How?",
+      "must_include": [
+        "/api/v1/monitor/search",
+        "query",
+        "metric:"
+      ],
+      "must_not_include": [
+        "/api/v1/monitor/by_metric"
+      ],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Give the v2 metrics timeseries query (newer API) for a single metric over the last hour.",
+      "must_include": [
+        "/api/v2/query/timeseries",
+        "queries",
+        "data_source"
+      ],
+      "must_not_include": [
+        "/api/v2/metrics/timeseries/query"
+      ],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "How do I tell whether a monitor is muted in the API response?",
+      "must_include": [
+        "options",
+        "silenced"
+      ],
+      "must_not_include": [
+        "muted: true field"
+      ],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Search logs and limit the results to 50 entries sorted by timestamp descending.",
+      "must_include": [
+        "/api/v2/logs/events/search",
+        "page",
+        "limit",
+        "sort"
+      ],
+      "must_not_include": [
+        "max_results=50"
+      ],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "What is the cursor field used for in v2 logs search pagination?",
+      "must_include": [
+        "page",
+        "cursor",
+        "after"
+      ],
+      "must_not_include": [
+        "next_page_token"
+      ],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Query average redis.mem.used filtered to cluster:cache-prod for the last 2 hours.",
+      "must_include": [
+        "/api/v1/query",
+        "redis.mem.used",
+        "cluster:cache-prod"
+      ],
+      "must_not_include": [
+        "redis_mem_used"
+      ],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "How do I post an event to Datadog (e.g., mark a deployment)?",
+      "must_include": [
+        "POST",
+        "/api/v1/events",
+        "title",
+        "text"
+      ],
+      "must_not_include": [
+        "/api/v1/events/create/new"
+      ],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "An on-call asks for all currently alerting monitors with their names and states. Show the call and which field tells me it's alerting.",
+      "must_include": [
+        "/api/v1/monitor",
+        "overall_state",
+        "Alert"
+      ],
+      "must_not_include": [
+        "status: down"
+      ],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Construct a metric query using the anomalies() function on request latency.",
+      "must_include": [
+        "/api/v1/query",
+        "anomalies(",
+        "service:"
+      ],
+      "must_not_include": [
+        "anomaly_detection()"
+      ],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "How do I retrieve a list of monitors but only return specific fields to reduce payload?",
+      "must_include": [
+        "/api/v1/monitor",
+        "monitor_tags",
+        "with_downtimes"
+      ],
+      "must_not_include": [
+        "fields=name,state only param"
+      ],
+      "difficulty": "edge"
+    },
+    {
+      "prompt": "Query for the forecast() of disk usage to predict when a volume fills up.",
+      "must_include": [
+        "/api/v1/query",
+        "forecast(",
+        "system.disk"
+      ],
+      "must_not_include": [
+        "predict()"
+      ],
+      "difficulty": "edge"
+    },
+    {
+      "prompt": "What does a 403 response from the Datadog API usually mean about my keys?",
+      "must_include": [
+        "403",
+        "DD-APPLICATION-KEY",
+        "permission"
+      ],
+      "must_not_include": [
+        "403 means rate limited"
+      ],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "What does a 429 response indicate and what header tells me when to retry?",
+      "must_include": [
+        "429",
+        "rate limit",
+        "X-RateLimit-Reset"
+      ],
+      "must_not_include": [
+        "429 means bad auth"
+      ],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Show me how to list dashboards and then filter by title containing 'Kafka'.",
+      "must_include": [
+        "/api/v1/dashboard",
+        "dashboards",
+        "title"
+      ],
+      "must_not_include": [
+        "?title_contains=Kafka"
+      ],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "I want to query a metric for a host but it returns 'No Data'. List two legitimate reasons that isn't a healthy signal.",
+      "must_include": [
+        "No Data",
+        "agent",
+        "reporting"
+      ],
+      "must_not_include": [
+        "No Data confirms host is fine"
+      ],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Give the rollup() example to aggregate a metric into 60-second sums.",
+      "must_include": [
+        "/api/v1/query",
+        ".rollup(",
+        "sum, 60"
+      ],
+      "must_not_include": [
+        "bucket(60)"
+      ],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "How do I get the overall status of all monitors grouped by state in one call?",
+      "must_include": [
+        "/api/v1/monitor",
+        "group_states",
+        "overall_state"
+      ],
+      "must_not_include": [
+        "/api/v1/monitor/summary"
+      ],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Query the difference between two metrics: requests in minus requests out for service proxy.",
+      "must_include": [
+        "/api/v1/query",
+        "service:proxy",
+        "-"
+      ],
+      "must_not_include": [
+        "subtract()"
+      ],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Search logs for the message containing a specific request ID across the last 24 hours with the right time bounds.",
+      "must_include": [
+        "/api/v2/logs/events/search",
+        "from",
+        "to",
+        "filter"
+      ],
+      "must_not_include": [
+        "since=24h param only"
+      ],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "How do I look up an incident in Datadog via the v2 incidents API?",
+      "must_include": [
+        "/api/v2/incidents",
+        "DD-API-KEY",
+        "DD-APPLICATION-KEY"
+      ],
+      "must_not_include": [
+        "/api/v1/incidents"
+      ],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "List active incidents only. Which query parameter filters by state?",
+      "must_include": [
+        "/api/v2/incidents",
+        "filter",
+        "state"
+      ],
+      "must_not_include": [
+        "?status=open only"
+      ],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Query avg aws.elb.healthy_host_count for a specific load balancer name tag in last 30 min.",
+      "must_include": [
+        "/api/v1/query",
+        "aws.elb.healthy_host_count",
+        "name:"
+      ],
+      "must_not_include": [
+        "aws_elb_healthy_hosts"
+      ],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "Explain how the .as_count() vs .as_rate() modifiers change a query.",
+      "must_include": [
+        "as_count()",
+        "as_rate()"
+      ],
+      "must_not_include": [
+        ".count_mode()"
+      ],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Show how to query a metric and apply a fill(null) to avoid interpolation.",
+      "must_include": [
+        "/api/v1/query",
+        ".fill(null"
+      ],
+      "must_not_include": [
+        "nofill()"
+      ],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "How do I authenticate the dog CLI? Which env vars or config file?",
+      "must_include": [
+        "DD_API_KEY",
+        "DD_APP_KEY"
+      ],
+      "must_not_include": [
+        "DATADOG_TOKEN"
+      ],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "Find logs from a Kubernetes pod by kube_namespace and pod_name over last hour.",
+      "must_include": [
+        "/api/v2/logs/events/search",
+        "kube_namespace:",
+        "pod_name:"
+      ],
+      "must_not_include": [
+        "namespace="
+      ],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "What's the correct endpoint to retrieve all tags for a host?",
+      "must_include": [
+        "/api/v1/tags/hosts/",
+        "DD-API-KEY"
+      ],
+      "must_not_include": [
+        "/api/v1/host/tags/get"
+      ],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Query the moving average of CPU over a 10-minute window for a service.",
+      "must_include": [
+        "/api/v1/query",
+        "moving_rollup",
+        "avg"
+      ],
+      "must_not_include": [
+        "movingAverage()"
+      ],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "How do I mark a monitor's status programmatically? Trick: can I force a monitor to OK via API?",
+      "must_include": [
+        "resolve",
+        "/api/v1/monitor",
+        "cannot"
+      ],
+      "must_not_include": [
+        "/api/v1/monitor/force_ok"
+      ],
+      "difficulty": "edge"
+    },
+    {
+      "prompt": "Query the top 5 services by error count using top() function.",
+      "must_include": [
+        "/api/v1/query",
+        "top(",
+        "5"
+      ],
+      "must_not_include": [
+        "limit 5"
+      ],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Show me the headers needed and endpoint for a v2 metrics submission.",
+      "must_include": [
+        "/api/v2/series",
+        "DD-API-KEY",
+        "POST"
+      ],
+      "must_not_include": [
+        "/api/v2/metrics/submit"
+      ],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "How can I tell from a monitor response when it last transitioned state?",
+      "must_include": [
+        "overall_state_modified",
+        "modified"
+      ],
+      "must_not_include": [
+        "last_transition_ts"
+      ],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Query average trace.servlet.request.errors for service web by resource_name in last hour.",
+      "must_include": [
+        "/api/v1/query",
+        "service:web",
+        "by {resource_name}"
+      ],
+      "must_not_include": [
+        "group_by=resource_name"
+      ],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "How do I list notebook objects in Datadog?",
+      "must_include": [
+        "/api/v1/notebooks",
+        "DD-API-KEY",
+        "DD-APPLICATION-KEY"
+      ],
+      "must_not_include": [
+        "/api/v1/notebook/list"
+      ],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Build a logs query excluding health-check noise: status:error but not @http.url_details.path:/health.",
+      "must_include": [
+        "/api/v2/logs/events/search",
+        "status:error",
+        "-@http.url_details.path:/health"
+      ],
+      "must_not_include": [
+        "NOT path=/health SQL"
+      ],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "What is the proper way to query a distribution metric percentile in v1?",
+      "must_include": [
+        "/api/v1/query",
+        "p99:",
+        "dist."
+      ],
+      "must_not_include": [
+        "percentile(dist,99)"
+      ],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Show how to retrieve a monitor's group states (per-tag-group status).",
+      "must_include": [
+        "/api/v1/monitor/",
+        "group_states",
+        "overall_state"
+      ],
+      "must_not_include": [
+        "?include_groups=all custom"
+      ],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Query the sum of bytes sent across all hosts in datacenter:us-east over 1 hour.",
+      "must_include": [
+        "/api/v1/query",
+        "datacenter:us-east",
+        "sum:"
+      ],
+      "must_not_include": [
+        "dc=us-east"
+      ],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "How do I delete a monitor by ID via the API?",
+      "must_include": [
+        "DELETE",
+        "/api/v1/monitor/"
+      ],
+      "must_not_include": [
+        "/api/v1/monitor/remove"
+      ],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "Investigate a latency regression: query p50, p90, p99 in one request for service cart.",
+      "must_include": [
+        "/api/v1/query",
+        "service:cart",
+        "p50",
+        "p99"
+      ],
+      "must_not_include": [
+        "percentiles=[50,90,99]"
+      ],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "What is the maximum lookback time window allowed for the v1 query endpoint and how does granularity change?",
+      "must_include": [
+        "rollup",
+        "granularity",
+        "from",
+        "to"
+      ],
+      "must_not_include": [
+        "unlimited resolution always"
+      ],
+      "difficulty": "edge"
+    },
+    {
+      "prompt": "Show the request to get aggregated log facet counts for the @network.client.ip facet.",
+      "must_include": [
+        "/api/v2/logs/analytics/aggregate",
+        "group_by",
+        "@network.client.ip"
+      ],
+      "must_not_include": [
+        "/api/v2/logs/facets"
+      ],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "How do I query events and filter to only the unaggregated priority:normal items?",
+      "must_include": [
+        "/api/v1/events",
+        "priority",
+        "unaggregated"
+      ],
+      "must_not_include": [
+        "?priority_level=normal"
+      ],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Give me the correct way to URL-encode a metric query in a curl GET to /api/v1/query.",
+      "must_include": [
+        "/api/v1/query",
+        "--data-urlencode",
+        "query="
+      ],
+      "must_not_include": [
+        "raw query in URL no encoding"
+      ],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "I have an app key but requests fail with 403 on monitors. The metrics query works. What's likely wrong?",
+      "must_include": [
+        "DD-APPLICATION-KEY",
+        "scope",
+        "permission"
+      ],
+      "must_not_include": [
+        "app keys not needed for monitors"
+      ],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Query the integral of throughput to estimate total bytes processed over a window.",
+      "must_include": [
+        "/api/v1/query",
+        "integral("
+      ],
+      "must_not_include": [
+        "sum_over_time()"
+      ],
+      "difficulty": "edge"
+    },
+    {
+      "prompt": "Show how to fetch the definition (widgets) of a dashboard to audit its queries.",
+      "must_include": [
+        "/api/v1/dashboard/",
+        "widgets"
+      ],
+      "must_not_include": [
+        "/api/v1/dashboard/export"
+      ],
+      "difficulty": "medium"
+    }
+  ]
+}

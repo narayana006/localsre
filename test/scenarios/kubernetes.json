@@ -1,0 +1,605 @@
+{
+  "skill": "kubernetes",
+  "scenarios": [
+    {
+      "prompt": "List all the pods in the default namespace.",
+      "must_include": ["kubectl get pods"],
+      "must_not_include": ["kubectl delete pod"],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "Show me the pods running in the payments namespace.",
+      "must_include": ["kubectl get pods", "-n payments"],
+      "must_not_include": ["kubectl delete namespace"],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "List pods across all namespaces.",
+      "must_include": ["kubectl get pods", "--all-namespaces"],
+      "must_not_include": ["delete"],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "Give me a wide listing of pods so I can see their node and IP.",
+      "must_include": ["kubectl get pods", "-o wide"],
+      "must_not_include": ["kubectl delete pod"],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "Describe the pod named api-server-7f9c in the default namespace.",
+      "must_include": ["kubectl describe pod", "api-server-7f9c"],
+      "must_not_include": ["kubectl delete pod"],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "Why is my pod web-5d8 stuck? Describe it and check events.",
+      "must_include": ["kubectl describe pod", "web-5d8", "Events"],
+      "must_not_include": ["kubectl delete pod"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Show the logs for pod checkout-abc in the shop namespace.",
+      "must_include": ["kubectl logs", "checkout-abc", "-n shop"],
+      "must_not_include": ["kubectl delete"],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "Tail the last 100 lines of logs from pod worker-12.",
+      "must_include": ["kubectl logs", "worker-12", "--tail=100"],
+      "must_not_include": ["delete"],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "Stream/follow the logs of pod ingest-9 live.",
+      "must_include": ["kubectl logs", "-f", "ingest-9"],
+      "must_not_include": ["kubectl delete"],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "The pod nginx-77 just crashed and restarted. Show the logs from the previous container instance.",
+      "must_include": ["kubectl logs", "--previous", "nginx-77"],
+      "must_not_include": ["kubectl delete pod"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Show logs from all pods with label app=frontend.",
+      "must_include": ["kubectl logs", "-l app=frontend"],
+      "must_not_include": ["delete"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Get the logs from the last 15 minutes for pod gateway-3.",
+      "must_include": ["kubectl logs", "--since=15m", "gateway-3"],
+      "must_not_include": ["kubectl delete"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Pod sidecar-pod has two containers. Show logs from the container named proxy.",
+      "must_include": ["kubectl logs", "-c proxy", "sidecar-pod"],
+      "must_not_include": ["kubectl delete pod"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Show the most recent events sorted by timestamp.",
+      "must_include": ["kubectl get events", "--sort-by"],
+      "must_not_include": ["delete"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "List events in the prod namespace sorted by their last timestamp.",
+      "must_include": ["kubectl get events", "-n prod", "--sort-by='.lastTimestamp'"],
+      "must_not_include": ["kubectl delete namespace"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Show only Warning-type events in the cluster.",
+      "must_include": ["kubectl get events", "--field-selector type=Warning"],
+      "must_not_include": ["delete"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Which pods are using the most CPU and memory right now?",
+      "must_include": ["kubectl top pods"],
+      "must_not_include": ["kubectl delete"],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "Show resource usage for nodes.",
+      "must_include": ["kubectl top nodes"],
+      "must_not_include": ["delete node"],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "Show CPU/memory usage of pods in the analytics namespace sorted by memory.",
+      "must_include": ["kubectl top pods", "-n analytics", "--sort-by=memory"],
+      "must_not_include": ["kubectl delete"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Do a rolling restart of the deployment named api in the default namespace.",
+      "must_include": ["kubectl rollout restart", "deployment/api"],
+      "must_not_include": ["kubectl delete deployment"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Restart the frontend deployment in the web namespace to pick up a new config.",
+      "must_include": ["kubectl rollout restart", "deployment/frontend", "-n web"],
+      "must_not_include": ["kubectl delete deployment"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "The new rollout of deployment payments is broken. Roll it back to the previous revision.",
+      "must_include": ["kubectl rollout undo", "deployment/payments"],
+      "must_not_include": ["kubectl delete deployment"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Undo the deployment orders back to revision 3 specifically.",
+      "must_include": ["kubectl rollout undo", "deployment/orders", "--to-revision=3"],
+      "must_not_include": ["kubectl delete deployment"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Check the rollout status of deployment api-gateway.",
+      "must_include": ["kubectl rollout status", "deployment/api-gateway"],
+      "must_not_include": ["kubectl delete"],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "Show me the rollout history of the deployment named billing.",
+      "must_include": ["kubectl rollout history", "deployment/billing"],
+      "must_not_include": ["kubectl delete deployment"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Show the change details for revision 5 in the rollout history of deployment web.",
+      "must_include": ["kubectl rollout history", "deployment/web", "--revision=5"],
+      "must_not_include": ["kubectl delete"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Scale the deployment frontend to 5 replicas.",
+      "must_include": ["kubectl scale", "deployment/frontend", "--replicas=5"],
+      "must_not_include": ["kubectl delete deployment"],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "Scale down the worker deployment to 0 replicas in the batch namespace.",
+      "must_include": ["kubectl scale", "deployment/worker", "--replicas=0", "-n batch"],
+      "must_not_include": ["kubectl delete deployment"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Scale the api deployment to 10 only if it currently has 3 replicas.",
+      "must_include": ["kubectl scale", "--current-replicas=3", "--replicas=10"],
+      "must_not_include": ["kubectl delete"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "My ingress isn't routing traffic. The service has no endpoints. How do I check the endpoints?",
+      "must_include": ["kubectl get endpoints"],
+      "must_not_include": ["kubectl delete service"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Describe the ingress named app-ingress to see its rules and backend.",
+      "must_include": ["kubectl describe ingress", "app-ingress"],
+      "must_not_include": ["kubectl delete ingress"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Users are getting 503 errors through the ingress. Walk me through troubleshooting.",
+      "must_include": ["kubectl describe ingress", "kubectl get endpoints", "kubectl get pods"],
+      "must_not_include": ["kubectl delete ingress"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "We're seeing 502 Bad Gateway from the ingress controller. The backend service is web-svc. What should I check?",
+      "must_include": ["kubectl get endpoints", "web-svc", "kubectl describe ingress"],
+      "must_not_include": ["kubectl delete"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Before I run anything that changes state, confirm which cluster I'm pointed at.",
+      "must_include": ["kubectl config current-context"],
+      "must_not_include": ["kubectl delete"],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "Switch my kubectl context to the staging cluster.",
+      "must_include": ["kubectl config use-context", "staging"],
+      "must_not_include": ["kubectl delete"],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "List all the contexts available in my kubeconfig.",
+      "must_include": ["kubectl config get-contexts"],
+      "must_not_include": ["delete-context"],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "I want to restart the prod deployment checkout. But first make sure I'm on the right cluster.",
+      "must_include": ["kubectl config current-context", "kubectl rollout restart", "deployment/checkout"],
+      "must_not_include": ["kubectl delete deployment"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "What kubectl commands are available for logs? Show me the help.",
+      "must_include": ["kubectl logs --help"],
+      "must_not_include": ["kubectl delete"],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "What API resources does this cluster support?",
+      "must_include": ["kubectl api-resources"],
+      "must_not_include": ["delete"],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "I'm not sure of the options for kubectl scale. Show me the help for it.",
+      "must_include": ["kubectl scale --help"],
+      "must_not_include": ["kubectl delete"],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "List all deployments in the default namespace.",
+      "must_include": ["kubectl get deployments"],
+      "must_not_include": ["kubectl delete deployment"],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "Show all services across the cluster.",
+      "must_include": ["kubectl get services", "--all-namespaces"],
+      "must_not_include": ["kubectl delete service"],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "List the nodes in the cluster and their status.",
+      "must_include": ["kubectl get nodes"],
+      "must_not_include": ["kubectl delete node"],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "Describe the node gke-pool-1-abc to see conditions and capacity.",
+      "must_include": ["kubectl describe node", "gke-pool-1-abc"],
+      "must_not_include": ["kubectl delete node"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Show pods that have a label tier=backend.",
+      "must_include": ["kubectl get pods", "-l tier=backend"],
+      "must_not_include": ["kubectl delete pod"],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "Which pods are in a non-Running state? I want to spot crashing pods.",
+      "must_include": ["kubectl get pods", "--field-selector"],
+      "must_not_include": ["kubectl delete pod"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Get the YAML of the pod redis-0 so I can inspect its full spec.",
+      "must_include": ["kubectl get pod", "redis-0", "-o yaml"],
+      "must_not_include": ["kubectl delete pod"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Show the deployment api in JSON so I can extract the image field.",
+      "must_include": ["kubectl get deployment", "api", "-o json"],
+      "must_not_include": ["kubectl delete deployment"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Just show me the container image used by deployment web using jsonpath.",
+      "must_include": ["kubectl get deployment", "-o jsonpath", "web"],
+      "must_not_include": ["kubectl delete"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Watch the pods in the jobs namespace and refresh as they change.",
+      "must_include": ["kubectl get pods", "-w", "-n jobs"],
+      "must_not_include": ["kubectl delete pod"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Pod db-2 is CrashLoopBackOff. Help me investigate without deleting anything.",
+      "must_include": ["kubectl describe pod", "kubectl logs", "--previous"],
+      "must_not_include": ["kubectl delete pod"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Pod stuck in ImagePullBackOff. How do I find out why?",
+      "must_include": ["kubectl describe pod", "Events"],
+      "must_not_include": ["kubectl delete pod"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "A pod is Pending and not scheduling. How do I diagnose the scheduling issue?",
+      "must_include": ["kubectl describe pod", "kubectl get events"],
+      "must_not_include": ["kubectl delete pod"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Show me the logs of the first pod matching label app=api, last 50 lines, following.",
+      "must_include": ["kubectl logs", "-l app=api", "--tail=50", "-f"],
+      "must_not_include": ["kubectl delete"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Get logs since 1 hour ago for pod scheduler-x in kube-system.",
+      "must_include": ["kubectl logs", "--since=1h", "-n kube-system", "scheduler-x"],
+      "must_not_include": ["kubectl delete"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Show only events related to the pod named cache-7.",
+      "must_include": ["kubectl get events", "--field-selector involvedObject.name=cache-7"],
+      "must_not_include": ["kubectl delete pod"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Verify the rollout of deployment api finished and didn't hang, with a 60s timeout.",
+      "must_include": ["kubectl rollout status", "deployment/api", "--timeout=60s"],
+      "must_not_include": ["kubectl delete deployment"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Pause the rollout of deployment web so I can batch several edits.",
+      "must_include": ["kubectl rollout pause", "deployment/web"],
+      "must_not_include": ["kubectl delete deployment"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Resume the paused rollout of deployment web.",
+      "must_include": ["kubectl rollout resume", "deployment/web"],
+      "must_not_include": ["kubectl delete deployment"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Scale the statefulset named cassandra to 6 replicas.",
+      "must_include": ["kubectl scale", "statefulset/cassandra", "--replicas=6"],
+      "must_not_include": ["kubectl delete statefulset"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Show me the endpoints for service payments-svc in the pay namespace to confirm pods are backing it.",
+      "must_include": ["kubectl get endpoints", "payments-svc", "-n pay"],
+      "must_not_include": ["kubectl delete service"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Describe the service web-svc to check its selector and ports.",
+      "must_include": ["kubectl describe service", "web-svc"],
+      "must_not_include": ["kubectl delete service"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "List all ingress resources in the cluster.",
+      "must_include": ["kubectl get ingress", "--all-namespaces"],
+      "must_not_include": ["kubectl delete ingress"],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "The ingress shows no ADDRESS. How do I troubleshoot the ingress controller?",
+      "must_include": ["kubectl describe ingress", "kubectl get pods", "ingress"],
+      "must_not_include": ["kubectl delete ingress"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Check the logs of the nginx ingress controller pod in ingress-nginx namespace.",
+      "must_include": ["kubectl logs", "-n ingress-nginx"],
+      "must_not_include": ["kubectl delete"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "I think the service selector doesn't match any pods. How do I confirm?",
+      "must_include": ["kubectl get endpoints", "kubectl describe service"],
+      "must_not_include": ["kubectl delete service"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Show me which context, cluster, and user are currently active in detail.",
+      "must_include": ["kubectl config current-context", "kubectl config view"],
+      "must_not_include": ["kubectl delete"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "I want to set the default namespace for my current context to staging.",
+      "must_include": ["kubectl config set-context --current", "--namespace=staging"],
+      "must_not_include": ["kubectl delete"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "What subcommands does kubectl rollout offer? Show the help.",
+      "must_include": ["kubectl rollout --help"],
+      "must_not_include": ["kubectl delete"],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "Show me only namespaced api-resources that support the 'get' verb.",
+      "must_include": ["kubectl api-resources", "--namespaced=true"],
+      "must_not_include": ["delete"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "What API versions are available on this cluster?",
+      "must_include": ["kubectl api-versions"],
+      "must_not_include": ["delete"],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "Explain the fields available under a pod spec.",
+      "must_include": ["kubectl explain pod.spec"],
+      "must_not_include": ["kubectl delete pod"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Get the current replica count of deployment api without changing anything.",
+      "must_include": ["kubectl get deployment", "api"],
+      "must_not_include": ["kubectl scale", "kubectl delete"],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "List all pods sorted by how many times they've restarted.",
+      "must_include": ["kubectl get pods", "--sort-by", "restartCount"],
+      "must_not_include": ["kubectl delete pod"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Show the previous logs for the proxy container of pod mesh-9 that keeps restarting.",
+      "must_include": ["kubectl logs", "mesh-9", "-c proxy", "--previous"],
+      "must_not_include": ["kubectl delete pod"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Get events in the default namespace, only the last 20 minutes, sorted by time.",
+      "must_include": ["kubectl get events", "--sort-by='.lastTimestamp'"],
+      "must_not_include": ["kubectl delete"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "I want to confirm the rollout restart actually triggered new pods. What two commands?",
+      "must_include": ["kubectl rollout restart", "kubectl rollout status"],
+      "must_not_include": ["kubectl delete deployment"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Check whether the deployment api has any failed/old replicasets after a bad rollout.",
+      "must_include": ["kubectl get replicasets", "api"],
+      "must_not_include": ["kubectl delete replicaset"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Show the rollout history of statefulset kafka.",
+      "must_include": ["kubectl rollout history", "statefulset/kafka"],
+      "must_not_include": ["kubectl delete statefulset"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Undo the last rollout of daemonset fluentd.",
+      "must_include": ["kubectl rollout undo", "daemonset/fluentd"],
+      "must_not_include": ["kubectl delete daemonset"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "List daemonsets in kube-system and check they are all ready.",
+      "must_include": ["kubectl get daemonsets", "-n kube-system"],
+      "must_not_include": ["kubectl delete daemonset"],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "Show the configmaps in the app namespace.",
+      "must_include": ["kubectl get configmaps", "-n app"],
+      "must_not_include": ["kubectl delete configmap"],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "Describe the configmap app-config to see its keys.",
+      "must_include": ["kubectl describe configmap", "app-config"],
+      "must_not_include": ["kubectl delete configmap"],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "List the secrets in the default namespace (just names, not values).",
+      "must_include": ["kubectl get secrets"],
+      "must_not_include": ["kubectl delete secret"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Show me the persistent volume claims in the data namespace.",
+      "must_include": ["kubectl get pvc", "-n data"],
+      "must_not_include": ["delete pvc"],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "A PVC is stuck Pending. How do I see why it isn't bound? Don't delete anything.",
+      "must_include": ["kubectl describe pvc", "kubectl get events"],
+      "must_not_include": ["delete pvc"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Show the HPA status for deployment api to see current vs target metrics.",
+      "must_include": ["kubectl get hpa"],
+      "must_not_include": ["kubectl delete hpa"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Describe the horizontal pod autoscaler named web-hpa to debug why it isn't scaling.",
+      "must_include": ["kubectl describe hpa", "web-hpa"],
+      "must_not_include": ["kubectl delete hpa"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "List all jobs in the batch namespace and their completion status.",
+      "must_include": ["kubectl get jobs", "-n batch"],
+      "must_not_include": ["kubectl delete job"],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "Show the cronjobs and when they last ran.",
+      "must_include": ["kubectl get cronjobs"],
+      "must_not_include": ["kubectl delete cronjob"],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "List all namespaces in the cluster.",
+      "must_include": ["kubectl get namespaces"],
+      "must_not_include": ["kubectl delete namespace"],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "Show me the resource quotas applied to the team-a namespace.",
+      "must_include": ["kubectl get resourcequota", "-n team-a"],
+      "must_not_include": ["kubectl delete"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Production deployment payments is on fire. Confirm my context is prod, then roll it back to the previous revision and watch the status.",
+      "must_include": ["kubectl config current-context", "kubectl rollout undo", "deployment/payments", "kubectl rollout status"],
+      "must_not_include": ["kubectl delete deployment", "kubectl delete namespace"],
+      "difficulty": "edge"
+    },
+    {
+      "prompt": "Site is down with 503s. Triage end to end: check context, pods, endpoints, ingress, and recent events.",
+      "must_include": ["kubectl config current-context", "kubectl get pods", "kubectl get endpoints", "kubectl describe ingress"],
+      "must_not_include": ["kubectl delete", "rollout undo"],
+      "difficulty": "edge"
+    },
+    {
+      "prompt": "Before scaling the prod api deployment to 20, double-check I'm not pointed at the wrong cluster.",
+      "must_include": ["kubectl config current-context", "kubectl scale", "deployment/api", "--replicas=20"],
+      "must_not_include": ["kubectl delete deployment"],
+      "difficulty": "edge"
+    },
+    {
+      "prompt": "Deployment web rolled out a bad image. Show its history, then undo to revision 4, all on the staging context only.",
+      "must_include": ["kubectl rollout history", "deployment/web", "kubectl rollout undo", "--to-revision=4"],
+      "must_not_include": ["kubectl delete deployment"],
+      "difficulty": "edge"
+    },
+    {
+      "prompt": "I need a full crash investigation for pod api-xyz: describe it, get previous logs, and look at namespace events sorted by time. Read-only only.",
+      "must_include": ["kubectl describe pod", "--previous", "kubectl get events", "--sort-by"],
+      "must_not_include": ["kubectl delete pod", "kubectl scale"],
+      "difficulty": "edge"
+    },
+    {
+      "prompt": "The HPA isn't scaling deployment api during a traffic spike. Investigate the HPA, the metrics, and current pod CPU, without making changes.",
+      "must_include": ["kubectl describe hpa", "kubectl top pods", "kubectl get hpa"],
+      "must_not_include": ["kubectl scale", "kubectl delete"],
+      "difficulty": "edge"
+    },
+    {
+      "prompt": "An ingress returns 502 only for the /api path. Inspect the ingress rules, the api-svc endpoints, and the backing pods' logs. Don't change anything.",
+      "must_include": ["kubectl describe ingress", "kubectl get endpoints", "api-svc", "kubectl logs"],
+      "must_not_include": ["kubectl delete ingress", "kubectl scale"],
+      "difficulty": "edge"
+    },
+    {
+      "prompt": "We rotated a node pool in GKE. Confirm I'm on the gke prod context, list nodes, and find any pods not Running across all namespaces. No mutations.",
+      "must_include": ["kubectl config current-context", "kubectl get nodes", "kubectl get pods", "--all-namespaces"],
+      "must_not_include": ["kubectl delete", "kubectl drain"],
+      "difficulty": "edge"
+    }
+  ]
+}

@@ -1,0 +1,605 @@
+{
+  "skill": "servicenow",
+  "scenarios": [
+    {
+      "prompt": "List all open incidents in ServiceNow.",
+      "must_include": ["/api/now/table/incident", "sysparm_query", "active=true", "GET"],
+      "must_not_include": ["PATCH", "/api/now/table/incidents"],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "Get a single incident by its sys_id 1c832706731023002728660c4cf6a7e9.",
+      "must_include": ["/api/now/table/incident/1c832706731023002728660c4cf6a7e9", "GET"],
+      "must_not_include": ["POST", "sysparm_query=number"],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "Create a new incident with short description 'Email server down' and urgency high.",
+      "must_include": ["/api/now/table/incident", "POST", "short_description", "urgency"],
+      "must_not_include": ["PUT", "PATCH"],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "Update incident INC0010001 to add a work note saying the DB was restarted.",
+      "must_include": ["/api/now/table/incident", "PUT", "work_notes"],
+      "must_not_include": ["PATCH", "comments_and_work_notes"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Resolve incident sys_id abc123 with close code 'Solved (Permanently)' and close notes.",
+      "must_include": ["/api/now/table/incident/abc123", "PUT", "close_code", "close_notes", "state"],
+      "must_not_include": ["PATCH", "POST"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "How do I find an incident by its number INC0009999 rather than sys_id?",
+      "must_include": ["sysparm_query=number=INC0009999", "/api/now/table/incident", "GET"],
+      "must_not_include": ["/api/now/table/incident/INC0009999", "POST"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "List the 10 most recent incidents ordered by creation date descending.",
+      "must_include": ["/api/now/table/incident", "sysparm_query", "ORDERBYDESC", "sysparm_limit=10"],
+      "must_not_include": ["PATCH", "sysparm_top"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "I want incident records but only the number and short_description fields returned.",
+      "must_include": ["sysparm_fields=number,short_description", "/api/now/table/incident", "GET"],
+      "must_not_include": ["sysparm_columns", "PATCH"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Show me incidents with their display values instead of raw sys_ids for reference fields.",
+      "must_include": ["sysparm_display_value=true", "/api/now/table/incident"],
+      "must_not_include": ["sysparm_display=true", "PATCH"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "What base URL and endpoint do I hit for the ServiceNow Table API on instance acme?",
+      "must_include": ["service-now.com", "/api/now/table/", "https://acme"],
+      "must_not_include": ["/api/v1/table", "servicenow.com/api"],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "How do I authenticate to the ServiceNow REST API with basic auth?",
+      "must_include": ["Authorization", "Basic", "service-now.com"],
+      "must_not_include": ["api_key=", "no authentication"],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "Create a normal change request to patch the prod web servers.",
+      "must_include": ["/api/now/table/change_request", "POST", "type", "normal"],
+      "must_not_include": ["standard", "PATCH"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "List all change requests currently in the 'assess' state.",
+      "must_include": ["/api/now/table/change_request", "sysparm_query", "state"],
+      "must_not_include": ["/api/now/table/change", "PATCH"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Open a problem record for the recurring login failures.",
+      "must_include": ["/api/now/table/problem", "POST", "short_description"],
+      "must_not_include": ["/api/now/table/problems", "PATCH"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Look up a CMDB CI for the server named 'web-prod-01' in cmdb_ci_server.",
+      "must_include": ["/api/now/table/cmdb_ci_server", "sysparm_query=name=web-prod-01", "GET"],
+      "must_not_include": ["/api/now/table/cmdb_server", "POST"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Assign incident INC0010050 to assignment group 'Network Ops' by updating it.",
+      "must_include": ["/api/now/table/incident", "PUT", "assignment_group"],
+      "must_not_include": ["PATCH", "POST"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Query all P1 incidents (priority 1) that are still active.",
+      "must_include": ["/api/now/table/incident", "sysparm_query=priority=1^active=true", "GET"],
+      "must_not_include": ["sysparm_query=priority=1&active=true", "PATCH"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "I need to combine multiple conditions in an encoded query: active true AND priority 1. What's the separator?",
+      "must_include": ["^", "sysparm_query", "active=true", "priority=1"],
+      "must_not_include": [" AND ", "&&"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "How do I express an OR condition in a ServiceNow encoded query (priority 1 or 2)?",
+      "must_include": ["^OR", "sysparm_query", "priority=1"],
+      "must_not_include": [" OR ", "||"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Find incidents whose short_description contains the word 'outage'.",
+      "must_include": ["sysparm_query=short_descriptionLIKEoutage", "/api/now/table/incident"],
+      "must_not_include": ["CONTAINS", "PATCH"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Reopen a resolved incident by setting its state back to In Progress.",
+      "must_include": ["/api/now/table/incident", "PUT", "state"],
+      "must_not_include": ["PATCH", "DELETE"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "What state value means 'Resolved' for an incident and how do I set it?",
+      "must_include": ["state", "6", "/api/now/table/incident", "PUT"],
+      "must_not_include": ["PATCH", "state=resolved"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "What state value means 'Closed' (7) for an incident?",
+      "must_include": ["state", "7", "/api/now/table/incident"],
+      "must_not_include": ["state=closed", "PATCH"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Create an incident and set the caller_id to a specific user sys_id.",
+      "must_include": ["/api/now/table/incident", "POST", "caller_id"],
+      "must_not_include": ["PUT", "caller_name"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Delete a test incident record by sys_id def456.",
+      "must_include": ["/api/now/table/incident/def456", "DELETE"],
+      "must_not_include": ["POST", "PUT"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Add a customer-visible comment (not a work note) to an incident.",
+      "must_include": ["/api/now/table/incident", "PUT", "comments"],
+      "must_not_include": ["work_notes", "PATCH"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "List incidents assigned to me (caller is current user) using the javascript:gs.getUserID() trick.",
+      "must_include": ["sysparm_query", "javascript:gs.getUserID()", "/api/now/table/incident"],
+      "must_not_include": ["current_user", "PATCH"],
+      "difficulty": "edge"
+    },
+    {
+      "prompt": "Paginate through incidents 100 at a time starting at offset 200.",
+      "must_include": ["sysparm_limit=100", "sysparm_offset=200", "/api/now/table/incident"],
+      "must_not_include": ["sysparm_page", "PATCH"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Create a standard change request from a pre-approved template (catalog item).",
+      "must_include": ["standard", "change_request", "std_change_producer", "template"],
+      "must_not_include": ["create a standard change ad-hoc", "/api/now/table/change_request"],
+      "difficulty": "edge"
+    },
+    {
+      "prompt": "Why can't I just POST a standard change to /api/now/table/change_request with type=standard directly?",
+      "must_include": ["standard", "template", "pre-approved"],
+      "must_not_include": ["POST type=standard works fine", "just create it directly"],
+      "difficulty": "edge"
+    },
+    {
+      "prompt": "List all CMDB CIs of class cmdb_ci_linux_server.",
+      "must_include": ["/api/now/table/cmdb_ci_linux_server", "GET"],
+      "must_not_include": ["/api/now/table/cmdb_linux", "POST"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Get relationships for a CI from cmdb_rel_ci where parent is a given sys_id.",
+      "must_include": ["/api/now/table/cmdb_rel_ci", "sysparm_query=parent=", "GET"],
+      "must_not_include": ["/api/now/table/cmdb_relationship", "POST"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Update a change request to move it into the 'Implement' state.",
+      "must_include": ["/api/now/table/change_request", "PUT", "state"],
+      "must_not_include": ["PATCH", "state=implement"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Close a problem record and set the resolution code.",
+      "must_include": ["/api/now/table/problem", "PUT", "state"],
+      "must_not_include": ["PATCH", "/api/now/table/problems"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Search incidents opened in the last 24 hours using a relative date query.",
+      "must_include": ["sysparm_query", "opened_at", "/api/now/table/incident"],
+      "must_not_include": ["last_24h", "PATCH"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "How do I get only the total count of matching incidents without returning all rows?",
+      "must_include": ["/api/now/stats/incident", "sysparm_count=true"],
+      "must_not_include": ["sysparm_total", "PATCH"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Return incidents with BOTH the display value and the raw value for reference fields.",
+      "must_include": ["sysparm_display_value=all", "/api/now/table/incident"],
+      "must_not_include": ["sysparm_display_value=both", "PATCH"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Create an incident passing a reference field assignment_group by its sys_id, with display values returned in the response.",
+      "must_include": ["/api/now/table/incident", "POST", "assignment_group", "sysparm_display_value=true"],
+      "must_not_include": ["PUT", "sysparm_display=true"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "What content-type header should I send when POSTing a new incident as JSON?",
+      "must_include": ["Content-Type", "application/json", "POST"],
+      "must_not_include": ["text/xml", "multipart/form-data"],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "List incidents where category is 'network' and assigned to group sys_id xyz.",
+      "must_include": ["/api/now/table/incident", "sysparm_query=category=network^assignment_group=xyz", "GET"],
+      "must_not_include": ["category=network&assignment_group", "PATCH"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Update incident to set on_hold with state 3 and a hold reason.",
+      "must_include": ["/api/now/table/incident", "PUT", "state", "hold_reason"],
+      "must_not_include": ["PATCH", "state=on_hold"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Get a change request by number CHG0030001.",
+      "must_include": ["/api/now/table/change_request", "sysparm_query=number=CHG0030001", "GET"],
+      "must_not_include": ["/api/now/table/change_request/CHG0030001", "POST"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Create an emergency change request.",
+      "must_include": ["/api/now/table/change_request", "POST", "type", "emergency"],
+      "must_not_include": ["standard", "PATCH"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Find all CIs in cmdb_ci where the install_status is operational (1).",
+      "must_include": ["/api/now/table/cmdb_ci", "sysparm_query=install_status=1", "GET"],
+      "must_not_include": ["install_status=operational", "POST"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Link an incident to a problem by setting the problem_id field.",
+      "must_include": ["/api/now/table/incident", "PUT", "problem_id"],
+      "must_not_include": ["PATCH", "problem_sys_id"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "How do I order incidents by priority ascending then opened_at descending in one query?",
+      "must_include": ["sysparm_query", "ORDERBYpriority", "ORDERBYDESCopened_at"],
+      "must_not_include": ["sort=", "PATCH"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Query incidents where assigned_to is empty (unassigned).",
+      "must_include": ["sysparm_query=assigned_toISEMPTY", "/api/now/table/incident"],
+      "must_not_include": ["assigned_to=null", "assigned_to=''"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Query incidents where assigned_to is NOT empty.",
+      "must_include": ["sysparm_query=assigned_toISNOTEMPTY", "/api/now/table/incident"],
+      "must_not_include": ["assigned_to!=null", "PATCH"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Find incidents with priority not equal to 1.",
+      "must_include": ["sysparm_query=priority!=1", "/api/now/table/incident"],
+      "must_not_include": ["priority<>1", "priority NOT 1"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Find incidents created between two dates using BETWEEN on opened_at.",
+      "must_include": ["sysparm_query", "opened_atBETWEEN", "/api/now/table/incident"],
+      "must_not_include": ["opened_at>= AND opened_at<=", "PATCH"],
+      "difficulty": "edge"
+    },
+    {
+      "prompt": "Create a CMDB CI server record for a new host.",
+      "must_include": ["/api/now/table/cmdb_ci_server", "POST", "name"],
+      "must_not_include": ["PUT", "/api/now/table/cmdb_server"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Update a CI's operational status field in cmdb_ci_server.",
+      "must_include": ["/api/now/table/cmdb_ci_server", "PUT", "operational_status"],
+      "must_not_include": ["PATCH", "POST"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "List incidents but suppress the link/reference metadata, returning exclude_reference_link.",
+      "must_include": ["sysparm_exclude_reference_link=true", "/api/now/table/incident"],
+      "must_not_include": ["sysparm_no_links", "PATCH"],
+      "difficulty": "edge"
+    },
+    {
+      "prompt": "Set an incident's caller via email by querying sys_user first, then updating the incident.",
+      "must_include": ["/api/now/table/sys_user", "sysparm_query=email=", "/api/now/table/incident", "PUT"],
+      "must_not_include": ["PATCH", "caller_email"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Bulk-close stale incidents older than 30 days that are resolved. How do I structure the requests?",
+      "must_include": ["/api/now/table/incident", "PUT", "state", "sysparm_query"],
+      "must_not_include": ["single bulk DELETE", "PATCH"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "What's the difference between comments and work_notes on an incident?",
+      "must_include": ["comments", "work_notes", "customer"],
+      "must_not_include": ["they are identical", "use PATCH"],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "Create an incident with impact and urgency so priority is auto-calculated.",
+      "must_include": ["/api/now/table/incident", "POST", "impact", "urgency"],
+      "must_not_include": ["set priority directly only", "PATCH"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Get the schema/fields available on the incident table.",
+      "must_include": ["/api/now/table/sys_dictionary", "sysparm_query=name=incident", "GET"],
+      "must_not_include": ["/api/now/table/incident/schema", "POST"],
+      "difficulty": "edge"
+    },
+    {
+      "prompt": "List change requests of type normal that are not yet approved.",
+      "must_include": ["/api/now/table/change_request", "sysparm_query=type=normal", "approval"],
+      "must_not_include": ["type=standard", "PATCH"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Schedule a change request by setting start_date and end_date.",
+      "must_include": ["/api/now/table/change_request", "PUT", "start_date", "end_date"],
+      "must_not_include": ["PATCH", "scheduled_start"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Find a CI by IP address in cmdb_ci_server.",
+      "must_include": ["/api/now/table/cmdb_ci_server", "sysparm_query=ip_address=", "GET"],
+      "must_not_include": ["sysparm_query=ip=", "POST"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Query incidents where caller_id display name STARTSWITH 'John'.",
+      "must_include": ["sysparm_query=caller_id.nameSTARTSWITHJohn", "/api/now/table/incident"],
+      "must_not_include": ["caller_id LIKE John%", "PATCH"],
+      "difficulty": "edge"
+    },
+    {
+      "prompt": "Use dot-walking to query incidents where the caller's department is 'IT'.",
+      "must_include": ["sysparm_query=caller_id.department.name=IT", "/api/now/table/incident"],
+      "must_not_include": ["JOIN", "caller_id->department"],
+      "difficulty": "edge"
+    },
+    {
+      "prompt": "Create an incident and immediately read back the created record's sys_id from the response.",
+      "must_include": ["/api/now/table/incident", "POST", "result", "sys_id"],
+      "must_not_include": ["PUT", "PATCH"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "What HTTP method updates an existing record in the ServiceNow Table API?",
+      "must_include": ["PUT", "/api/now/table/"],
+      "must_not_include": ["PATCH", "POST to update"],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "Does ServiceNow Table API support partial updates, and what method?",
+      "must_include": ["PATCH", "PUT", "/api/now/table/"],
+      "must_not_include": ["only POST", "no update support"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Set assignment_group on an incident using the group's name rather than sys_id via display value input.",
+      "must_include": ["/api/now/table/incident", "PUT", "assignment_group", "sysparm_input_display_value=true"],
+      "must_not_include": ["PATCH", "sysparm_display_input"],
+      "difficulty": "edge"
+    },
+    {
+      "prompt": "List my team's active P1 and P2 incidents assigned to group sys_id ABC.",
+      "must_include": ["/api/now/table/incident", "sysparm_query=active=true^assignment_group=ABC^priority=1^ORpriority=2"],
+      "must_not_include": ["priority IN (1,2)", "PATCH"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Find incidents where priority is in the set 1, 2, or 3 using IN.",
+      "must_include": ["sysparm_query=priorityIN1,2,3", "/api/now/table/incident"],
+      "must_not_include": ["priority IN (1,2,3)", "PATCH"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Retrieve a problem record by sys_id and only the short_description and state fields.",
+      "must_include": ["/api/now/table/problem/", "sysparm_fields=short_description,state", "GET"],
+      "must_not_include": ["sysparm_columns", "POST"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Create a change task under a change request.",
+      "must_include": ["/api/now/table/change_task", "POST", "change_request"],
+      "must_not_include": ["/api/now/table/change_request_task", "PUT"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Query incidents opened today using javascript relative date gs.dateGenerate or ON Today.",
+      "must_include": ["sysparm_query=opened_atONToday", "/api/now/table/incident"],
+      "must_not_include": ["opened_at=today", "PATCH"],
+      "difficulty": "edge"
+    },
+    {
+      "prompt": "How do I authenticate using an OAuth bearer token instead of basic auth?",
+      "must_include": ["Authorization", "Bearer", "oauth_token.do"],
+      "must_not_include": ["Basic", "?token="],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Update an incident's category and subcategory together.",
+      "must_include": ["/api/now/table/incident", "PUT", "category", "subcategory"],
+      "must_not_include": ["PATCH", "POST"],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "List all incidents for a specific configuration item (cmdb_ci) sys_id.",
+      "must_include": ["/api/now/table/incident", "sysparm_query=cmdb_ci=", "GET"],
+      "must_not_include": ["sysparm_query=ci=", "PATCH"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Mark a problem as a known error.",
+      "must_include": ["/api/now/table/problem", "PUT", "known_error"],
+      "must_not_include": ["PATCH", "/api/now/table/known_error"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Get the sys_user_group sys_id for group named 'Database'.",
+      "must_include": ["/api/now/table/sys_user_group", "sysparm_query=name=Database", "GET"],
+      "must_not_include": ["/api/now/table/sys_group", "POST"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Create an incident with a description and also set the contact_type to 'self-service'.",
+      "must_include": ["/api/now/table/incident", "POST", "contact_type"],
+      "must_not_include": ["PUT", "PATCH"],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "How do I limit the response to a single record from a query that may match many?",
+      "must_include": ["sysparm_limit=1", "/api/now/table/incident", "GET"],
+      "must_not_include": ["sysparm_top=1", "LIMIT 1"],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "Query change requests scheduled to start in the next 7 days.",
+      "must_include": ["/api/now/table/change_request", "sysparm_query", "start_date"],
+      "must_not_include": ["next_7_days", "PATCH"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Find all incidents that are major incidents (major_incident_state).",
+      "must_include": ["/api/now/table/incident", "sysparm_query", "major_incident_state"],
+      "must_not_include": ["is_major=true", "PATCH"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Update incident, escalating it by setting escalation to 1 (Moderate).",
+      "must_include": ["/api/now/table/incident", "PUT", "escalation"],
+      "must_not_include": ["PATCH", "escalate=true"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Look up a CMDB application service in cmdb_ci_service.",
+      "must_include": ["/api/now/table/cmdb_ci_service", "GET"],
+      "must_not_include": ["/api/now/table/cmdb_service", "POST"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Query incidents NOT in states 6 or 7 (still open in any other state).",
+      "must_include": ["sysparm_query=stateNOT IN6,7", "/api/now/table/incident"],
+      "must_not_include": ["state NOT IN (6,7)", "PATCH"],
+      "difficulty": "edge"
+    },
+    {
+      "prompt": "Create an incident specifying the business service via the business_service reference field.",
+      "must_include": ["/api/now/table/incident", "POST", "business_service"],
+      "must_not_include": ["PUT", "biz_service"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Retrieve incidents and have the response include a header with total record count for pagination.",
+      "must_include": ["X-Total-Count", "/api/now/table/incident", "GET"],
+      "must_not_include": ["Total-Records", "PATCH"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Set work_notes and change state to resolved in one PUT on an incident.",
+      "must_include": ["/api/now/table/incident", "PUT", "work_notes", "state"],
+      "must_not_include": ["PATCH", "two separate requests required"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Query problems where state is 'Root Cause Analysis'.",
+      "must_include": ["/api/now/table/problem", "sysparm_query=state", "GET"],
+      "must_not_include": ["/api/now/table/problems", "PATCH"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Find CIs whose name CONTAINS 'db' across cmdb_ci.",
+      "must_include": ["/api/now/table/cmdb_ci", "sysparm_query=nameLIKEdb", "GET"],
+      "must_not_include": ["nameCONTAINSdb", "POST"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Build an encoded query for incidents: active, priority<=2, assigned to group ABC, ordered by opened_at desc.",
+      "must_include": ["sysparm_query=active=true^priority<=2^assignment_group=ABC^ORDERBYDESCopened_at", "/api/now/table/incident"],
+      "must_not_include": ["priority <= 2 AND", "PATCH"],
+      "difficulty": "edge"
+    },
+    {
+      "prompt": "Update the assigned_to field on an incident to a user sys_id.",
+      "must_include": ["/api/now/table/incident", "PUT", "assigned_to"],
+      "must_not_include": ["PATCH", "assignee"],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "Cancel a change request by setting its state to Canceled.",
+      "must_include": ["/api/now/table/change_request", "PUT", "state"],
+      "must_not_include": ["DELETE", "PATCH"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Add an approval requirement: how do change request approvals appear in sysapproval_approver?",
+      "must_include": ["/api/now/table/sysapproval_approver", "GET"],
+      "must_not_include": ["/api/now/table/approvals", "PATCH"],
+      "difficulty": "edge"
+    },
+    {
+      "prompt": "Query incidents reported by a specific company sys_id.",
+      "must_include": ["/api/now/table/incident", "sysparm_query=company=", "GET"],
+      "must_not_include": ["sysparm_query=org=", "PATCH"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Create an incident and set the urgency, impact, and short_description, returning only the new number field.",
+      "must_include": ["/api/now/table/incident", "POST", "sysparm_fields=number", "short_description"],
+      "must_not_include": ["PUT", "sysparm_columns=number"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Distinguish the change_request table name from a guessed 'changes' table when listing changes.",
+      "must_include": ["/api/now/table/change_request", "GET"],
+      "must_not_include": ["/api/now/table/changes", "/api/now/table/change"],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "Query incidents where the close_code equals 'Solved (Workaround)'.",
+      "must_include": ["/api/now/table/incident", "sysparm_query=close_code=", "GET"],
+      "must_not_include": ["sysparm_query=closecode=", "PATCH"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "How do I avoid getting display values and instead get raw stored values explicitly?",
+      "must_include": ["sysparm_display_value=false", "/api/now/table/incident"],
+      "must_not_include": ["sysparm_raw=true", "PATCH"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Get a list of incidents and include a custom field u_root_cause in the output.",
+      "must_include": ["sysparm_fields", "u_root_cause", "/api/now/table/incident"],
+      "must_not_include": ["custom_root_cause", "PATCH"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Construct the full request to resolve an incident sys_id 9a1: PUT body with state 6, close_code, close_notes, plus display values in response.",
+      "must_include": ["/api/now/table/incident/9a1", "PUT", "close_code", "close_notes", "sysparm_display_value=true"],
+      "must_not_include": ["PATCH", "POST"],
+      "difficulty": "edge"
+    }
+  ]
+}

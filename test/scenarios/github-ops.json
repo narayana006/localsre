@@ -1,0 +1,605 @@
+{
+  "skill": "github-ops",
+  "scenarios": [
+    {
+      "prompt": "Stage all my changes and commit them with the message 'fix login bug'.",
+      "must_include": ["git add", "git commit -m", "fix login bug"],
+      "must_not_include": ["git push --force"],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "Commit just the file src/auth.py with the message 'refactor auth'.",
+      "must_include": ["git add src/auth.py", "git commit -m", "refactor auth"],
+      "must_not_include": ["git add ."],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "Push my current branch to the remote.",
+      "must_include": ["git push", "origin"],
+      "must_not_include": ["git push --force", "--force-with-lease"],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "I made some edits. Show me how to see what's currently changed before committing.",
+      "must_include": ["git status", "git diff"],
+      "must_not_include": ["git reset --hard"],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "Create a new branch called feature/dark-mode and switch to it.",
+      "must_include": ["git checkout -b", "feature/dark-mode"],
+      "must_not_include": ["git branch -D"],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "Open a pull request for my current branch.",
+      "must_include": ["gh pr create", "--title"],
+      "must_not_include": ["gh pull request new"],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "Check the status of my open pull request.",
+      "must_include": ["gh pr status", "current branch"],
+      "must_not_include": ["gh pr info"],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "List the GitHub Actions workflows in this repo.",
+      "must_include": ["gh workflow list", "workflow"],
+      "must_not_include": ["gh actions list"],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "Trigger the workflow named deploy.yml manually.",
+      "must_include": ["gh workflow run", "deploy.yml"],
+      "must_not_include": ["gh workflow trigger"],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "Watch my most recent workflow run live until it finishes.",
+      "must_include": ["gh run watch", "gh run list"],
+      "must_not_include": ["gh run follow"],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "Show me details about the last GitHub Actions run.",
+      "must_include": ["gh run view", "gh run list"],
+      "must_not_include": ["gh run show"],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "List my recent workflow runs.",
+      "must_include": ["gh run list", "--limit"],
+      "must_not_include": ["gh run history"],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "Create a GitHub release for tag v1.2.0.",
+      "must_include": ["gh release create", "v1.2.0"],
+      "must_not_include": ["gh release new"],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "Am I logged into the GitHub CLI? How do I check?",
+      "must_include": ["gh auth status", "gh auth login"],
+      "must_not_include": ["gh login"],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "Commit my work in progress with message 'wip' and push it.",
+      "must_include": ["git commit -m", "wip", "git push"],
+      "must_not_include": ["git push --force"],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "How do I see the commit history for this repo?",
+      "must_include": ["git log", "--oneline"],
+      "must_not_include": ["git history"],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "Stage everything and commit with 'update docs', then open a PR.",
+      "must_include": ["git add", "git commit -m", "update docs", "gh pr create"],
+      "must_not_include": ["git push --force"],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "Switch back to the main branch.",
+      "must_include": ["git checkout", "main"],
+      "must_not_include": ["git checkout -b main"],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "Push my new local branch to origin and set the upstream.",
+      "must_include": ["git push", "-u", "origin"],
+      "must_not_include": ["git push --force"],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "View the CI checks status for my current PR.",
+      "must_include": ["gh pr checks", "current branch"],
+      "must_not_include": ["gh pr ci"],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "Create a release v2.0.0 and upload the binary dist/app.tar.gz as an asset.",
+      "must_include": ["gh release create", "v2.0.0", "dist/app.tar.gz"],
+      "must_not_include": ["gh release new"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Open a PR with title 'Add caching' and a body describing the change.",
+      "must_include": ["gh pr create", "--title", "--body"],
+      "must_not_include": ["gh pr create --message"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "I'm on main with uncommitted changes for a feature. Get me onto a safe branch first, then commit.",
+      "must_include": ["git checkout -b", "git add", "git commit -m"],
+      "must_not_include": ["git push --force"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Run the workflow ci.yml on the branch release/3.1 specifically.",
+      "must_include": ["gh workflow run", "ci.yml", "--ref"],
+      "must_not_include": ["gh workflow trigger"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Watch run 12345678 and exit with a non-zero status if it fails.",
+      "must_include": ["gh run watch", "12345678", "--exit-status"],
+      "must_not_include": ["gh run follow"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "View the failed logs for the last run so I can debug it.",
+      "must_include": ["gh run view", "--log-failed"],
+      "must_not_include": ["gh run logs"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Create a draft release for v3.0.0-rc1 with auto-generated notes.",
+      "must_include": ["gh release create", "v3.0.0-rc1", "--draft", "--generate-notes"],
+      "must_not_include": ["gh release new"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Commit with message 'release prep' then tag the commit as v1.5.0 and push the tag.",
+      "must_include": ["git commit -m", "git tag", "v1.5.0", "git push"],
+      "must_not_include": ["git push --force"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Open a PR from my branch targeting the develop base branch.",
+      "must_include": ["gh pr create", "--base", "develop"],
+      "must_not_include": ["--target"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Mark my current PR as ready for review and request a reviewer named alice.",
+      "must_include": ["gh pr ready", "gh pr edit", "alice"],
+      "must_not_include": ["gh pr assign"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Re-run only the failed jobs from run 99887766.",
+      "must_include": ["gh run rerun", "99887766", "--failed"],
+      "must_not_include": ["gh run retry"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Amend my last commit message to 'fix typo in readme' without changing files.",
+      "must_include": ["git commit --amend", "fix typo in readme"],
+      "must_not_include": ["git push --force"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Show me the diff of what's staged versus the last commit.",
+      "must_include": ["git diff", "--staged"],
+      "must_not_include": ["git diff --uncommitted"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Create a release v4.1.0 with notes from a file named CHANGELOG-4.1.md.",
+      "must_include": ["gh release create", "v4.1.0", "--notes-file", "CHANGELOG-4.1.md"],
+      "must_not_include": ["gh release new"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Watch the checks on PR number 42 until they complete.",
+      "must_include": ["gh pr checks", "42", "--watch"],
+      "must_not_include": ["gh pr ci"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "I want to commit only the changes I select interactively, then push.",
+      "must_include": ["git add -p", "git commit", "git push"],
+      "must_not_include": ["git add ."],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "List all releases in this repo.",
+      "must_include": ["gh release list", "release"],
+      "must_not_include": ["gh release all"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Upload an extra asset coverage.html to the existing v2.3.0 release.",
+      "must_include": ["gh release upload", "v2.3.0", "coverage.html"],
+      "must_not_include": ["gh release create"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Create a PR and add the labels bug and priority-high.",
+      "must_include": ["gh pr create", "--label", "bug", "priority-high"],
+      "must_not_include": ["--tag"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Trigger workflow build.yml passing an input named environment set to staging.",
+      "must_include": ["gh workflow run", "build.yml", "-f", "environment=staging"],
+      "must_not_include": ["--input"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Show me which workflow run a specific commit triggered, filtering by branch main.",
+      "must_include": ["gh run list", "--branch", "main"],
+      "must_not_include": ["gh run history"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "My push was rejected because remote has new commits. What's the safe way to fix this?",
+      "must_include": ["git pull", "git push"],
+      "must_not_include": ["git push --force"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Merge my approved PR using a squash merge and delete the branch.",
+      "must_include": ["gh pr merge", "--squash", "--delete-branch"],
+      "must_not_include": ["--force"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Stash my current changes so I can switch branches cleanly.",
+      "must_include": ["git stash", "git stash pop"],
+      "must_not_include": ["git stash drop"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Check out PR number 57 locally so I can test it.",
+      "must_include": ["gh pr checkout", "57"],
+      "must_not_include": ["gh pr clone"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Cancel the in-progress workflow run 55443322.",
+      "must_include": ["gh run cancel", "55443322"],
+      "must_not_include": ["gh run stop"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Create an annotated tag v6.0.0 with a message and push only that tag.",
+      "must_include": ["git tag -a", "v6.0.0", "git push origin"],
+      "must_not_include": ["git push --force"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Add a remote called origin pointing to git@github.com:me/repo.git and push main.",
+      "must_include": ["git remote add origin", "git push", "main"],
+      "must_not_include": ["git push --force"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "View the most recent run for the workflow tests.yml only.",
+      "must_include": ["gh run list", "--workflow", "tests.yml", "gh run view"],
+      "must_not_include": ["gh run history"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Create a PR as a draft so it doesn't trigger reviews yet.",
+      "must_include": ["gh pr create", "--draft"],
+      "must_not_include": ["--wip"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "I committed but forgot to include changes in utils.py. Add it to the last commit.",
+      "must_include": ["git add utils.py", "git commit --amend", "--no-edit"],
+      "must_not_include": ["git push --force"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Download the build artifact named release-bundle from run 77665544.",
+      "must_include": ["gh run download", "77665544", "-n", "release-bundle"],
+      "must_not_include": ["gh artifact download"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Open a PR and assign it to me, set milestone v3, and fill body from a template file.",
+      "must_include": ["gh pr create", "--assignee", "--milestone", "--body-file"],
+      "must_not_include": ["--template-file"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Run a workflow on a specific git ref (a tag v9.0.0) and then watch the resulting run.",
+      "must_include": ["gh workflow run", "--ref", "v9.0.0", "gh run watch"],
+      "must_not_include": ["gh workflow trigger"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "I need to undo my last commit but keep the changes staged.",
+      "must_include": ["git reset --soft", "HEAD~1"],
+      "must_not_include": ["git reset --hard"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Create release v7.2.0, mark it as a prerelease, and target the commit at abc1234.",
+      "must_include": ["gh release create", "v7.2.0", "--prerelease", "--target", "abc1234"],
+      "must_not_include": ["--pre"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "List failed workflow runs only so I can triage CI failures.",
+      "must_include": ["gh run list", "--status", "failure"],
+      "must_not_include": ["--status failed"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Show me the logs of a specific job inside run 33221100.",
+      "must_include": ["gh run view", "33221100", "--job"],
+      "must_not_include": ["gh job view"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Rename my current branch from feature/old to feature/new and push it correctly.",
+      "must_include": ["git branch -m", "feature/new", "git push", "-u"],
+      "must_not_include": ["git push --force"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Comment on PR 88 that the tests now pass and approve it.",
+      "must_include": ["gh pr comment", "88", "gh pr review", "--approve"],
+      "must_not_include": ["gh pr accept"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Delete a release v0.9.0-beta but keep the git tag.",
+      "must_include": ["gh release delete", "v0.9.0-beta"],
+      "must_not_include": ["--cleanup-tag"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Create a release and upload multiple files: app-linux, app-mac, and app-win for tag v5.0.0.",
+      "must_include": ["gh release create", "v5.0.0", "app-linux", "app-mac", "app-win"],
+      "must_not_include": ["gh release new"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "View the full YAML definition of the workflow named release.yml.",
+      "must_include": ["gh workflow view", "release.yml", "--yaml"],
+      "must_not_include": ["gh workflow cat"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Disable the scheduled workflow nightly.yml so it stops running.",
+      "must_include": ["gh workflow disable", "nightly.yml"],
+      "must_not_include": ["gh workflow stop"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Re-enable the workflow nightly.yml that was previously disabled.",
+      "must_include": ["gh workflow enable", "nightly.yml"],
+      "must_not_include": ["gh workflow start"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "I want to cherry-pick commit deadbeef onto my current branch and push.",
+      "must_include": ["git cherry-pick", "deadbeef", "git push"],
+      "must_not_include": ["git push --force"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "My local main diverged from origin/main. Rebase my work on top of origin/main safely.",
+      "must_include": ["git fetch", "git rebase", "origin/main"],
+      "must_not_include": ["git push --force"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Set the gh CLI default repo to me/myrepo so commands target the right repo.",
+      "must_include": ["gh repo set-default", "me/myrepo"],
+      "must_not_include": ["gh repo default"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Create a release from the latest tag and edit notes for v8.1.0 after creation.",
+      "must_include": ["gh release create", "v8.1.0", "gh release edit"],
+      "must_not_include": ["gh release new"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Show me the diff for PR number 101 without checking it out.",
+      "must_include": ["gh pr diff", "101"],
+      "must_not_include": ["gh pr show-diff"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Trigger workflow deploy.yml with two inputs: region=us-east-1 and dry_run=true.",
+      "must_include": ["gh workflow run", "deploy.yml", "region=us-east-1", "dry_run=true"],
+      "must_not_include": ["--input"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "List the jobs and their status for the latest run of build.yml.",
+      "must_include": ["gh run list", "--workflow", "build.yml", "gh run view"],
+      "must_not_include": ["gh job list"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Push a tag v10.0.0 to origin but I accidentally tagged the wrong commit; move the tag locally and force-push only the tag.",
+      "must_include": ["git tag -f", "v10.0.0", "git push origin", "--force"],
+      "must_not_include": ["git push --force origin main"],
+      "difficulty": "edge"
+    },
+    {
+      "prompt": "My .env file with API keys got staged. Unstage it before I commit and make sure it won't be committed.",
+      "must_include": ["git restore --staged", ".env", ".gitignore"],
+      "must_not_include": ["git add .env"],
+      "difficulty": "edge"
+    },
+    {
+      "prompt": "I just committed a secret AWS key in the last commit that hasn't been pushed. How do I remove it from the commit?",
+      "must_include": ["git rm --cached", "git commit --amend", "rotate"],
+      "must_not_include": ["git push"],
+      "difficulty": "edge"
+    },
+    {
+      "prompt": "Force update my feature branch after an interactive rebase, without clobbering teammates' work.",
+      "must_include": ["git push", "--force-with-lease"],
+      "must_not_include": ["git push --force origin main"],
+      "difficulty": "edge"
+    },
+    {
+      "prompt": "gh commands fail with auth errors. Diagnose and re-authenticate.",
+      "must_include": ["gh auth status", "gh auth login"],
+      "must_not_include": ["gh login"],
+      "difficulty": "edge"
+    },
+    {
+      "prompt": "I'm in detached HEAD state after checking out a tag. Save my new commits onto a real branch.",
+      "must_include": ["git checkout -b", "git branch"],
+      "must_not_include": ["git push --force"],
+      "difficulty": "edge"
+    },
+    {
+      "prompt": "The PR check 'lint' is failing. Re-run just that one workflow run and watch it.",
+      "must_include": ["gh run rerun", "gh run watch"],
+      "must_not_include": ["gh check rerun"],
+      "difficulty": "edge"
+    },
+    {
+      "prompt": "I want to commit but pre-commit hooks are broken and blocking me on an emergency hotfix. How do I commit this once?",
+      "must_include": ["git commit", "--no-verify"],
+      "must_not_include": ["git push --force"],
+      "difficulty": "edge"
+    },
+    {
+      "prompt": "Someone asks me to push directly to main with --force to 'fix' history. Is that safe and what should I do instead?",
+      "must_include": ["not", "git revert"],
+      "must_not_include": ["git push --force origin main"],
+      "difficulty": "edge"
+    },
+    {
+      "prompt": "Create a release but the tag v11.0.0 doesn't exist yet; create it from branch release-11 in one command.",
+      "must_include": ["gh release create", "v11.0.0", "--target", "release-11"],
+      "must_not_include": ["git tag"],
+      "difficulty": "edge"
+    },
+    {
+      "prompt": "My workflow_dispatch run isn't showing because I'm on a fork. How do I correctly run a workflow specifying the repo?",
+      "must_include": ["gh workflow run", "--repo", "-R"],
+      "must_not_include": ["gh workflow trigger"],
+      "difficulty": "edge"
+    },
+    {
+      "prompt": "I accidentally committed to main locally. Move that commit to a new branch and reset main.",
+      "must_include": ["git branch", "git reset", "HEAD~1", "git checkout"],
+      "must_not_include": ["git push --force origin main"],
+      "difficulty": "edge"
+    },
+    {
+      "prompt": "gh pr create says 'must be on a branch named differently from the default branch'. What's the fix?",
+      "must_include": ["git checkout -b", "git push", "gh pr create"],
+      "must_not_include": ["gh pr create --from-main"],
+      "difficulty": "edge"
+    },
+    {
+      "prompt": "Watch a run but it's already finished; just confirm its conclusion and view the summary.",
+      "must_include": ["gh run view", "--exit-status"],
+      "must_not_include": ["gh run watch --past"],
+      "difficulty": "edge"
+    },
+    {
+      "prompt": "I need to upload a clobbering replacement asset to release v3.5.0 because the file already exists.",
+      "must_include": ["gh release upload", "v3.5.0", "--clobber"],
+      "must_not_include": ["--overwrite"],
+      "difficulty": "edge"
+    },
+    {
+      "prompt": "Delete a remote branch feature/done after the PR merged, without touching local.",
+      "must_include": ["git push origin --delete", "feature/done"],
+      "must_not_include": ["git branch -D"],
+      "difficulty": "edge"
+    },
+    {
+      "prompt": "My commit was signed wrong. Resign and amend the last commit with GPG signing enabled.",
+      "must_include": ["git commit --amend", "-S"],
+      "must_not_include": ["git push --force origin main"],
+      "difficulty": "edge"
+    },
+    {
+      "prompt": "I have a merge conflict during pull. Show me how to see conflicted files and abort if needed.",
+      "must_include": ["git status", "git merge --abort"],
+      "must_not_include": ["git reset --hard origin"],
+      "difficulty": "edge"
+    },
+    {
+      "prompt": "Create a PR but also have it auto-merge once checks pass.",
+      "must_include": ["gh pr create", "gh pr merge", "--auto"],
+      "must_not_include": ["--automerge"],
+      "difficulty": "edge"
+    },
+    {
+      "prompt": "View workflow run logs but only download them as a zip for offline analysis of run 44556677.",
+      "must_include": ["gh run download", "44556677"],
+      "must_not_include": ["gh run logs"],
+      "difficulty": "edge"
+    },
+    {
+      "prompt": "I want to check whether my gh token has the right scopes for managing releases.",
+      "must_include": ["gh auth status", "--show-token"],
+      "must_not_include": ["gh token list"],
+      "difficulty": "edge"
+    },
+    {
+      "prompt": "Refresh my gh auth to add the workflow scope so I can dispatch workflows.",
+      "must_include": ["gh auth refresh", "-s", "workflow"],
+      "must_not_include": ["gh auth scope add"],
+      "difficulty": "edge"
+    },
+    {
+      "prompt": "Commit and push, but first confirm I'm NOT on main so I don't break protected branch rules.",
+      "must_include": ["git branch", "git commit", "git push"],
+      "must_not_include": ["git push --force origin main"],
+      "difficulty": "edge"
+    },
+    {
+      "prompt": "List PRs that need my review across the repo.",
+      "must_include": ["gh pr list", "--search", "review-requested"],
+      "must_not_include": ["gh pr review-list"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Show the status of all checks on the latest commit of main via the API or gh.",
+      "must_include": ["gh pr checks", "gh run list"],
+      "must_not_include": ["gh check status"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Create a release v12.0.0 and have gh generate notes only since the previous tag v11.9.0.",
+      "must_include": ["gh release create", "v12.0.0", "--generate-notes", "--notes-start-tag"],
+      "must_not_include": ["--since-tag"],
+      "difficulty": "edge"
+    },
+    {
+      "prompt": "I want to verify a tag was pushed and exists on the remote before creating a release.",
+      "must_include": ["git ls-remote", "--tags", "gh release create"],
+      "must_not_include": ["git tag --remote"],
+      "difficulty": "edge"
+    },
+    {
+      "prompt": "Convert my draft PR to ready and watch its checks complete before merging.",
+      "must_include": ["gh pr ready", "gh pr checks", "--watch"],
+      "must_not_include": ["gh pr undraft"],
+      "difficulty": "hard"
+    }
+  ]
+}

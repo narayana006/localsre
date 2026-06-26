@@ -1,0 +1,605 @@
+{
+  "skill": "pagerduty",
+  "scenarios": [
+    {
+      "prompt": "List all currently open (triggered or acknowledged) PagerDuty incidents.",
+      "must_include": ["api.pagerduty.com", "/incidents", "Authorization: Token token=", "statuses[]="],
+      "must_not_include": ["/list_incidents", "resolved everything"],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "Show me every triggered incident right now.",
+      "must_include": ["/incidents", "statuses[]=triggered", "api.pagerduty.com"],
+      "must_not_include": ["statuses[]=resolved"],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "What auth header do I need to call the PagerDuty REST API?",
+      "must_include": ["Authorization: Token token=", "api.pagerduty.com"],
+      "must_not_include": ["Bearer ", "Basic "],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "Acknowledge incident PXYZ123 on behalf of me (alice@example.com).",
+      "must_include": ["/incidents/PXYZ123", "From: alice@example.com", "type", "incident", "acknowledged"],
+      "must_not_include": ["incident_reference", "resolved"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Resolve incident PABC987. My email is bob@corp.io.",
+      "must_include": ["/incidents/PABC987", "From: bob@corp.io", "resolved", "incident"],
+      "must_not_include": ["incident_reference", "acknowledged"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Who is currently on-call?",
+      "must_include": ["/oncalls", "api.pagerduty.com", "Authorization: Token token="],
+      "must_not_include": ["/who_is_oncall", "/schedules/oncall"],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "Get the details of incident PINC555.",
+      "must_include": ["/incidents/PINC555", "api.pagerduty.com", "Authorization: Token token="],
+      "must_not_include": ["incident_reference", "POST"],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "Add a note to incident PINC555 saying 'Investigating root cause'.",
+      "must_include": ["/incidents/PINC555/notes", "POST", "Investigating root cause", "From:"],
+      "must_not_include": ["incident_reference", "GET"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "List the log entries (timeline) for incident PLOG222.",
+      "must_include": ["/incidents/PLOG222/log_entries", "api.pagerduty.com", "Authorization: Token token="],
+      "must_not_include": ["/timeline", "POST"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Show the notes on incident PNOTE777.",
+      "must_include": ["/incidents/PNOTE777/notes", "Authorization: Token token=", "api.pagerduty.com"],
+      "must_not_include": ["POST", "incident_reference"],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "List all PagerDuty services.",
+      "must_include": ["/services", "api.pagerduty.com", "Authorization: Token token="],
+      "must_not_include": ["/service_list", "POST"],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "List the on-call schedules in our account.",
+      "must_include": ["/schedules", "api.pagerduty.com", "Authorization: Token token="],
+      "must_not_include": ["/oncall_schedules", "POST"],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "Acknowledge all triggered incidents assigned to me. From: ops@team.com.",
+      "must_include": ["/incidents", "From: ops@team.com", "acknowledged", "incident"],
+      "must_not_include": ["incident_reference", "resolved"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Resolve incident PDOWN01 and leave a note 'Service recovered'. From: sre@x.com.",
+      "must_include": ["/incidents/PDOWN01", "resolved", "/notes", "From: sre@x.com"],
+      "must_not_include": ["incident_reference", "acknowledged"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Who's on call for the Database escalation policy right now?",
+      "must_include": ["/oncalls", "escalation_policy_ids[]", "api.pagerduty.com"],
+      "must_not_include": ["/who_is_oncall", "/schedules/oncall"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "What's the correct JSON body to acknowledge an incident via the PUT /incidents endpoint?",
+      "must_include": ["\"type\": \"incident\"", "\"status\": \"acknowledged\""],
+      "must_not_include": ["incident_reference", "\"status\": \"resolved\""],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "What's the correct request body to resolve an incident?",
+      "must_include": ["\"type\": \"incident\"", "\"status\": \"resolved\""],
+      "must_not_include": ["incident_reference", "acknowledged"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "List incidents for the Payments service only.",
+      "must_include": ["/incidents", "service_ids[]", "api.pagerduty.com"],
+      "must_not_include": ["/services/incidents", "POST"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Show open incidents assigned to user PUSER01.",
+      "must_include": ["/incidents", "user_ids[]=PUSER01", "Authorization: Token token="],
+      "must_not_include": ["/users/PUSER01/incidents", "POST"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Using the pd CLI, list open incidents.",
+      "must_include": ["pd incident", "list"],
+      "must_not_include": ["pd list-incidents", "api.pagerduty.com/incidents/all"],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "Using the pd CLI, acknowledge incident PCLI100.",
+      "must_include": ["pd incident", "acknowledge", "PCLI100"],
+      "must_not_include": ["pd resolve", "incident_reference"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Using the pd CLI, resolve incident PCLI200.",
+      "must_include": ["pd incident", "resolve", "PCLI200"],
+      "must_not_include": ["pd acknowledge", "incident_reference"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Get who is on-call using the pd CLI.",
+      "must_include": ["pd oncall", "oncall"],
+      "must_not_include": ["pd who-is-oncall", "pd schedule oncall"],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "I want only the high-urgency open incidents. How do I filter?",
+      "must_include": ["/incidents", "urgencies[]=high", "api.pagerduty.com"],
+      "must_not_include": ["priority=high", "POST"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Resolve incident PROD999 — but should you confirm with me first?",
+      "must_include": ["confirm", "/incidents/PROD999", "resolved"],
+      "must_not_include": ["incident_reference", "auto-resolved without"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Add a note to PINC100 but I haven't told you the note text. What do you do?",
+      "must_include": ["/incidents/PINC100/notes", "note", "ask"],
+      "must_not_include": ["POST a blank", "made up"],
+      "difficulty": "edge"
+    },
+    {
+      "prompt": "Show me incident detail including the assignments and escalation policy for PESC42.",
+      "must_include": ["/incidents/PESC42", "api.pagerduty.com", "Authorization: Token token="],
+      "must_not_include": ["POST", "incident_reference"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "How do I paginate through a large list of incidents?",
+      "must_include": ["/incidents", "limit", "offset"],
+      "must_not_include": ["page_token", "?cursor="],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "List incidents that were created since 2026-06-01.",
+      "must_include": ["/incidents", "since=", "2026-06-01"],
+      "must_not_include": ["created_after=", "POST"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "List incidents between two dates with since and until.",
+      "must_include": ["/incidents", "since=", "until="],
+      "must_not_include": ["from=", "to=date"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "What Content-Type and Accept headers should I send when acknowledging an incident?",
+      "must_include": ["Content-Type: application/json", "Authorization: Token token="],
+      "must_not_include": ["text/plain", "Bearer "],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Why does acknowledging an incident return a 400 with my body? I sent type incident_reference.",
+      "must_include": ["\"type\": \"incident\"", "incident_reference"],
+      "must_not_include": ["it is fine", "use incident_reference for status updates"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "The From header is required — what should it contain?",
+      "must_include": ["From:", "email"],
+      "must_not_include": ["user ID", "API key"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Acknowledge a batch of incidents PA1 and PA2 in a single PUT call. From: lead@team.com.",
+      "must_include": ["/incidents", "acknowledged", "From: lead@team.com", "incident"],
+      "must_not_include": ["incident_reference", "resolved"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Who is on-call for schedule PSCHED9 today?",
+      "must_include": ["/oncalls", "schedule_ids[]=PSCHED9", "api.pagerduty.com"],
+      "must_not_include": ["/schedules/PSCHED9/oncall", "POST"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Get the rendered schedule entries for schedule PSCHED9 for the next 24 hours.",
+      "must_include": ["/schedules/PSCHED9", "since=", "until="],
+      "must_not_include": ["/oncalls/PSCHED9", "POST"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Get details of a single service PSVC77.",
+      "must_include": ["/services/PSVC77", "api.pagerduty.com", "Authorization: Token token="],
+      "must_not_include": ["POST", "/service/PSVC77"],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "Snooze incident PSNZ01 for 1 hour. From: oncall@x.com.",
+      "must_include": ["/incidents/PSNZ01/snooze", "duration", "From: oncall@x.com"],
+      "must_not_include": ["resolved", "incident_reference"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Reassign incident PRSG01 to user PUSERZZ. From: mgr@x.com.",
+      "must_include": ["/incidents/PRSG01", "assignments", "PUSERZZ", "From: mgr@x.com"],
+      "must_not_include": ["resolved", "incident_reference"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Escalate incident PESCL1 to escalation level 2. From: mgr@x.com.",
+      "must_include": ["/incidents/PESCL1", "escalation_level", "From: mgr@x.com"],
+      "must_not_include": ["resolved", "incident_reference"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "List users in the PagerDuty account.",
+      "must_include": ["/users", "api.pagerduty.com", "Authorization: Token token="],
+      "must_not_include": ["/account/users", "POST"],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "List escalation policies.",
+      "must_include": ["/escalation_policies", "api.pagerduty.com"],
+      "must_not_include": ["/policies", "POST"],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "List teams.",
+      "must_include": ["/teams", "api.pagerduty.com", "Authorization: Token token="],
+      "must_not_include": ["/groups", "POST"],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "Show me only the resolved incidents from last week.",
+      "must_include": ["/incidents", "statuses[]=resolved", "since="],
+      "must_not_include": ["statuses[]=triggered only", "POST"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "How do I include the acknowledgers and assignees in the incident list response?",
+      "must_include": ["/incidents", "include[]"],
+      "must_not_include": ["expand=", "POST"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Give me a curl command to list triggered incidents.",
+      "must_include": ["curl", "api.pagerduty.com/incidents", "Authorization: Token token=", "statuses[]=triggered"],
+      "must_not_include": ["Bearer ", "incident_reference"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Give me a curl command to acknowledge incident PCURL1. From: me@x.com.",
+      "must_include": ["curl", "PUT", "/incidents/PCURL1", "From: me@x.com", "acknowledged"],
+      "must_not_include": ["incident_reference", "resolved"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Give me a curl command to add a note to PCURL2. From: me@x.com.",
+      "must_include": ["curl", "POST", "/incidents/PCURL2/notes", "From: me@x.com"],
+      "must_not_include": ["PUT", "incident_reference"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Give me a curl command to resolve incident PCURL3. From: me@x.com.",
+      "must_include": ["curl", "PUT", "/incidents/PCURL3", "resolved", "From: me@x.com"],
+      "must_not_include": ["incident_reference", "acknowledged"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Why am I getting a 401 Unauthorized from the PagerDuty API?",
+      "must_include": ["Authorization: Token token=", "401"],
+      "must_not_include": ["Bearer token", "it's a PagerDuty outage"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Why am I getting a 403 when acknowledging? My token is read-only.",
+      "must_include": ["403", "read-only", "write"],
+      "must_not_include": ["incident_reference", "use a Bearer token"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "How do I find the incident ID from an incident_number like 4521?",
+      "must_include": ["/incidents", "incident_number", "id"],
+      "must_not_include": ["/incidents/4521 is the id", "POST"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "List on-call entries for a specific user PUSERON.",
+      "must_include": ["/oncalls", "user_ids[]=PUSERON", "api.pagerduty.com"],
+      "must_not_include": ["/users/PUSERON/oncalls", "POST"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Show who is on-call right now including the escalation level.",
+      "must_include": ["/oncalls", "escalation_level", "api.pagerduty.com"],
+      "must_not_include": ["/who_is_oncall", "POST"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "I need to know the current on-call across all schedules with their schedule names included.",
+      "must_include": ["/oncalls", "include[]", "api.pagerduty.com"],
+      "must_not_include": ["expand=schedules", "POST"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Acknowledge incident PACK01 but the user forgot to give a From email. What do you do?",
+      "must_include": ["From:", "email", "ask"],
+      "must_not_include": ["use a default email", "skip the From header"],
+      "difficulty": "edge"
+    },
+    {
+      "prompt": "List maintenance windows.",
+      "must_include": ["/maintenance_windows", "api.pagerduty.com"],
+      "must_not_include": ["/maintenance", "POST"],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "List the priorities defined in the account.",
+      "must_include": ["/priorities", "api.pagerduty.com", "Authorization: Token token="],
+      "must_not_include": ["/incident_priorities", "POST"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Update incident PPRIO1 to priority PPRIORITY9. From: mgr@x.com.",
+      "must_include": ["/incidents/PPRIO1", "priority", "From: mgr@x.com", "incident"],
+      "must_not_include": ["incident_reference", "resolved"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Show the alerts attached to incident PALERT1.",
+      "must_include": ["/incidents/PALERT1/alerts", "api.pagerduty.com"],
+      "must_not_include": ["/alerts/PALERT1", "POST"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Resolve all open incidents for the Checkout service. From: ic@x.com. Anything I should watch out for?",
+      "must_include": ["confirm", "/incidents", "resolved", "From: ic@x.com"],
+      "must_not_include": ["auto-resolved without confirm", "incident_reference"],
+      "difficulty": "edge"
+    },
+    {
+      "prompt": "What query parameter limits the maximum results per page and what is the cap?",
+      "must_include": ["limit", "100"],
+      "must_not_include": ["page_size", "1000 max"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "How do I sort incidents by created_at descending?",
+      "must_include": ["/incidents", "sort_by", "created_at"],
+      "must_not_include": ["order_by=", "POST"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Get the on-call for a specific team PTEAM5.",
+      "must_include": ["/oncalls", "team_ids[]=PTEAM5", "api.pagerduty.com"],
+      "must_not_include": ["/teams/PTEAM5/oncalls", "POST"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "List incidents filtered by team PTEAM5.",
+      "must_include": ["/incidents", "team_ids[]=PTEAM5", "api.pagerduty.com"],
+      "must_not_include": ["/teams/PTEAM5/incidents", "POST"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Acknowledge PINC1 and then immediately resolve it. From: oncall@x.com.",
+      "must_include": ["/incidents/PINC1", "acknowledged", "resolved", "From: oncall@x.com"],
+      "must_not_include": ["incident_reference", "DELETE"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Show the full timeline of who acknowledged and resolved incident PTL1.",
+      "must_include": ["/incidents/PTL1/log_entries", "api.pagerduty.com", "Authorization: Token token="],
+      "must_not_include": ["/timeline", "POST"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Is the PagerDuty API base URL the same for EU accounts?",
+      "must_include": ["api.pagerduty.com", "api.eu.pagerduty.com"],
+      "must_not_include": ["api.pagerduty.eu", "same for everyone"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "What header format does PagerDuty require — Bearer or Token?",
+      "must_include": ["Authorization: Token token=", "Token"],
+      "must_not_include": ["Bearer is correct", "Basic auth"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "List notes for incident PNOTES9 and tell me the endpoint.",
+      "must_include": ["/incidents/PNOTES9/notes", "api.pagerduty.com", "GET"],
+      "must_not_include": ["POST", "/notes/PNOTES9"],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "Add a resolution note to PRES1 saying 'Rolled back deploy' and resolve it. From: dev@x.com.",
+      "must_include": ["/incidents/PRES1/notes", "Rolled back deploy", "resolved", "From: dev@x.com"],
+      "must_not_include": ["incident_reference", "acknowledged"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "How do I list only incidents whose status is acknowledged?",
+      "must_include": ["/incidents", "statuses[]=acknowledged"],
+      "must_not_include": ["statuses[]=resolved", "POST"],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "Give me the exact PUT request to acknowledge incident PEXACT1, headers and body. From: a@b.com.",
+      "must_include": ["PUT", "/incidents/PEXACT1", "From: a@b.com", "\"type\": \"incident\"", "acknowledged"],
+      "must_not_include": ["incident_reference", "resolved"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Why does my note POST fail with 'Requester not found'?",
+      "must_include": ["From:", "email"],
+      "must_not_include": ["Bearer token", "token is wrong region"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "List business services.",
+      "must_include": ["/business_services", "api.pagerduty.com"],
+      "must_not_include": ["/services/business", "POST"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Get the on-call for the next week for escalation policy PEP3.",
+      "must_include": ["/oncalls", "escalation_policy_ids[]=PEP3", "since=", "until="],
+      "must_not_include": ["/escalation_policies/PEP3/oncalls", "POST"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "List incidents and include the bodies/details. Which include value?",
+      "must_include": ["/incidents", "include[]"],
+      "must_not_include": ["expand=body", "POST"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "What does a successful acknowledge response status code look like?",
+      "must_include": ["200", "incident"],
+      "must_not_include": ["201", "204 No Content"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Resolve incident PEDGE1, but it's already resolved. What happens / what do you do?",
+      "must_include": ["already resolved", "/incidents/PEDGE1"],
+      "must_not_include": ["re-trigger it", "incident_reference"],
+      "difficulty": "edge"
+    },
+    {
+      "prompt": "Acknowledge incident that the user referred to only as 'the database one' — no ID given.",
+      "must_include": ["/incidents", "which", "id"],
+      "must_not_include": ["guess the ID", "acknowledged a random incident"],
+      "difficulty": "edge"
+    },
+    {
+      "prompt": "List the contact methods for user PUSERCM.",
+      "must_include": ["/users/PUSERCM/contact_methods", "api.pagerduty.com"],
+      "must_not_include": ["/contact_methods/PUSERCM", "POST"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "How do I get the current incident counts by status without pulling every incident?",
+      "must_include": ["total", "/incidents", "limit=1"],
+      "must_not_include": ["/incidents/count", "POST"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "List integrations on service PSVCINT.",
+      "must_include": ["/services/PSVCINT", "integrations", "api.pagerduty.com"],
+      "must_not_include": ["/integrations/PSVCINT", "POST"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Acknowledge incident PMERGE then merge PMERGE2 into it. From: ic@x.com.",
+      "must_include": ["/incidents/PMERGE", "merge", "From: ic@x.com"],
+      "must_not_include": ["incident_reference", "resolved everything"],
+      "difficulty": "edge"
+    },
+    {
+      "prompt": "What's the difference between type incident and incident_reference, and which do I use to change status?",
+      "must_include": ["\"type\": \"incident\"", "incident_reference"],
+      "must_not_include": ["incident_reference to change status", "they are interchangeable"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "List incidents created in the last hour for service PSVCQ, high urgency, acknowledged or triggered.",
+      "must_include": ["/incidents", "service_ids[]=PSVCQ", "urgencies[]=high", "statuses[]"],
+      "must_not_include": ["POST", "incident_reference"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "How do I authenticate the pd CLI?",
+      "must_include": ["pd", "token"],
+      "must_not_include": ["Bearer", "api.pagerduty.com/login"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Show me how to acknowledge with the pd CLI specifying the requester email.",
+      "must_include": ["pd incident", "acknowledge", "--from"],
+      "must_not_include": ["pd resolve", "incident_reference"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Get the schedule's current on-call user names for PSCHEDX.",
+      "must_include": ["/oncalls", "schedule_ids[]=PSCHEDX", "include[]"],
+      "must_not_include": ["/schedules/PSCHEDX/users", "POST"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "List webhook subscriptions.",
+      "must_include": ["/webhook_subscriptions", "api.pagerduty.com"],
+      "must_not_include": ["/webhooks", "POST"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Add a note to incident PNADD with special characters and quotes in the body. How do I escape it?",
+      "must_include": ["/incidents/PNADD/notes", "POST", "Content-Type: application/json"],
+      "must_not_include": ["PUT", "incident_reference"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Show only the open incidents for two services PSV1 and PSV2.",
+      "must_include": ["/incidents", "service_ids[]=PSV1", "service_ids[]=PSV2"],
+      "must_not_include": ["service_ids=PSV1,PSV2", "POST"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Resolve incident PFINAL using the pd CLI and confirm before doing it.",
+      "must_include": ["pd incident", "resolve", "PFINAL", "confirm"],
+      "must_not_include": ["acknowledge", "auto-resolved without confirm"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "List incidents and only return the id and title fields if possible.",
+      "must_include": ["/incidents", "api.pagerduty.com", "Authorization: Token token="],
+      "must_not_include": ["fields=id,title", "POST"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "What endpoint adds a status update visible to subscribers on incident PSU1?",
+      "must_include": ["/incidents/PSU1/status_updates", "POST", "From:"],
+      "must_not_include": ["/notes for status updates", "incident_reference"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "I keep getting 429 errors when listing incidents in a loop. Why and what do I do?",
+      "must_include": ["429", "rate limit"],
+      "must_not_include": ["your token is invalid", "incident_reference"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Show me the oncall for right now, earliest only, one per escalation policy.",
+      "must_include": ["/oncalls", "earliest=true"],
+      "must_not_include": ["latest=true", "POST"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Quick: just give me the base endpoint and auth to start hitting PagerDuty.",
+      "must_include": ["api.pagerduty.com", "Authorization: Token token="],
+      "must_not_include": ["Bearer ", "api.pagerduty.io"],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "Acknowledge incident POPS9, with the From header value oncall-bot@x.com, and confirm it's type incident not reference.",
+      "must_include": ["/incidents/POPS9", "From: oncall-bot@x.com", "\"type\": \"incident\"", "acknowledged"],
+      "must_not_include": ["incident_reference", "resolved"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "List on-calls for the next 7 days for the whole account.",
+      "must_include": ["/oncalls", "since=", "until="],
+      "must_not_include": ["/schedules/oncall", "POST"],
+      "difficulty": "medium"
+    }
+  ]
+}

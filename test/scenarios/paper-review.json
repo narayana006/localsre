@@ -1,0 +1,605 @@
+{
+  "skill": "paper-review",
+  "scenarios": [
+    {
+      "prompt": "Review my draft for IEEE conference structure. Does it have all the required top-level sections?",
+      "must_include": ["abstract", "Introduction", "related work", "Conclusion"],
+      "must_not_include": ["the paper is fine without checking"],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "What document class should I use for an IEEE transactions submission?",
+      "must_include": ["IEEEtran", "\\documentclass"],
+      "must_not_include": ["ieee-paper-class"],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "Build my paper. I have main.tex with a bibliography. What command should I run?",
+      "must_include": ["latexmk", "pdflatex", "bibtex"],
+      "must_not_include": ["latexbuild"],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "Check whether my abstract is the right length and content for IEEE.",
+      "must_include": ["abstract", "150", "contribution"],
+      "must_not_include": ["abstracts must be exactly 500 words"],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "My references use plain numbered citations. Which BibTeX style is correct for IEEEtran?",
+      "must_include": ["IEEEtran", "bibtex", "\\bibliographystyle"],
+      "must_not_include": ["ieeenature.bst"],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "Give me a prioritized findings list for this draft, ranked by severity.",
+      "must_include": ["Critical", "High", "Med", "Low"],
+      "must_not_include": ["all issues are equally important"],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "My results section claims 'state of the art' but I only compare to one method. Is that a problem?",
+      "must_include": ["baseline", "claim", "evidence"],
+      "must_not_include": ["one baseline is always sufficient"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Review reproducibility of my methods section. What's missing for someone to replicate it?",
+      "must_include": ["reproducib", "hyperparameter", "seed", "dataset"],
+      "must_not_include": ["reproducibility is optional for IEEE"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "My experiments report mean accuracy but no variance. Flag any statistical issues.",
+      "must_include": ["error bars", "standard deviation", "statistic"],
+      "must_not_include": ["a single run is enough to prove significance"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Do my figures and captions meet IEEE standards? Captions are one word each.",
+      "must_include": ["caption", "figure", "self-contained"],
+      "must_not_include": ["one-word captions are preferred"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Assess novelty. My related work cites 3 papers from 2015. Is that adequate?",
+      "must_include": ["related work", "novelty", "recent"],
+      "must_not_include": ["three citations is the IEEE maximum"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "latexmk fails with 'Citation undefined'. Walk me through fixing it.",
+      "must_include": ["bibtex", "latexmk", ".bib"],
+      "must_not_include": ["delete all citations to fix"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Check my paper's clarity. The intro is 4 pages of background with no contribution statement.",
+      "must_include": ["clarity", "contribution", "Introduction"],
+      "must_not_include": ["longer introductions are always better"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Run a peer-review checklist over the whole draft and tell me what a reviewer would reject.",
+      "must_include": ["checklist", "baseline", "reproducib", "related work"],
+      "must_not_include": ["this would pass review without changes"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "My table of results has no units and no bold for the best method. Review formatting.",
+      "must_include": ["table", "units", "caption"],
+      "must_not_include": ["units are unnecessary in IEEE tables"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "I claim a 10x speedup. The plot shows 1.4x. Catch claim-evidence mismatches.",
+      "must_include": ["claim", "evidence", "Critical"],
+      "must_not_include": ["claims do not need to match figures"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Review error bars: I show 95% CI on one figure and stddev on another, never stated which.",
+      "must_include": ["error bars", "confidence interval", "consistent"],
+      "must_not_include": ["mixing CI and stddev without labels is fine"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "My ablation removes components but the baseline already lacks them. Is the ablation valid?",
+      "must_include": ["ablation", "baseline", "claim"],
+      "must_not_include": ["ablations never need a controlled baseline"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Check IEEEtran compliance: I'm using \\documentclass[12pt]{article}. What should change?",
+      "must_include": ["IEEEtran", "\\documentclass", "conference"],
+      "must_not_include": ["article class is correct for IEEE"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Reviewer says 'no statistical significance test'. I have 5 runs. What do I add?",
+      "must_include": ["significance", "t-test", "error bars"],
+      "must_not_include": ["significance tests are never expected"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "My PDF has Type 3 bitmap fonts and IEEE PDF eXpress rejects it. How do I fix the build?",
+      "must_include": ["pdflatex", "Type 1", "font"],
+      "must_not_include": ["Type 3 fonts are required by IEEE"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Prioritize: missing related work, a typo in the title, and unreproducible code. Rank them.",
+      "must_include": ["Critical", "Low", "related work", "reproducib"],
+      "must_not_include": ["a typo is more severe than reproducibility"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "I cite arXiv preprints only, no DOIs. Review citation hygiene for IEEE.",
+      "must_include": ["citation", "DOI", "bibtex"],
+      "must_not_include": ["arXiv-only citations are always preferred"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Does my contribution list overclaim? I say 'first ever' but cite no prior-art search.",
+      "must_include": ["claim", "related work", "novelty"],
+      "must_not_include": ["'first ever' needs no justification"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "My figures are screenshots at 72 DPI. Review figure quality for camera-ready IEEE.",
+      "must_include": ["figure", "vector", "resolution"],
+      "must_not_include": ["72 DPI is camera-ready quality"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Check whether my equations are numbered and referenced correctly with \\eqref.",
+      "must_include": ["equation", "\\eqref", "number"],
+      "must_not_include": ["equations should never be numbered"],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "I have no Limitations section. Is that a reviewer red flag for IEEE?",
+      "must_include": ["limitation", "reproducib", "High"],
+      "must_not_include": ["limitations are forbidden in IEEE papers"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Review my dataset description. I say 'a large dataset' with no size, source, or split.",
+      "must_include": ["dataset", "reproducib", "split"],
+      "must_not_include": ["dataset details are unnecessary"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "latexmk -pdf produces an empty bibliography even though refs.bib exists. Diagnose.",
+      "must_include": ["latexmk", "bibtex", "\\bibliography"],
+      "must_not_include": ["empty bibliography is expected behavior"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "My abstract contains a citation [12] and an equation. Is that allowed in IEEE abstracts?",
+      "must_include": ["abstract", "citation", "self-contained"],
+      "must_not_include": ["abstracts must contain citations"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Give a full IEEE structural review: order of sections from title to references.",
+      "must_include": ["abstract", "Introduction", "related work", "Conclusion", "references"],
+      "must_not_include": ["references come before the introduction"],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "My method has 7 magic-number hyperparameters with no justification. Reproducibility review.",
+      "must_include": ["reproducib", "hyperparameter", "baseline"],
+      "must_not_include": ["magic numbers need no explanation"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Reviewer 2 says results are 'not significant'. My p-value is 0.21. How do I respond honestly?",
+      "must_include": ["significance", "p-value", "claim"],
+      "must_not_include": ["p=0.21 proves significance"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Check that my IEEE keywords (index terms) block exists and is formatted.",
+      "must_include": ["index terms", "keyword", "IEEEtran"],
+      "must_not_include": ["index terms are not used in IEEE"],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "I overfull-hbox warnings everywhere. URLs run into the margin. Fix the LaTeX.",
+      "must_include": ["overfull", "url", "\\url"],
+      "must_not_include": ["overfull hboxes improve readability"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Audit my baselines: I compare only against my own prior paper. Is that enough?",
+      "must_include": ["baseline", "related work", "comparison"],
+      "must_not_include": ["self-comparison is a complete baseline set"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "My conclusion just restates the abstract verbatim. Review it.",
+      "must_include": ["Conclusion", "future work", "clarity"],
+      "must_not_include": ["copying the abstract is best practice"],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "Do a clarity pass on my contributions paragraph; it's one 200-word sentence.",
+      "must_include": ["clarity", "contribution", "sentence"],
+      "must_not_include": ["run-on sentences aid clarity"],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "Review statistical rigor: I report accuracy to 4 decimals from a single 50-sample test set.",
+      "must_include": ["error bars", "statistic", "sample"],
+      "must_not_include": ["four decimals from 50 samples is rigorous"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "My related work is a flat list of summaries with no synthesis. Improve it.",
+      "must_include": ["related work", "synthesis", "novelty"],
+      "must_not_include": ["a list of summaries is ideal related work"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "How do I make latexmk auto-run bibtex and rebuild until references resolve?",
+      "must_include": ["latexmk", "bibtex", "-pdf"],
+      "must_not_include": ["latexmk cannot run bibtex"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Figure 3 is referenced before Figure 2 in the text. Is that an issue?",
+      "must_include": ["figure", "reference", "order"],
+      "must_not_include": ["figures must be cited out of order"],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "Full peer-review of attached draft: produce Critical/High/Med/Low with rationale.",
+      "must_include": ["Critical", "High", "Med", "Low", "rationale"],
+      "must_not_include": ["no issues found, ship it"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "My evaluation metric (F1) is never defined and the dataset is imbalanced. Review.",
+      "must_include": ["metric", "F1", "dataset"],
+      "must_not_include": ["metrics need no definition"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Reproducibility: I provide no code link and no environment versions. Severity?",
+      "must_include": ["reproducib", "code", "High"],
+      "must_not_include": ["omitting code is fine for reproducibility"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "I use \\cite{} with author-year format. Does that match IEEEtran numbered style?",
+      "must_include": ["IEEEtran", "numbered", "\\cite"],
+      "must_not_include": ["IEEEtran uses author-year by default"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Check my paper for proper use of \\section vs \\subsection nesting and numbering.",
+      "must_include": ["\\section", "\\subsection", "numbering"],
+      "must_not_include": ["subsections must precede sections"],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "My claims rely on a figure with a truncated y-axis starting at 90%. Honesty review.",
+      "must_include": ["claim", "y-axis", "figure"],
+      "must_not_include": ["truncated axes are always appropriate"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Audit error bars across all plots and confirm whether n is reported for each.",
+      "must_include": ["error bars", "sample size", "report"],
+      "must_not_include": ["sample size never needs reporting"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "My title is 30 words and a full sentence. Review against IEEE title conventions.",
+      "must_include": ["title", "concise", "clarity"],
+      "must_not_include": ["longer titles are required by IEEE"],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "I have a Methods, then Results, but no Experimental Setup section. Structural review.",
+      "must_include": ["experimental setup", "reproducib", "dataset"],
+      "must_not_include": ["experimental setup is never needed"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Build error: '! LaTeX Error: File IEEEtran.cls not found'. How do I resolve it?",
+      "must_include": ["IEEEtran", "package", "install"],
+      "must_not_include": ["rename article.cls to IEEEtran.cls"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Review whether my contribution claims are testable and supported by experiments.",
+      "must_include": ["claim", "evidence", "contribution"],
+      "must_not_include": ["claims need no experimental support"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "My related work omits the two most-cited papers in this subfield. How serious?",
+      "must_include": ["related work", "Critical", "novelty"],
+      "must_not_include": ["missing key prior work is trivial"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Check my LaTeX for \\label/\\ref consistency; some refs show '??' in the PDF.",
+      "must_include": ["\\label", "\\ref", "latexmk"],
+      "must_not_include": ["'??' in output is correct"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "I report only the best of 20 runs as my result. Statistical honesty review.",
+      "must_include": ["claim", "error bars", "statistic"],
+      "must_not_include": ["cherry-picking the best run is standard"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Review the abstract: it promises results not present anywhere in the paper.",
+      "must_include": ["abstract", "claim", "evidence"],
+      "must_not_include": ["abstracts may promise absent results"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Does my paper need an Author Contributions or Data Availability statement for IEEE?",
+      "must_include": ["data availability", "reproducib", "statement"],
+      "must_not_include": ["IEEE forbids data availability statements"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "My figures use red/green to distinguish lines. Accessibility/formatting review.",
+      "must_include": ["figure", "colorblind", "accessib"],
+      "must_not_include": ["red/green is the most accessible pairing"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Compile warns 'There were undefined references' on first pass only. Is that normal?",
+      "must_include": ["latexmk", "bibtex", "pass"],
+      "must_not_include": ["this warning always indicates failure"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Give me a complete IEEE peer-review checklist I can run on any draft.",
+      "must_include": ["checklist", "abstract", "baseline", "reproducib", "related work"],
+      "must_not_include": ["a checklist is unnecessary"],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "My method claims generalization but tests on one dataset. Review claim scope.",
+      "must_include": ["claim", "dataset", "generaliz"],
+      "must_not_include": ["one dataset proves generalization"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Should my appendix material be in the main text? IEEE page limit is 6 pages.",
+      "must_include": ["page limit", "appendix", "IEEEtran"],
+      "must_not_include": ["page limits do not apply to IEEE"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Review whether my baselines were tuned as carefully as my method (fair comparison).",
+      "must_include": ["baseline", "fair", "comparison"],
+      "must_not_include": ["untuned baselines make a fair comparison"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "My captions are above figures and below tables. Which is correct for IEEE?",
+      "must_include": ["caption", "figure", "table"],
+      "must_not_include": ["caption placement is irrelevant"],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "Reviewer flags 'unclear notation'. I reuse symbol theta for 3 things. Clarity review.",
+      "must_include": ["notation", "clarity", "symbol"],
+      "must_not_include": ["reusing symbols improves clarity"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Check whether my numerical claims in the abstract match Table II exactly.",
+      "must_include": ["abstract", "claim", "Table"],
+      "must_not_include": ["abstract numbers need not match tables"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "My runtime experiments lack hardware specs. Reproducibility severity and fix.",
+      "must_include": ["reproducib", "hardware", "Med"],
+      "must_not_include": ["hardware specs are never relevant"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "How do I clean stale latexmk aux files that are causing wrong references?",
+      "must_include": ["latexmk", "-c", "aux"],
+      "must_not_include": ["aux files must never be deleted"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Review: my related work section comes after the conclusion. Reorganize?",
+      "must_include": ["related work", "Introduction", "order"],
+      "must_not_include": ["related work belongs after the conclusion"],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "My results table has identical numbers for two different methods. Likely error?",
+      "must_include": ["table", "evidence", "verify"],
+      "must_not_include": ["identical results across methods is expected"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Do a top-to-bottom review and output the single most Critical blocker first.",
+      "must_include": ["Critical", "baseline", "reproducib"],
+      "must_not_include": ["there are never any blockers"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "My equations overflow the column width in two-column IEEEtran. Fix options?",
+      "must_include": ["IEEEtran", "two-column", "equation"],
+      "must_not_include": ["equation overflow is not fixable"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Review whether I distinguish correlation from causation in my findings.",
+      "must_include": ["claim", "causation", "evidence"],
+      "must_not_include": ["correlation always implies causation"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "I have no Introduction-Contributions bullet list. Should I add explicit contributions?",
+      "must_include": ["contribution", "Introduction", "clarity"],
+      "must_not_include": ["stating contributions is discouraged"],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "Check BibTeX: several entries lack 'year' and 'pages'. How does IEEEtran render those?",
+      "must_include": ["bibtex", "IEEEtran", "year"],
+      "must_not_include": ["missing fields never affect output"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "My significance test uses a t-test but data is clearly non-normal. Review stats.",
+      "must_include": ["t-test", "statistic", "assumption"],
+      "must_not_include": ["t-tests require no assumptions"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Review figure captions for whether each is interpretable without the body text.",
+      "must_include": ["caption", "figure", "self-contained"],
+      "must_not_include": ["captions should depend on body text"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "My paper mixes US and UK spelling and tense. Light copyedit/clarity pass.",
+      "must_include": ["clarity", "consistent", "spelling"],
+      "must_not_include": ["mixed spelling is preferred in IEEE"],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "Assess novelty against this list of 4 prior works I think I beat. Be skeptical.",
+      "must_include": ["novelty", "related work", "claim"],
+      "must_not_include": ["assume novelty without comparison"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "latexmk hangs at 'Rerun to get cross-references right' forever. What's wrong?",
+      "must_include": ["latexmk", "cross-reference", "\\label"],
+      "must_not_include": ["infinite reruns are normal and harmless"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "My results claim 'significant improvement' with no test and overlapping error bars.",
+      "must_include": ["significance", "error bars", "claim"],
+      "must_not_include": ["overlapping error bars prove significance"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Review my Methods for whether random seeds and data splits are documented.",
+      "must_include": ["reproducib", "seed", "split"],
+      "must_not_include": ["seeds are irrelevant to reproducibility"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "My double-column figure uses figure* but still sits in one column. Fix.",
+      "must_include": ["figure*", "IEEEtran", "column"],
+      "must_not_include": ["figure* always spans one column"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Produce a findings list AND tell me which items block submission vs nice-to-have.",
+      "must_include": ["Critical", "Low", "baseline", "block"],
+      "must_not_include": ["everything is nice-to-have"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "My related work cites only my own group's papers. Reviewer-bias concern?",
+      "must_include": ["related work", "citation", "bias"],
+      "must_not_include": ["self-citation only is unbiased"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Check whether my abstract states the problem, approach, and quantified result.",
+      "must_include": ["abstract", "result", "contribution"],
+      "must_not_include": ["abstracts should omit results"],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "I trained on the test set by accident; numbers look amazing. How do I report honestly?",
+      "must_include": ["claim", "test set", "Critical"],
+      "must_not_include": ["training on test data is acceptable"],
+      "difficulty": "edge"
+    },
+    {
+      "prompt": "Review: my error bars are SEM but I describe them as 'standard deviation' in the caption.",
+      "must_include": ["error bars", "caption", "consistent"],
+      "must_not_include": ["SEM and standard deviation are interchangeable labels"],
+      "difficulty": "edge"
+    },
+    {
+      "prompt": "My anonymized submission still has \\author{John Doe, MIT} in the source. De-anon risk?",
+      "must_include": ["anonym", "author", "double-blind"],
+      "must_not_include": ["author names are required in blind review"],
+      "difficulty": "edge"
+    },
+    {
+      "prompt": "Reviewer asks for an ImageNet baseline but my task is tabular regression. Valid pushback?",
+      "must_include": ["baseline", "appropriate", "task"],
+      "must_not_include": ["every paper must include an ImageNet baseline"],
+      "difficulty": "edge"
+    },
+    {
+      "prompt": "My BibTeX has a duplicate key 'smith2020' for two papers; only one renders. Diagnose.",
+      "must_include": ["bibtex", "duplicate", "key"],
+      "must_not_include": ["duplicate keys are silently merged correctly"],
+      "difficulty": "edge"
+    },
+    {
+      "prompt": "I report 99.9% accuracy but the dataset has a known 5% label error rate. Plausibility?",
+      "must_include": ["claim", "evidence", "label"],
+      "must_not_include": ["accuracy above label noise is fully plausible"],
+      "difficulty": "edge"
+    },
+    {
+      "prompt": "A reviewer wants error bars on a deterministic algorithm with no randomness. Reasonable?",
+      "must_include": ["error bars", "deterministic", "variance"],
+      "must_not_include": ["deterministic methods always need error bars"],
+      "difficulty": "edge"
+    },
+    {
+      "prompt": "My contribution claims hold only under an assumption buried in a footnote. Review honesty.",
+      "must_include": ["claim", "assumption", "clarity"],
+      "must_not_include": ["hiding assumptions in footnotes is fine"],
+      "difficulty": "edge"
+    },
+    {
+      "prompt": "Two figures share the same \\label, so all \\ref point to the second. Find and fix.",
+      "must_include": ["\\label", "\\ref", "duplicate"],
+      "must_not_include": ["duplicate labels resolve correctly"],
+      "difficulty": "edge"
+    },
+    {
+      "prompt": "My related-work table claims competitors 'cannot scale' but I never tested them. Fair?",
+      "must_include": ["related work", "claim", "evidence"],
+      "must_not_include": ["untested claims about competitors are acceptable"],
+      "difficulty": "edge"
+    },
+    {
+      "prompt": "I want to submit a 'fine' paper without you reading it. Just confirm it's ready.",
+      "must_include": ["review", "checklist", "claim"],
+      "must_not_include": ["the paper is fine, submit it"],
+      "difficulty": "edge"
+    },
+    {
+      "prompt": "Reproducibility: my code repo is private and will stay private post-publication. Severity?",
+      "must_include": ["reproducib", "code", "High"],
+      "must_not_include": ["private code fully satisfies reproducibility"],
+      "difficulty": "edge"
+    },
+    {
+      "prompt": "My p-values are all exactly 0.000. Is reporting them that way correct for IEEE?",
+      "must_include": ["p-value", "statistic", "report"],
+      "must_not_include": ["p=0.000 is the correct way to report significance"],
+      "difficulty": "edge"
+    }
+  ]
+}

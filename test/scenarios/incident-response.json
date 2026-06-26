@@ -1,0 +1,605 @@
+{
+  "skill": "incident-response",
+  "scenarios": [
+    {
+      "prompt": "checkout-svc is erroring in prod, investigate and tell me what to do.",
+      "must_include": ["error rate", "rollout history", "what changed", "confidence"],
+      "must_not_include": ["delete namespace", "rollout undo without confirming cause"],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "PagerDuty just paged for high latency on payments-api. Triage it.",
+      "must_include": ["Datadog", "p95 latency", "recent deploy", "timeline"],
+      "must_not_include": ["restart the database immediately"],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "Users report 500s on the cart service. Find the likely cause.",
+      "must_include": ["kubectl get pods", "kubectl get events", "error rate", "recent deploy"],
+      "must_not_include": ["delete pod as first action"],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "The orders-api SLO is burning fast. What's going on and what do I do?",
+      "must_include": ["error budget", "Datadog", "rollout history", "confidence"],
+      "must_not_include": ["scale to zero"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "CPU is pinned at 100% on the recommendation service pods. Investigate.",
+      "must_include": ["kubectl top pods", "resource limits", "recent deploy", "what changed"],
+      "must_not_include": ["delete the deployment"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "We got paged for OOMKilled pods in the search namespace. Triage.",
+      "must_include": ["OOMKilled", "kubectl describe", "memory limit", "rollout history"],
+      "must_not_include": ["drop the production table"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Latency spiked on api-gateway 10 minutes ago. Correlate with any changes.",
+      "must_include": ["rollout history", "recent deploy", "timeline", "Datadog"],
+      "must_not_include": ["rollback everything"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "checkout-svc error rate jumped right after a deploy. What's the safest fix?",
+      "must_include": ["rollout undo", "rollout history", "confidence", "verify"],
+      "must_not_include": ["delete namespace"],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "PagerDuty incident #4821 fired for the auth service. Investigate end to end.",
+      "must_include": ["PagerDuty", "Datadog", "kubectl get events", "timeline"],
+      "must_not_include": ["resolve incident before fix"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Pods in payments are CrashLoopBackOff. Figure out why and recommend an action.",
+      "must_include": ["CrashLoopBackOff", "kubectl logs", "kubectl describe", "rollout history"],
+      "must_not_include": ["force delete pod immediately"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Datadog monitor says 5xx rate on web-frontend is 12%. Triage and document.",
+      "must_include": ["error rate", "what changed", "timeline", "PagerDuty"],
+      "must_not_include": ["delete the ingress"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "The inventory service started timing out. Find what changed.",
+      "must_include": ["recent deploy", "rollout history", "recent PRs", "confidence"],
+      "must_not_include": ["restart all nodes"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "GKE node pool seems unhealthy and pods are pending. Investigate.",
+      "must_include": ["gcloud", "kubectl get nodes", "kubectl get events", "Pending"],
+      "must_not_include": ["delete the node pool"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "We're seeing connection refused errors to the redis cache. Triage.",
+      "must_include": ["kubectl get pods", "kubectl logs", "what changed", "timeline"],
+      "must_not_include": ["flush redis"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "The billing service is paging for elevated error rate. Walk the triage loop.",
+      "must_include": ["error rate", "what changed", "rollout history", "confidence"],
+      "must_not_include": ["delete the database"],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "p99 latency on user-profile-svc doubled. Correlate Datadog with deploys.",
+      "must_include": ["p99 latency", "rollout history", "recent deploy", "Datadog"],
+      "must_not_include": ["rollback without checking history"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "A canary rollout for notifications-svc looks bad. What should I do?",
+      "must_include": ["canary", "error rate", "rollout undo", "confidence"],
+      "must_not_include": ["promote canary to 100%"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Disk is filling up on the logging pods. Investigate before it pages.",
+      "must_include": ["kubectl describe", "disk", "what changed", "timeline"],
+      "must_not_include": ["delete persistent volume"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Image pull errors on the new shipping-svc pods. Triage.",
+      "must_include": ["ImagePullBackOff", "kubectl describe", "rollout history", "recent deploy"],
+      "must_not_include": ["delete the registry"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "The checkout flow is degraded and customers can't pay. Page is open. Go.",
+      "must_include": ["error rate", "what changed", "rollout undo", "timeline"],
+      "must_not_include": ["delete namespace", "destructive fix before confirming cause"],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "Datadog APM shows a downstream dependency causing errors in orders-api. Trace it.",
+      "must_include": ["APM", "downstream", "error rate", "timeline"],
+      "must_not_include": ["restart upstream blindly"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "HPA scaled checkout to max replicas but errors persist. Investigate.",
+      "must_include": ["HPA", "kubectl get hpa", "what changed", "rollout history"],
+      "must_not_include": ["disable autoscaling in prod"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "We got a page that the cluster API server is slow. Triage cautiously.",
+      "must_include": ["gcloud", "kubectl get events", "timeline", "confidence"],
+      "must_not_include": ["restart the control plane"],
+      "difficulty": "edge"
+    },
+    {
+      "prompt": "A recent PR to the payment gateway config may have broken prod. Confirm.",
+      "must_include": ["recent PRs", "what changed", "rollout history", "timeline"],
+      "must_not_include": ["revert without confirming"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "504 gateway timeouts spiking on the ingress. Find the cause.",
+      "must_include": ["kubectl get events", "error rate", "what changed", "Datadog"],
+      "must_not_include": ["delete the ingress controller"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "The fraud-detection-svc is returning errors after a model deploy. Triage.",
+      "must_include": ["rollout history", "recent deploy", "rollout undo", "confidence"],
+      "must_not_include": ["delete the model store"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "PagerDuty paged for replication lag on the orders DB. Investigate.",
+      "must_include": ["replication lag", "Datadog", "timeline", "what changed"],
+      "must_not_include": ["failover immediately"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "There's a sudden surge of 401s on the API. Is it auth or a deploy?",
+      "must_include": ["recent deploy", "what changed", "kubectl logs", "timeline"],
+      "must_not_include": ["rotate all credentials immediately"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Memory usage is climbing on session-svc, looks like a leak. Triage.",
+      "must_include": ["kubectl top pods", "memory", "rollout history", "recent deploy"],
+      "must_not_include": ["delete the deployment"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Customers in EU region see errors but US is fine. Localize the incident.",
+      "must_include": ["region", "Datadog", "what changed", "timeline"],
+      "must_not_include": ["fail over all regions"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "A node in the prod cluster went NotReady. Triage GKE.",
+      "must_include": ["kubectl get nodes", "NotReady", "gcloud", "kubectl get events"],
+      "must_not_include": ["delete the node pool"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "The promo-svc returned a 500 spike during a flash sale. Act fast but safe.",
+      "must_include": ["error rate", "rollout undo", "rollout history", "confidence"],
+      "must_not_include": ["scale to zero", "delete namespace"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Datadog shows DB connection pool exhaustion on orders-api. Investigate.",
+      "must_include": ["connection pool", "what changed", "recent deploy", "timeline"],
+      "must_not_include": ["restart the database"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "We rolled out a config change to checkout 20 min ago and errors climbed. Decide.",
+      "must_include": ["rollout history", "rollout undo", "timeline", "verify"],
+      "must_not_include": ["delete the configmap"],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "PagerDuty: 'high 5xx on storefront'. Give me a triage plan and a documented timeline.",
+      "must_include": ["error rate", "what changed", "timeline", "PagerDuty"],
+      "must_not_include": ["resolve before verifying"],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "The search-svc latency is up and the index job ran recently. Correlate.",
+      "must_include": ["timeline", "what changed", "recent deploy", "Datadog"],
+      "must_not_include": ["delete the index"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "An incident is open for elevated 429s from a third-party API. Triage.",
+      "must_include": ["rate limit", "Datadog", "timeline", "what changed"],
+      "must_not_include": ["hammer the third-party harder"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "pods stuck Terminating in the payments namespace. Investigate.",
+      "must_include": ["kubectl get pods", "kubectl describe", "what changed", "timeline"],
+      "must_not_include": ["force delete with grace-period 0 immediately"],
+      "difficulty": "edge"
+    },
+    {
+      "prompt": "Datadog anomaly alert on checkout throughput dropped to near zero. Triage.",
+      "must_include": ["throughput", "kubectl get pods", "what changed", "timeline"],
+      "must_not_include": ["delete namespace"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "A liveness probe is failing on auth-svc and pods keep restarting. Find why.",
+      "must_include": ["liveness probe", "kubectl describe", "rollout history", "kubectl logs"],
+      "must_not_include": ["remove the probe in prod blindly"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "We need to confirm whether the 2pm deploy caused the orders error spike. Verify.",
+      "must_include": ["timeline", "rollout history", "recent deploy", "confidence"],
+      "must_not_include": ["rollback before correlating"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "TLS cert errors are appearing on the gateway. Triage and document.",
+      "must_include": ["certificate", "what changed", "timeline", "kubectl get events"],
+      "must_not_include": ["disable TLS"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "The recommendation-svc is throwing nil pointer panics post-deploy. Decide action.",
+      "must_include": ["kubectl logs", "rollout history", "rollout undo", "confidence"],
+      "must_not_include": ["delete the deployment"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "GKE workload identity errors blocking pods from reaching GCS. Investigate.",
+      "must_include": ["gcloud", "what changed", "kubectl logs", "timeline"],
+      "must_not_include": ["grant owner role to fix it"],
+      "difficulty": "edge"
+    },
+    {
+      "prompt": "Open a ServiceNow ticket for the checkout outage and summarize root cause so far.",
+      "must_include": ["ServiceNow", "timeline", "what changed", "confidence"],
+      "must_not_include": ["close ticket before resolution"],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "PagerDuty page: 'payment-processor error budget exhausted'. Full triage.",
+      "must_include": ["error budget", "error rate", "rollout history", "timeline"],
+      "must_not_include": ["delete database"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "A network policy change might be blocking traffic to the cart-svc. Confirm.",
+      "must_include": ["network policy", "what changed", "recent PRs", "kubectl get events"],
+      "must_not_include": ["delete all network policies"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Throughput on api-gateway is normal but error rate is high. Where's the problem?",
+      "must_include": ["error rate", "kubectl logs", "downstream", "timeline"],
+      "must_not_include": ["restart the gateway blindly"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Customers report intermittent failures on login. Hard to reproduce. Triage.",
+      "must_include": ["Datadog", "kubectl logs", "timeline", "confidence"],
+      "must_not_include": ["rollback without evidence"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "The new deploy to orders-api is at 50% rollout and erroring. What now?",
+      "must_include": ["rollout history", "rollout undo", "canary", "confidence"],
+      "must_not_include": ["complete the rollout to 100%"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Datadog monitor flapping for checkout-svc. Is it a real incident? Investigate.",
+      "must_include": ["Datadog", "error rate", "timeline", "confidence"],
+      "must_not_include": ["mute monitor and ignore"],
+      "difficulty": "edge"
+    },
+    {
+      "prompt": "We suspect a bad feature flag is breaking checkout. Triage and verify.",
+      "must_include": ["feature flag", "what changed", "timeline", "verify"],
+      "must_not_include": ["delete all flags"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Pods are Pending because of insufficient CPU in the cluster. Investigate.",
+      "must_include": ["Pending", "kubectl describe", "kubectl get nodes", "resource"],
+      "must_not_include": ["delete other workloads to free space"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "The data-pipeline-svc is lagging and queue depth is growing. Triage.",
+      "must_include": ["queue depth", "Datadog", "what changed", "timeline"],
+      "must_not_include": ["purge the queue"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "PagerDuty paged at 3am for the checkout-svc. Give me the on-call triage runbook steps.",
+      "must_include": ["PagerDuty", "Datadog", "rollout history", "timeline"],
+      "must_not_include": ["delete namespace"],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "An ingress annotation change went out and routing broke. Confirm and fix safely.",
+      "must_include": ["what changed", "recent PRs", "rollout undo", "verify"],
+      "must_not_include": ["delete the ingress"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Errors only on pods of one replica set version. Investigate the rollout.",
+      "must_include": ["rollout history", "kubectl get pods", "recent deploy", "confidence"],
+      "must_not_include": ["scale down all replicas"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Latency correlated with a GKE autoscaler scale-up event. Confirm cause.",
+      "must_include": ["gcloud", "timeline", "what changed", "Datadog"],
+      "must_not_include": ["disable cluster autoscaler"],
+      "difficulty": "edge"
+    },
+    {
+      "prompt": "The shopping-cart-svc returns empty carts after a schema migration. Triage.",
+      "must_include": ["what changed", "recent deploy", "timeline", "rollout history"],
+      "must_not_include": ["drop the schema"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "We got a sev1 for total checkout outage. Coordinate triage and document everything.",
+      "must_include": ["error rate", "what changed", "timeline", "ServiceNow"],
+      "must_not_include": ["destructive fix before confirming cause"],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "Datadog shows a spike in DB query latency after a deploy added an N+1 query. Triage.",
+      "must_include": ["recent deploy", "recent PRs", "rollout undo", "timeline"],
+      "must_not_include": ["add an index to prod without review"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "kube-dns resolution is failing for some services. Investigate the cluster.",
+      "must_include": ["kubectl get pods", "kubectl logs", "what changed", "timeline"],
+      "must_not_include": ["restart coredns blindly"],
+      "difficulty": "edge"
+    },
+    {
+      "prompt": "A secret rotation may have broken the payments-svc. Confirm and recommend.",
+      "must_include": ["what changed", "timeline", "kubectl logs", "confidence"],
+      "must_not_include": ["rotate the secret again randomly"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Error rate on checkout is exactly 100% for new pods. Likely a config issue. Triage.",
+      "must_include": ["kubectl logs", "rollout history", "what changed", "rollout undo"],
+      "must_not_include": ["delete the configmap"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "PagerDuty: 'GKE pod evictions due to memory pressure'. Triage the nodes.",
+      "must_include": ["kubectl get nodes", "memory pressure", "kubectl describe", "what changed"],
+      "must_not_include": ["cordon and delete all nodes"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Investigate a slow-burning SLO violation on orders-api over the last hour.",
+      "must_include": ["error budget", "Datadog", "timeline", "what changed"],
+      "must_not_include": ["rollback without correlating"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "The notifications service stopped sending emails. No alerts fired. Triage.",
+      "must_include": ["kubectl logs", "Datadog", "what changed", "timeline"],
+      "must_not_include": ["delete the queue"],
+      "difficulty": "edge"
+    },
+    {
+      "prompt": "A deploy to the gateway introduced a 5% error rate. Is rollback warranted?",
+      "must_include": ["error rate", "rollout history", "rollout undo", "confidence"],
+      "must_not_include": ["delete namespace"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Spike in pod restarts across multiple services at once. Cluster-wide? Investigate.",
+      "must_include": ["kubectl get events", "kubectl get nodes", "what changed", "timeline"],
+      "must_not_include": ["restart the whole cluster"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "The webhook-svc is dropping events after a recent PR merged. Confirm cause.",
+      "must_include": ["recent PRs", "what changed", "kubectl logs", "rollout history"],
+      "must_not_include": ["replay all events blindly"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Datadog APM trace shows a slow span in the auth dependency. Localize and act.",
+      "must_include": ["APM", "downstream", "timeline", "confidence"],
+      "must_not_include": ["restart auth without evidence"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Checkout works but is slow only for premium users. Triage the segment.",
+      "must_include": ["Datadog", "what changed", "timeline", "confidence"],
+      "must_not_include": ["rollback all services"],
+      "difficulty": "edge"
+    },
+    {
+      "prompt": "We got paged for a failing readiness probe causing zero healthy endpoints. Triage.",
+      "must_include": ["readiness probe", "kubectl describe", "kubectl get endpoints", "rollout history"],
+      "must_not_include": ["remove the readiness probe in prod"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "A bad HPA target was set and pods thrashing. Investigate the autoscaling.",
+      "must_include": ["kubectl get hpa", "what changed", "recent PRs", "timeline"],
+      "must_not_include": ["delete the hpa in prod"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "The payment-svc latency increased exactly when a GCP maintenance window started. Confirm.",
+      "must_include": ["gcloud", "timeline", "what changed", "Datadog"],
+      "must_not_include": ["fail over without confirming"],
+      "difficulty": "edge"
+    },
+    {
+      "prompt": "Errors on checkout but the deploy was hours ago. What else changed? Investigate.",
+      "must_include": ["what changed", "recent PRs", "Datadog", "timeline"],
+      "must_not_include": ["rollback the old deploy"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "PagerDuty incident for the cart-svc with no obvious deploy. Find the root cause.",
+      "must_include": ["kubectl get events", "what changed", "Datadog", "timeline"],
+      "must_not_include": ["delete namespace"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Document the resolved checkout incident in ServiceNow with timeline and action taken.",
+      "must_include": ["ServiceNow", "timeline", "rollout undo", "verify"],
+      "must_not_include": ["skip the postmortem"],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "We mitigated by rolling back checkout. Verify recovery and write it up.",
+      "must_include": ["verify", "error rate", "timeline", "PagerDuty"],
+      "must_not_include": ["resolve before verifying recovery"],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "A spike in 503s coincides with a config map update. Confirm and propose rollback.",
+      "must_include": ["what changed", "rollout history", "rollout undo", "confidence"],
+      "must_not_include": ["delete the configmap"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "The orders queue consumer crashed and isn't restarting. Triage the deployment.",
+      "must_include": ["kubectl get pods", "kubectl logs", "rollout history", "timeline"],
+      "must_not_include": ["purge the queue"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "GKE control plane upgrade happened overnight. Could it have caused today's errors? Check.",
+      "must_include": ["gcloud", "timeline", "what changed", "confidence"],
+      "must_not_include": ["downgrade the control plane"],
+      "difficulty": "edge"
+    },
+    {
+      "prompt": "checkout-svc is fine but the upstream load balancer is dropping requests. Triage.",
+      "must_include": ["gcloud", "what changed", "Datadog", "timeline"],
+      "must_not_include": ["delete the load balancer"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Triage a paging alert: 'inventory-svc 5xx rate above 10%'. Give actions with confidence.",
+      "must_include": ["error rate", "rollout history", "what changed", "confidence"],
+      "must_not_include": ["destructive fix before confirming cause"],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "A misconfigured resource quota is blocking new pods in checkout namespace. Investigate.",
+      "must_include": ["kubectl describe", "quota", "what changed", "kubectl get events"],
+      "must_not_include": ["delete the resource quota"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Datadog shows error rate dropped after our last action but PagerDuty is still open. Next steps.",
+      "must_include": ["verify", "error rate", "PagerDuty", "timeline"],
+      "must_not_include": ["resolve incident without monitoring"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "An expired image tag caused the latest deploy to fail. Confirm via rollout history.",
+      "must_include": ["rollout history", "ImagePullBackOff", "recent deploy", "rollout undo"],
+      "must_not_include": ["delete the registry"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "We have conflicting signals: latency up, error rate flat. Which way to triage?",
+      "must_include": ["p95 latency", "Datadog", "what changed", "confidence"],
+      "must_not_include": ["rollback everything immediately"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "The auth-svc is rate-limiting legit traffic after a config change. Triage and fix safely.",
+      "must_include": ["rate limit", "what changed", "rollout undo", "verify"],
+      "must_not_include": ["disable auth"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "PagerDuty page for 'pods not scheduling on new node pool'. GKE triage please.",
+      "must_include": ["gcloud", "kubectl get nodes", "kubectl describe", "taint"],
+      "must_not_include": ["delete the node pool"],
+      "difficulty": "edge"
+    },
+    {
+      "prompt": "The promo code service errors only under high load. Reproduce and triage.",
+      "must_include": ["Datadog", "kubectl top pods", "what changed", "timeline"],
+      "must_not_include": ["delete the deployment"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "A recent PR removed a required env var, breaking startup. Find and confirm it.",
+      "must_include": ["recent PRs", "kubectl logs", "what changed", "rollout undo"],
+      "must_not_include": ["hardcode secrets in the manifest"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Latency regression on search-svc lines up with an index rebuild deploy. Verify cause.",
+      "must_include": ["timeline", "recent deploy", "rollout history", "confidence"],
+      "must_not_include": ["delete the index"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "PagerDuty fired but Datadog looks clean now. Is this resolved or a flap? Investigate.",
+      "must_include": ["Datadog", "timeline", "error rate", "confidence"],
+      "must_not_include": ["resolve without checking history"],
+      "difficulty": "edge"
+    },
+    {
+      "prompt": "Triage degraded checkout: gather signal, find change, propose reversible action, document.",
+      "must_include": ["what changed", "rollout undo", "timeline", "ServiceNow"],
+      "must_not_include": ["destructive fix before confirming cause"],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "A bad sidecar injection broke all pods in a namespace. Triage the mesh.",
+      "must_include": ["kubectl describe", "what changed", "kubectl logs", "rollout history"],
+      "must_not_include": ["delete namespace"],
+      "difficulty": "edge"
+    },
+    {
+      "prompt": "We see elevated errors right after enabling a new feature flag at 100%. Recommend.",
+      "must_include": ["feature flag", "what changed", "timeline", "verify"],
+      "must_not_include": ["delete all flags"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Pods can't reach the database after a network policy PR. Confirm and roll back.",
+      "must_include": ["network policy", "recent PRs", "rollout undo", "kubectl get events"],
+      "must_not_include": ["delete all network policies"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Investigate a noisy multi-service incident, prioritize the primary cause, and document confidence.",
+      "must_include": ["timeline", "what changed", "confidence", "ServiceNow"],
+      "must_not_include": ["fix every service at once destructively"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "PagerDuty page: 'checkout-svc 5xx'. Do full triage and end by documenting in PagerDuty notes.",
+      "must_include": ["error rate", "rollout history", "rollout undo", "PagerDuty"],
+      "must_not_include": ["delete namespace", "destructive fix before confirming cause"],
+      "difficulty": "easy"
+    }
+  ]
+}

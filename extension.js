@@ -614,8 +614,23 @@ async function readDocument(p) {
 const pendingApprovals = {};
 let approvalSeq = 0;
 let postToWebview = null; // set when the chat view resolves
+
+// Harmless, read-only commands that never mutate state — auto-approved so the agent
+// doesn't nag for `echo`, `ls`, `kubectl get`, `git status`, etc. (most of investigation).
+function isSafeCommand(cmd) {
+  const c = String(cmd || "").trim();
+  if (!c) return false;
+  // Reject anything that writes, redirects, substitutes, or chains into the unknown.
+  if (/[>`]|\$\(|\|\s*(sh|bash|tee|xargs)|\b(rm|mv|cp|dd|mkfs|chmod|chown|kill|tee|truncate|shred|sed\s+-i|apply|delete|destroy|install|uninstall|commit|push|reset|checkout)\b/.test(c)) return false;
+  if (/^echo\b/.test(c) && !/[>|]/.test(c)) return true; // pure echo (no redirect) — always safe
+  const SAFE = /^(pwd|whoami|hostname|date|uptime|id|uname|arch|env|printenv|which|type|echo|ls|ll|cat|head|tail|wc|file|stat|du|df|free|ps|top|dig|nslookup|host|getent|ip|ss|netstat|lsof|find|grep|egrep|fgrep|rg|sort|uniq|cut|awk|tree|sleep|true|jq|yq|column|basename|dirname|realpath|readlink)\b/;
+  const SAFE_SUB = /^(git\s+(status|log|diff|show|branch|remote|describe|rev-parse|ls-files|config\s+--get|tag|blame)|kubectl\s+(get|describe|logs|top|version|api-resources|explain|config\s+(view|current-context|get-contexts)|cluster-info)|docker\s+(ps|images|logs|version|inspect|stats)|helm\s+(list|status|get|version|history)|terraform\s+(plan|show|validate|version|output|state\s+list)|npm\s+(ls|list|view|outdated|--version)|yarn\s+(list|--version)|pip\s+(list|show|--version|freeze)|node\s+--version|python3?\s+(--version|-V)|go\s+version|cargo\s+--version|aws\s+\S+\s+(describe|list|get)|gcloud\s+\S+\s+(describe|list))\b/;
+  return SAFE.test(c) || SAFE_SUB.test(c);
+}
+
 async function approveCommand(command, what) {
   if (cfg().autoApprove) return true;
+  if (!what && isSafeCommand(command)) return true; // read-only command — no friction
   if (!postToWebview) return false; // no chat view → DENY (don't hang the run on an uncancellable modal)
   // inline Approve/Deny card in the chat panel
   return new Promise((resolve) => {
@@ -892,7 +907,7 @@ async function callModelHTTP(messages, onDelta) {
   try {
     const res = await fetch(c.endpoint + "/chat/completions", {
       method: "POST", headers, signal: ctrl.signal,
-      body: JSON.stringify({ model: await localModelName(), messages, tools: getTools(), tool_choice: "auto", temperature: c.temperature, stream: !!onDelta, max_tokens: 4096, think: false, enable_thinking: false }),
+      body: JSON.stringify({ model: await localModelName(), messages, tools: getTools(), tool_choice: "auto", temperature: c.temperature, stream: !!onDelta, max_tokens: 4096, think: false, enable_thinking: false, keep_alive: "30m" }),
     });
     if (!res.ok) throw new Error("HTTP " + res.status + ": " + (await res.text()).slice(0, 300));
     // Stream when asked (real servers); fall back to JSON when there's no readable body (tests/non-stream).
@@ -1519,6 +1534,25 @@ function activate(context) {
   );
   // connect configured MCP servers in the background (tools appear as mcp_<server>_<tool>)
   mcpStartAll().then((names) => { if (names.length && provider.view) provider.view.webview.postMessage({ type: "status", text: "MCP connected: " + names.join(", ") }); }).catch(() => {});
+  // WARMUP: preload the local model so the FIRST message isn't a 20s+ cold start (loading a 17GB model).
+  // Fire-and-forget; keep_alive holds it in memory for 30m. Local provider only.
+  warmupModel().catch(() => {});
+}
+
+// Preload the local model into memory so the first real request is warm.
+async function warmupModel() {
+  const c = cfg();
+  if (curProvider() !== "local" || !c.endpoint) return;
+  const ctrl = new AbortController();
+  const to = setTimeout(() => ctrl.abort(), 5000);
+  try {
+    await fetch(c.endpoint + "/chat/completions", {
+      method: "POST", headers: { "Content-Type": "application/json", ...(c.apiKey ? { Authorization: "Bearer " + c.apiKey } : {}) },
+      signal: ctrl.signal,
+      body: JSON.stringify({ model: await localModelName(), messages: [{ role: "user", content: "hi" }], max_tokens: 1, stream: false, keep_alive: "30m" }),
+    });
+  } catch (_) { /* model not up yet — first real call will load it */ }
+  finally { clearTimeout(to); }
 }
 function deactivate() {
   for (const s of servers.slice()) killServer(s);

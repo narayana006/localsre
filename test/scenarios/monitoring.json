@@ -1,0 +1,605 @@
+{
+  "skill": "monitoring",
+  "scenarios": [
+    {
+      "prompt": "Read the last 50 log entries from my current GCP project.",
+      "must_include": ["gcloud logging read", "--limit", "50"],
+      "must_not_include": ["gcloud logs read", "kubectl logs"],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "Show me ERROR severity logs from the last hour.",
+      "must_include": ["gcloud logging read", "severity>=ERROR", "timestamp"],
+      "must_not_include": ["gcloud logging tail --severity", "level=error"],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "Tail logs in real time for the project.",
+      "must_include": ["gcloud logging tail", "--project"],
+      "must_not_include": ["gcloud logging read --tail", "gcloud logs tail"],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "Read logs for a Cloud Run service named checkout-api.",
+      "must_include": ["gcloud logging read", "resource.type=\"cloud_run_revision\"", "checkout-api"],
+      "must_not_include": ["resource.type=cloud_run", "kubectl logs"],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "List all metric descriptors available in the project.",
+      "must_include": ["gcloud", "metrics-descriptors", "list"],
+      "must_not_include": ["gcloud monitoring metrics describe", "metric-descriptors"],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "Show the JSON output of logs filtered to a specific Compute Engine instance instance-1.",
+      "must_include": ["gcloud logging read", "resource.type=\"gce_instance\"", "--format=json"],
+      "must_not_include": ["resource.type=compute", "--output json"],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "List all alert policies in the project.",
+      "must_include": ["gcloud alpha monitoring policies list", "--project"],
+      "must_not_include": ["gcloud monitoring alert-policies list", "gcloud alerts list"],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "List all notification channels.",
+      "must_include": ["gcloud alpha monitoring channels list", "--project"],
+      "must_not_include": ["gcloud monitoring notification-channels list", "gcloud channels list"],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "List all uptime checks configured.",
+      "must_include": ["gcloud", "uptime", "list"],
+      "must_not_include": ["gcloud monitoring uptime-checks get", "gcloud uptime ls"],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "List the log-based metrics in my project.",
+      "must_include": ["gcloud logging metrics list", "--project"],
+      "must_not_include": ["gcloud monitoring metrics list", "gcloud logging metric list"],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "Read logs and only show the timestamp and textPayload fields in a table.",
+      "must_include": ["gcloud logging read", "--format=", "timestamp"],
+      "must_not_include": ["awk '{print", "jq -r"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Read logs from the last 30 minutes filtering on a JSON payload field status equal to 500.",
+      "must_include": ["gcloud logging read", "jsonPayload.status=500", "timestamp"],
+      "must_not_include": ["jsonPayload.status==500", "json.status:500"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Create a log-based counter metric named error_count that counts ERROR logs.",
+      "must_include": ["gcloud logging metrics create", "error_count", "severity>=ERROR"],
+      "must_not_include": ["gcloud monitoring metrics create", "--type=gauge"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Create a distribution log-based metric that extracts request latency from jsonPayload.latency.",
+      "must_include": ["gcloud logging metrics create", "--value-extractor", "jsonPayload.latency"],
+      "must_not_include": ["gcloud monitoring metrics create", "--distribution-type=histogram"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Delete the log-based metric named old_error_count.",
+      "must_include": ["gcloud logging metrics delete", "old_error_count"],
+      "must_not_include": ["gcloud logging metrics remove", "--force"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Update the description of the log-based metric error_count.",
+      "must_include": ["gcloud logging metrics update", "error_count", "--description"],
+      "must_not_include": ["gcloud logging metrics modify", "gcloud monitoring"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Create an alert policy from a policy file policy.json.",
+      "must_include": ["gcloud alpha monitoring policies create", "--policy-from-file", "policy.json"],
+      "must_not_include": ["gcloud monitoring policies create --file", "--config"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Show me a policy.json for a CPU utilization threshold alert above 80% for 5 minutes.",
+      "must_include": ["conditionThreshold", "comparison", "COMPARISON_GT", "\"duration\""],
+      "must_not_include": ["COMPARISON_GREATER", "thresholdValue: 0.8 //"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "What does the comparison field accept in a conditionThreshold? Give the value for greater-than.",
+      "must_include": ["comparison", "COMPARISON_GT"],
+      "must_not_include": ["COMPARISON_GREATER_THAN", "GREATER"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Build an alert policy JSON that aggregates time series by ALIGN_MEAN over 60s.",
+      "must_include": ["aggregations", "ALIGN_MEAN", "alignmentPeriod"],
+      "must_not_include": ["ALIGN_AVERAGE", "alignment_period"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Add a combiner to my alert policy so any condition triggers it.",
+      "must_include": ["combiner", "OR"],
+      "must_not_include": ["combiner: ANY", "combineMode"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Attach a notification channel to a policy in the JSON file.",
+      "must_include": ["notificationChannels", "projects/", "notificationChannels/"],
+      "must_not_include": ["notification_channels", "channelIds"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Delete an alert policy by ID. Be careful.",
+      "must_include": ["gcloud alpha monitoring policies delete", "confirm"],
+      "must_not_include": ["--quiet without"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Describe a specific alert policy by its full resource name.",
+      "must_include": ["gcloud alpha monitoring policies describe", "projects/"],
+      "must_not_include": ["gcloud monitoring policies get", "gcloud alerts describe"],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "Update an existing alert policy from an edited policy.json.",
+      "must_include": ["gcloud alpha monitoring policies update", "--policy-from-file"],
+      "must_not_include": ["gcloud monitoring policies replace", "--patch-file"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Create an email notification channel for sre@example.com.",
+      "must_include": ["gcloud alpha monitoring channels create", "--type=email", "--channel-labels"],
+      "must_not_include": ["--type email-address", "--email="],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Delete a notification channel by ID, with confirmation.",
+      "must_include": ["gcloud alpha monitoring channels delete", "confirm"],
+      "must_not_include": ["--quiet without", "gcloud channels rm"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Create an uptime check for https://example.com root path.",
+      "must_include": ["gcloud", "uptime", "create"],
+      "must_not_include": ["gcloud monitoring uptime add", "--protocol=PING"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Query time series for CPU utilization using the Monitoring API.",
+      "must_include": ["timeSeries", "compute.googleapis.com/instance/cpu/utilization", "monitoring.googleapis.com"],
+      "must_not_include": ["gcloud monitoring timeseries get", "metrics.list"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Use a curl call to list time series from the Monitoring API v3.",
+      "must_include": ["monitoring.googleapis.com/v3/projects", "timeSeries", "Authorization: Bearer"],
+      "must_not_include": ["monitoring.googleapis.com/v1/", "api-key="],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "What metric type identifies Cloud Run request count?",
+      "must_include": ["run.googleapis.com/request_count", "metric.type"],
+      "must_not_include": ["cloudrun.request.count", "run/requests"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Read logs containing the substring 'OutOfMemory' across all resources.",
+      "must_include": ["gcloud logging read", "OutOfMemory"],
+      "must_not_include": ["grep OutOfMemory", "--contains"],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "Read logs and freshness-limit the read so it doesn't scan old entries; last 10 minutes only.",
+      "must_include": ["gcloud logging read", "--freshness", "timestamp"],
+      "must_not_include": ["--max-age", "--since"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Read logs from a specific log name 'cloudaudit.googleapis.com/activity'.",
+      "must_include": ["gcloud logging read", "logName", "cloudaudit.googleapis.com%2Factivity"],
+      "must_not_include": ["--log=", "logname:"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Tail logs filtered to severity WARNING and above for a GKE workload.",
+      "must_include": ["gcloud logging tail", "severity>=WARNING", "resource.type=\"k8s_container\""],
+      "must_not_include": ["gcloud logging read --tail", "resource.type=gke"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Describe a single metric descriptor for compute CPU utilization.",
+      "must_include": ["metrics-descriptors describe", "compute.googleapis.com/instance/cpu/utilization"],
+      "must_not_include": ["metric-descriptors describe", "gcloud monitoring metric describe"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Create an alert policy JSON that uses a MQL or PromQL condition instead of conditionThreshold.",
+      "must_include": ["conditionMonitoringQueryLanguage", "query"],
+      "must_not_include": ["conditionMQL", "conditionPromql:"],
+      "difficulty": "edge"
+    },
+    {
+      "prompt": "In policy.json, set the trigger to fire when count of violating time series is at least 1.",
+      "must_include": ["trigger", "count"],
+      "must_not_include": ["triggerCount", "minViolations"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Add documentation content to an alert policy so responders see a runbook link.",
+      "must_include": ["documentation", "content", "mimeType"],
+      "must_not_include": ["runbook:", "docs:"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Disable an alert policy temporarily without deleting it.",
+      "must_include": ["gcloud alpha monitoring policies update", "--no-enabled"],
+      "must_not_include": ["--disable", "--enabled=false-only"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Re-enable a previously disabled alert policy.",
+      "must_include": ["gcloud alpha monitoring policies update", "--enabled"],
+      "must_not_include": ["--enable", "--activate"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Read logs for the last 1 hour, ordered oldest first.",
+      "must_include": ["gcloud logging read", "--order=asc", "timestamp"],
+      "must_not_include": ["--sort=asc", "--ascending"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Read only 5 log entries and show full JSON payload.",
+      "must_include": ["gcloud logging read", "--limit=5", "--format=json"],
+      "must_not_include": ["--limit 5 --json", "--count=5"],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "Filter logs to a particular trace ID for distributed tracing.",
+      "must_include": ["gcloud logging read", "trace"],
+      "must_not_include": ["traceId:", "--trace="],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Create a notification channel of type Slack.",
+      "must_include": ["gcloud alpha monitoring channels create", "--type=slack", "--channel-labels"],
+      "must_not_include": ["--type slack-webhook", "--slack-url="],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Create a PagerDuty notification channel.",
+      "must_include": ["gcloud alpha monitoring channels create", "--type=pagerduty"],
+      "must_not_include": ["--type=pager-duty", "--pd-key="],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Describe a notification channel by ID to see its labels.",
+      "must_include": ["gcloud alpha monitoring channels describe", "projects/"],
+      "must_not_include": ["gcloud monitoring channels get", "gcloud channels show"],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "Update the display name of a notification channel.",
+      "must_include": ["gcloud alpha monitoring channels update", "--display-name"],
+      "must_not_include": ["gcloud channels rename", "--name="],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Build a policy.json condition that alerts when the absence of data lasts 5 minutes.",
+      "must_include": ["conditionAbsent", "duration", "aggregations"],
+      "must_not_include": ["conditionThreshold", "conditionMissing"],
+      "difficulty": "edge"
+    },
+    {
+      "prompt": "Set the threshold alert to use a 95th percentile aligner.",
+      "must_include": ["aggregations", "ALIGN_PERCENTILE_95", "alignmentPeriod"],
+      "must_not_include": ["ALIGN_P95", "ALIGN_95TH"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Set a cross-series reducer to sum across all instances in the aggregation.",
+      "must_include": ["crossSeriesReducer", "REDUCE_SUM"],
+      "must_not_include": ["crossSeriesReduce", "REDUCE_SUM_ACROSS"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Group time series by resource label zone in the aggregation.",
+      "must_include": ["groupByFields", "resource.label.zone"],
+      "must_not_include": ["groupBy:", "resource.zone"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Read logs but exclude entries from a noisy log named 'requests'.",
+      "must_include": ["gcloud logging read", "logName!=", "requests"],
+      "must_not_include": ["--exclude", "NOT logName ="],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Read audit logs for who deleted a GCS bucket in the last day.",
+      "must_include": ["gcloud logging read", "cloudaudit.googleapis.com", "storage.buckets.delete"],
+      "must_not_include": ["gcloud storage audit", "gsutil logging"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Show the metric descriptor list filtered to logging.googleapis.com user metrics.",
+      "must_include": ["metrics-descriptors list", "--filter", "logging.googleapis.com/user"],
+      "must_not_include": ["metric-descriptors list", "--query"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Create a metric threshold alert policy entirely via flags (no JSON file) for high memory.",
+      "must_include": ["gcloud alpha monitoring policies create", "--condition-threshold-value", "--condition-filter"],
+      "must_not_include": ["--threshold=", "--policy-from-file"],
+      "difficulty": "edge"
+    },
+    {
+      "prompt": "What is the resource.type for a Kubernetes container in logs?",
+      "must_include": ["resource.type", "k8s_container"],
+      "must_not_include": ["gke_container", "kubernetes_container"],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "What is the resource.type for a Cloud SQL database?",
+      "must_include": ["resource.type", "cloudsql_database"],
+      "must_not_include": ["cloud_sql", "sql_database"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Create an uptime check for a TCP port 443 on host db.example.com.",
+      "must_include": ["gcloud", "uptime", "create"],
+      "must_not_include": ["--protocol=PING", "--check-type=icmp"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Delete an uptime check by ID with confirmation prompt.",
+      "must_include": ["gcloud", "uptime", "delete", "confirm"],
+      "must_not_include": ["--quiet without", "uptime rm"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Describe an uptime check configuration by ID.",
+      "must_include": ["gcloud", "uptime", "describe"],
+      "must_not_include": ["uptime get", "uptime show"],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "Query the Monitoring API for the request latency distribution metric of a load balancer.",
+      "must_include": ["timeSeries", "loadbalancing.googleapis.com", "monitoring.googleapis.com"],
+      "must_not_include": ["lb.latency.get", "gcloud lb metrics"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Provide an interval start and end time for a timeSeries.list call.",
+      "must_include": ["interval.startTime", "interval.endTime", "timeSeries"],
+      "must_not_include": ["start_time=", "interval.start="],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Set the alignment period to 300s and per-series aligner to rate for a counter metric.",
+      "must_include": ["aggregation.alignmentPeriod", "ALIGN_RATE"],
+      "must_not_include": ["ALIGN_DELTA_RATE", "alignment=300"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Read logs across multiple projects using a log scope or specifying projects.",
+      "must_include": ["gcloud logging read", "--project"],
+      "must_not_include": ["--all-projects", "--projects="],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Read logs from a specific resource label, e.g. namespace_name = production.",
+      "must_include": ["gcloud logging read", "resource.labels.namespace_name=\"production\""],
+      "must_not_include": ["resource.label.namespace", "labels.namespace:"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Create a log-based metric with label extractors to break down by status code.",
+      "must_include": ["gcloud logging metrics create", "--config-from-file"],
+      "must_not_include": ["--labels=", "--extract-label"],
+      "difficulty": "edge"
+    },
+    {
+      "prompt": "What HTTP method and endpoint creates an alert policy via REST?",
+      "must_include": ["POST", "monitoring.googleapis.com/v3/projects", "alertPolicies"],
+      "must_not_include": ["PUT", "/v1/alertPolicies"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Patch an alert policy via REST to change only the threshold.",
+      "must_include": ["PATCH", "updateMask", "alertPolicies/"],
+      "must_not_include": ["PUT alertPolicies", "fieldMask="],
+      "difficulty": "edge"
+    },
+    {
+      "prompt": "Set a policy.json comparison to less-than for a low-traffic alert.",
+      "must_include": ["comparison", "COMPARISON_LT", "conditionThreshold"],
+      "must_not_include": ["COMPARISON_LESS", "COMPARISON_LESS_THAN"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Read logs filtered by HTTP request status >= 400 from httpRequest field.",
+      "must_include": ["gcloud logging read", "httpRequest.status>=400"],
+      "must_not_include": ["httpRequest.status>400 //", "http.status:400"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Create an alert policy that notifies on log-based metric error_count exceeding 10/min.",
+      "must_include": ["conditionThreshold", "logging.googleapis.com/user/error_count", "comparison"],
+      "must_not_include": ["conditionLogMatch only", "metric/error_count"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Create a log-match (log alerting) policy that fires on any matching log entry.",
+      "must_include": ["conditionMatchedLog", "filter"],
+      "must_not_include": ["conditionLogMatch", "conditionLog:"],
+      "difficulty": "edge"
+    },
+    {
+      "prompt": "List alert policies and show only display names in a table.",
+      "must_include": ["gcloud alpha monitoring policies list", "--format", "displayName"],
+      "must_not_include": ["--columns=", "name.display"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Filter the alert policies list to enabled policies only.",
+      "must_include": ["gcloud alpha monitoring policies list", "--filter", "enabled=true"],
+      "must_not_include": ["--enabled-only", "--state=enabled"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Read logs for failed Cloud Build steps in the last 6 hours.",
+      "must_include": ["gcloud logging read", "resource.type=\"build\""],
+      "must_not_include": ["resource.type=cloudbuild", "gcloud builds log --filter"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Read logs from a sink-excluded perspective: confirm what filter a sink uses (do not create a sink).",
+      "must_include": ["gcloud logging sinks describe", "filter"],
+      "must_not_include": ["gcloud logging sinks create", "gcloud logging read --sink"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Query time series and limit results to 10 series via pageSize.",
+      "must_include": ["timeSeries", "pageSize", "monitoring.googleapis.com"],
+      "must_not_include": ["limit=10", "maxResults"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "What's the metric.type for memory utilization of a GCE VM via the ops agent?",
+      "must_include": ["agent.googleapis.com/memory/percent_used", "metric.type"],
+      "must_not_include": ["compute.googleapis.com/memory", "gce/memory/used"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Create an SMS notification channel for an on-call phone.",
+      "must_include": ["gcloud alpha monitoring channels create", "--type=sms", "--channel-labels"],
+      "must_not_include": ["--type=text", "--phone="],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Create a webhook notification channel with a token auth label.",
+      "must_include": ["gcloud alpha monitoring channels create", "--type=webhook_tokenauth"],
+      "must_not_include": ["--type=webhook", "--webhook-url="],
+      "difficulty": "edge"
+    },
+    {
+      "prompt": "Verify a notification channel (send verification) for email.",
+      "must_include": ["gcloud alpha monitoring channels verify", "projects/"],
+      "must_not_include": ["gcloud channels confirm", "--send-verification"],
+      "difficulty": "edge"
+    },
+    {
+      "prompt": "Read logs filtered to a specific GKE pod by labels pod_name.",
+      "must_include": ["gcloud logging read", "resource.labels.pod_name", "k8s_container"],
+      "must_not_include": ["resource.labels.pod=", "pod_name:"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Read logs from the past day and write to a local file as JSON.",
+      "must_include": ["gcloud logging read", "--format=json", "--freshness=1d"],
+      "must_not_include": ["--output-file", "--since=1d"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Show me a full policy.json with conditionThreshold, comparison, duration, aggregations, combiner and notificationChannels all present.",
+      "must_include": ["conditionThreshold", "comparison", "aggregations", "combiner", "notificationChannels"],
+      "must_not_include": ["conditionThresholds", "combineMode"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Set the alert duration to 0s so it fires immediately on any breach.",
+      "must_include": ["conditionThreshold", "\"duration\"", "0s"],
+      "must_not_include": ["duration: 0 //", "durationSeconds"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "What does combiner AND_WITH_MATCHING_RESOURCE do, and how is it set?",
+      "must_include": ["combiner", "AND_WITH_MATCHING_RESOURCE"],
+      "must_not_include": ["AND_MATCHING", "combiner: AND_RESOURCE"],
+      "difficulty": "edge"
+    },
+    {
+      "prompt": "Read logs and filter on a regular-expression match in textPayload.",
+      "must_include": ["gcloud logging read", "textPayload=~"],
+      "must_not_include": ["textPayload~", "regex:"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "List time series for a metric but only return headers (no points) to discover series.",
+      "must_include": ["timeSeries", "view=HEADERS"],
+      "must_not_include": ["view=METADATA", "headersOnly=true"],
+      "difficulty": "edge"
+    },
+    {
+      "prompt": "Create an uptime check and then list it to confirm.",
+      "must_include": ["gcloud", "uptime", "create", "list"],
+      "must_not_include": ["uptime add", "uptime ls"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "How do I reference the project in a Monitoring API resource name? Show the name prefix.",
+      "must_include": ["projects/", "monitoring.googleapis.com/v3/projects"],
+      "must_not_include": ["project_id=", "/v3/project/"],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "Update an alert policy to add a second notification channel without removing the first.",
+      "must_include": ["gcloud alpha monitoring policies update", "--add-notification-channels"],
+      "must_not_include": ["--notification-channels=replace", "--append-channel"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Remove a notification channel from an alert policy.",
+      "must_include": ["gcloud alpha monitoring policies update", "--remove-notification-channels"],
+      "must_not_include": ["--delete-notification-channels", "--detach-channel"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Read logs and filter to a time range with explicit timestamps.",
+      "must_include": ["gcloud logging read", "timestamp>=", "timestamp<="],
+      "must_not_include": ["--start-time", "--end-time"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "List metric descriptors and grep for pubsub to find subscription backlog metric.",
+      "must_include": ["metrics-descriptors list", "pubsub.googleapis.com"],
+      "must_not_include": ["metric-descriptors list", "pubsub/backlog/list"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Provide the exact metric.type for Pub/Sub oldest unacked message age.",
+      "must_include": ["pubsub.googleapis.com/subscription/oldest_unacked_message_age", "metric.type"],
+      "must_not_include": ["pubsub/oldest_message", "subscription.backlog.age"],
+      "difficulty": "edge"
+    },
+    {
+      "prompt": "Delete an alert policy non-interactively in a script but make intent explicit.",
+      "must_include": ["gcloud alpha monitoring policies delete", "--quiet"],
+      "must_not_include": ["rm -rf policy", "policies remove"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Create a notification channel from a JSON descriptor file.",
+      "must_include": ["gcloud alpha monitoring channels create", "--channel-content-from-file"],
+      "must_not_include": ["--from-file", "--channel-file="],
+      "difficulty": "edge"
+    },
+    {
+      "prompt": "Read logs for IAM permission-denied errors in the last 12 hours.",
+      "must_include": ["gcloud logging read", "PERMISSION_DENIED"],
+      "must_not_include": ["403 only", "gcloud iam logs"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Set up an alert on uptime check failures using the uptime check passed metric.",
+      "must_include": ["conditionThreshold", "monitoring.googleapis.com/uptime_check/check_passed", "comparison"],
+      "must_not_include": ["uptime/failed", "uptime.check.status"],
+      "difficulty": "edge"
+    }
+  ]
+}

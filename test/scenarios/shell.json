@@ -1,0 +1,605 @@
+{
+  "skill": "shell",
+  "scenarios": [
+    {
+      "prompt": "Find all files named exactly 'config.yaml' under the current directory.",
+      "must_include": ["find .", "-name", "config.yaml"],
+      "must_not_include": ["rm -rf", "-name=config.yaml"],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "Recursively search for the string 'TODO' in all files under src/ and show line numbers.",
+      "must_include": ["grep -rn", "TODO", "src/"],
+      "must_not_include": ["grep -L", "rm -rf"],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "Use ripgrep to find every occurrence of the word 'panic' in the repo.",
+      "must_include": ["rg", "panic"],
+      "must_not_include": ["grep -rn", "rg --made-up"],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "Count how many lines in access.log contain the status code 404.",
+      "must_include": ["grep", "404", "access.log", "-c"],
+      "must_not_include": ["wc -c", "rm -rf"],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "List all files modified in the last 24 hours under the current directory.",
+      "must_include": ["find .", "-mtime", "-1"],
+      "must_not_include": ["-mtime 1d", "rm -rf"],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "Find files larger than 100MB under /var/log.",
+      "must_include": ["find", "/var/log", "-size", "+100M"],
+      "must_not_include": ["-size 100MB", "rm -rf"],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "Show the 10 largest files/directories in the current directory sorted by size.",
+      "must_include": ["du", "sort", "head"],
+      "must_not_include": ["df -h /", "rm -rf"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Check disk usage of all mounted filesystems in human-readable form.",
+      "must_include": ["df -h"],
+      "must_not_include": ["du -sh", "df --made-up"],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "Print the total size of the ./node_modules directory in human-readable form.",
+      "must_include": ["du -sh", "node_modules"],
+      "must_not_include": ["df -h", "rm -rf"],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "Extract the second column from a CSV file data.csv.",
+      "must_include": ["cut", "-d", "-f2", "data.csv"],
+      "must_not_include": ["-f 2nd", "rm -rf"],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "Using awk, print the first and third whitespace-separated fields of report.txt.",
+      "must_include": ["awk", "$1", "$3", "report.txt"],
+      "must_not_include": ["$0", "awk -f1"],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "Sum the values in the third column of numbers.txt using awk.",
+      "must_include": ["awk", "$3", "sum", "END"],
+      "must_not_include": ["+= $4", "rm -rf"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Count unique IP addresses in the first column of access.log, sorted by frequency.",
+      "must_include": ["awk", "sort", "uniq -c", "sort -rn"],
+      "must_not_include": ["uniq -d", "rm -rf"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Replace all occurrences of 'foo' with 'bar' in file.txt in place on macOS.",
+      "must_include": ["sed -i ''", "s/foo/bar/g", "file.txt"],
+      "must_not_include": ["sed -i s", "sed --in-place"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Replace 'foo' with 'bar' in place in file.txt on a GNU/Linux system.",
+      "must_include": ["sed -i", "s/foo/bar/g", "file.txt"],
+      "must_not_include": ["sed -i ''", "rm -rf"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Delete all blank lines from a file and print to stdout.",
+      "must_include": ["sed", "/^$/d"],
+      "must_not_include": ["sed -d", "rm -rf"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Pretty-print a JSON file response.json.",
+      "must_include": ["jq", ".", "response.json"],
+      "must_not_include": ["jq --pretty", "rm -rf"],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "Extract the 'name' field from each object in a JSON array in users.json.",
+      "must_include": ["jq", ".[]", ".name", "users.json"],
+      "must_not_include": ["jq .name[]", "rm -rf"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "From a curl call to an API, extract the .data.id field with jq.",
+      "must_include": ["curl", "jq", ".data.id"],
+      "must_not_include": ["jq .data,id", "rm -rf"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Filter a JSON array in items.json to objects where .price > 100 using jq.",
+      "must_include": ["jq", "select", ".price > 100", "items.json"],
+      "must_not_include": ["where(", "rm -rf"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "List all running processes containing the word 'nginx'.",
+      "must_include": ["ps", "grep", "nginx"],
+      "must_not_include": ["pkill nginx", "rm -rf"],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "Find the PID of a process named 'redis-server' using pgrep.",
+      "must_include": ["pgrep", "redis-server"],
+      "must_not_include": ["pkill", "rm -rf"],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "Show which process is listening on TCP port 8080.",
+      "must_include": ["lsof -i", ":8080"],
+      "must_not_include": ["kill 8080", "rm -rf"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Gracefully terminate the process with PID 12345.",
+      "must_include": ["kill", "12345"],
+      "must_not_include": ["kill -9 1", "rm -rf"],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "Force-kill all processes matching 'python manage.py runserver'.",
+      "must_include": ["pkill", "-9", "runserver"],
+      "must_not_include": ["kill -9 -1", "rm -rf /"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Show the top 5 processes by memory usage.",
+      "must_include": ["ps", "sort", "head"],
+      "must_not_include": ["kill", "rm -rf"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Create a gzipped tar archive of the ./project directory.",
+      "must_include": ["tar czf", "project"],
+      "must_not_include": ["tar xzf", "rm -rf"],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "Extract a gzipped tarball backup.tar.gz into the current directory.",
+      "must_include": ["tar", "xzf", "backup.tar.gz"],
+      "must_not_include": ["tar czf", "rm -rf"],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "List the contents of an archive release.tar.gz without extracting it.",
+      "must_include": ["tar", "tzf", "release.tar.gz"],
+      "must_not_include": ["tar xzf", "unzip"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Create a zip archive of the docs/ folder including subfolders.",
+      "must_include": ["zip -r", "docs"],
+      "must_not_include": ["tar czf", "rm -rf"],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "Sync the ./local directory to a remote host at /srv/app preserving permissions.",
+      "must_include": ["rsync -av", "./local", ":/srv/app"],
+      "must_not_include": ["rsync --delete-everything", "rm -rf"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Mirror a directory to a backup location, deleting files at the destination that no longer exist in the source.",
+      "must_include": ["rsync -av", "--delete"],
+      "must_not_include": ["rm -rf /", "--made-up"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Find all .log files and delete them, handling filenames with spaces safely.",
+      "must_include": ["find .", "-name", "*.log", "-print0", "xargs -0"],
+      "must_not_include": ["rm -rf /", "xargs rm -rf"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Find all .tmp files older than 7 days and remove them.",
+      "must_include": ["find", "-name", "*.tmp", "-mtime +7", "-delete"],
+      "must_not_include": ["rm -rf /", "-mtime 7d"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Download a URL and save it to output.html using curl.",
+      "must_include": ["curl", "-o", "output.html"],
+      "must_not_include": ["wget -O-", "rm -rf"],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "Make a GET request and show only the HTTP response headers.",
+      "must_include": ["curl", "-I"],
+      "must_not_include": ["curl --headers-only", "rm -rf"],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "Resolve the A records for example.com using dig in short form.",
+      "must_include": ["dig", "example.com", "+short"],
+      "must_not_include": ["nslookup +short", "dig --short"],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "Test whether TCP port 443 on example.com is reachable using netcat.",
+      "must_include": ["nc", "-z", "example.com", "443"],
+      "must_not_include": ["nc --test", "rm -rf"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "POST a JSON body to an API endpoint with curl setting the Content-Type header.",
+      "must_include": ["curl", "-X POST", "-H", "Content-Type: application/json"],
+      "must_not_include": ["--json-body", "rm -rf"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Show all listening TCP ports and the processes using them.",
+      "must_include": ["lsof -i", "-P", "LISTEN"],
+      "must_not_include": ["netstat --made-up", "rm -rf"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Find all files containing the word 'password' (case-insensitive) under /etc.",
+      "must_include": ["grep -rni", "password", "/etc"],
+      "must_not_include": ["grep -v", "rm -rf"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Search for lines NOT containing 'DEBUG' in app.log.",
+      "must_include": ["grep -v", "DEBUG", "app.log"],
+      "must_not_include": ["grep DEBUG", "rm -rf"],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "Show only the matching part of an email-like pattern in contacts.txt.",
+      "must_include": ["grep -oE", "contacts.txt"],
+      "must_not_include": ["grep -v", "rm -rf"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Find files modified more recently than reference file marker.txt.",
+      "must_include": ["find .", "-newer", "marker.txt"],
+      "must_not_include": ["-newermt", "rm -rf"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Find all empty directories under the current path.",
+      "must_include": ["find .", "-type d", "-empty"],
+      "must_not_include": ["-type f", "rm -rf"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Count the number of files (not directories) under the project tree.",
+      "must_include": ["find .", "-type f", "wc -l"],
+      "must_not_include": ["-type d", "rm -rf"],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "Replace tabs with commas in data.tsv and write to data.csv.",
+      "must_include": ["sed", "data.tsv", "data.csv"],
+      "must_not_include": ["sed -i ''", "rm -rf"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Print lines 50 through 100 of bigfile.txt.",
+      "must_include": ["sed", "-n", "50,100p", "bigfile.txt"],
+      "must_not_include": ["head -100", "rm -rf"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Print only the last 20 lines of a log file and follow new output.",
+      "must_include": ["tail", "-f", "-n 20"],
+      "must_not_include": ["head -f", "rm -rf"],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "Sort a file numerically and remove duplicate lines.",
+      "must_include": ["sort -n", "uniq", "-u"],
+      "must_not_include": ["sort -r only", "rm -rf"],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "Show the count of each distinct value in column 5 of events.csv.",
+      "must_include": ["cut -d", "-f5", "sort", "uniq -c"],
+      "must_not_include": ["uniq -f5", "rm -rf"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Find duplicate lines in names.txt.",
+      "must_include": ["sort", "uniq -d", "names.txt"],
+      "must_not_include": ["uniq -u", "rm -rf"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Using awk, print only lines where the second field is greater than 1000.",
+      "must_include": ["awk", "$2 > 1000"],
+      "must_not_include": ["$2 = 1000", "rm -rf"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Use awk with a comma field separator to print the last field of each line.",
+      "must_include": ["awk", "-F", "$NF"],
+      "must_not_include": ["$LAST", "rm -rf"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Convert a JSON object of key-value pairs in config.json to .env lines (KEY=value) with jq.",
+      "must_include": ["jq", "-r", "to_entries", "config.json"],
+      "must_not_include": ["jq --env", "rm -rf"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Get the length of a JSON array stored in list.json with jq.",
+      "must_include": ["jq", "length", "list.json"],
+      "must_not_include": ["jq .count", "rm -rf"],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "Sort a JSON array of numbers in nums.json ascending using jq.",
+      "must_include": ["jq", "sort", "nums.json"],
+      "must_not_include": ["sort -n", "rm -rf"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Extract unique values of the .country field across a JSON array using jq.",
+      "must_include": ["jq", "map(.country)", "unique"],
+      "must_not_include": ["uniq", "rm -rf"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Show open files held by process with PID 4242.",
+      "must_include": ["lsof", "-p", "4242"],
+      "must_not_include": ["kill 4242", "rm -rf"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Show CPU and memory usage of all processes in a snapshot, sorted by CPU.",
+      "must_include": ["ps", "aux", "sort"],
+      "must_not_include": ["kill", "rm -rf"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Find which process is using a file that is preventing unmount of /Volumes/Data.",
+      "must_include": ["lsof", "/Volumes/Data"],
+      "must_not_include": ["umount -f always", "rm -rf"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Send SIGHUP to a process named 'haproxy' to reload its config.",
+      "must_include": ["pkill", "-HUP", "haproxy"],
+      "must_not_include": ["-9", "rm -rf"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Archive logs/ into a tarball named logs-2026.tar.gz, but exclude any .gz files.",
+      "must_include": ["tar", "czf", "--exclude", "logs"],
+      "must_not_include": ["tar xzf", "rm -rf"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Extract just one file path/to/app.conf from archive bundle.tar.gz.",
+      "must_include": ["tar", "xzf", "bundle.tar.gz", "path/to/app.conf"],
+      "must_not_include": ["tar czf", "rm -rf"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Unzip archive.zip into a directory called extracted.",
+      "must_include": ["unzip", "archive.zip", "-d", "extracted"],
+      "must_not_include": ["tar xzf", "rm -rf"],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "Do a dry run of an rsync that would copy ./src to ./dst so I can preview changes.",
+      "must_include": ["rsync", "-av", "--dry-run", "./src", "./dst"],
+      "must_not_include": ["rm -rf", "--delete-everything"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "rsync over SSH from a remote server's /data to local ./data using a specific identity file.",
+      "must_include": ["rsync -av", "-e", "ssh", ":/data"],
+      "must_not_include": ["rm -rf", "scp -r --made-up"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Run 'gzip' on each .log file found, in parallel with up to 4 jobs, using xargs.",
+      "must_include": ["find .", "-name", "*.log", "xargs", "-P 4"],
+      "must_not_include": ["rm -rf", "xargs -0 rm"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Build a single line of space-separated PIDs from pgrep output and pass them to renice.",
+      "must_include": ["pgrep", "xargs", "renice"],
+      "must_not_include": ["kill -9", "rm -rf"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Search recursively but only inside .py files for the function 'def handle'.",
+      "must_include": ["grep -rn", "--include=*.py", "def handle"],
+      "must_not_include": ["--include *.js", "rm -rf"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Use ripgrep to search only Go files for 'context.Context'.",
+      "must_include": ["rg", "-t go", "context.Context"],
+      "must_not_include": ["--type py", "rm -rf"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Use ripgrep to list only the filenames that contain the string 'apiKey'.",
+      "must_include": ["rg", "-l", "apiKey"],
+      "must_not_include": ["grep -L", "rm -rf"],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "Show 3 lines of context before and after each match of 'ERROR' in server.log.",
+      "must_include": ["grep", "-C 3", "ERROR", "server.log"],
+      "must_not_include": ["-A 3 -B 3 -C 3", "rm -rf"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Find and print only files whose names match a glob *.bak under home, case-insensitively.",
+      "must_include": ["find", "-iname", "*.bak"],
+      "must_not_include": ["-name *.BAK only", "rm -rf"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Find all symlinks under the current directory.",
+      "must_include": ["find .", "-type l"],
+      "must_not_include": ["-type f", "rm -rf"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Change permissions of all .sh files under scripts/ to executable.",
+      "must_include": ["find", "scripts/", "-name", "*.sh", "chmod +x"],
+      "must_not_include": ["chmod 777 /", "rm -rf"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Print the number of CPU cores on macOS.",
+      "must_include": ["sysctl", "-n", "hw.ncpu"],
+      "must_not_include": ["nproc", "rm -rf"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Print the number of CPU cores on Linux.",
+      "must_include": ["nproc"],
+      "must_not_include": ["sysctl hw.ncpu", "rm -rf"],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "Watch a command's output refreshing every 2 seconds (note macOS may need coreutils).",
+      "must_include": ["watch", "-n 2"],
+      "must_not_include": ["watch --made-up", "rm -rf"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Show the difference between two files config.old and config.new side by side.",
+      "must_include": ["diff", "config.old", "config.new"],
+      "must_not_include": ["rm -rf", "diff --merge"],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "Compute the SHA-256 checksum of installer.dmg on macOS.",
+      "must_include": ["shasum", "-a 256", "installer.dmg"],
+      "must_not_include": ["sha256sum", "rm -rf"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Compute the SHA-256 checksum of installer.bin on Linux.",
+      "must_include": ["sha256sum", "installer.bin"],
+      "must_not_include": ["shasum -a 256", "rm -rf"],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "Tail a JSON-lines log and pretty-print each new line with jq as it arrives.",
+      "must_include": ["tail -f", "jq"],
+      "must_not_include": ["rm -rf", "jq --stream-broken"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Grep for an error in a gzipped log file without decompressing it to disk.",
+      "must_include": ["zgrep", "error"],
+      "must_not_include": ["gunzip -f log", "rm -rf"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Replace Windows CRLF line endings with Unix LF in script.sh in place on macOS.",
+      "must_include": ["sed -i ''", "script.sh"],
+      "must_not_include": ["sed -i s", "dos2unix --made-up"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Use awk to compute the average of all numbers in a single-column file values.txt.",
+      "must_include": ["awk", "sum", "NR", "END"],
+      "must_not_include": ["/ 0", "rm -rf"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Join two sorted files left.txt and right.txt on their first column.",
+      "must_include": ["join", "left.txt", "right.txt"],
+      "must_not_include": ["paste -d", "rm -rf"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Remove all carriage return characters from a file using tr.",
+      "must_include": ["tr", "-d", "greeting.txt"],
+      "must_not_include": ["tr -s", "rm -rf"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Find the top 3 most frequent words in essay.txt, ignoring case.",
+      "must_include": ["tr", "sort", "uniq -c", "head"],
+      "must_not_include": ["rm -rf", "uniq -d"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Show me which files changed between two directories dirA and dirB recursively.",
+      "must_include": ["diff -r", "dirA", "dirB"],
+      "must_not_include": ["rm -rf", "diff --merge"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Use curl to follow redirects and fail silently on HTTP errors, returning the body.",
+      "must_include": ["curl", "-L", "-f"],
+      "must_not_include": ["--no-redirect", "rm -rf"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Measure how long a request to an endpoint takes using curl's timing output.",
+      "must_include": ["curl", "-w", "time_total"],
+      "must_not_include": ["time curl --made-up", "rm -rf"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Find broken symlinks under the current directory tree.",
+      "must_include": ["find .", "-type l"],
+      "must_not_include": ["-type f", "rm -rf"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Pipe ps output to grep but exclude the grep process itself from results.",
+      "must_include": ["ps aux", "grep", "[n]"],
+      "must_not_include": ["grep -v grep is wrong", "rm -rf"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Copy a directory tree preserving symlinks, timestamps, and permissions with rsync, no remote.",
+      "must_include": ["rsync -a", "src/", "dst/"],
+      "must_not_include": ["--delete", "rm -rf"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Recursively replace 'http://' with 'https://' in all .html files in place on macOS.",
+      "must_include": ["find .", "-name", "*.html", "sed -i ''", "xargs"],
+      "must_not_include": ["sed -i s", "rm -rf"],
+      "difficulty": "edge"
+    },
+    {
+      "prompt": "Compress a directory and stream it over SSH to a remote host in one pipeline.",
+      "must_include": ["tar", "czf -", "ssh"],
+      "must_not_include": ["rm -rf", "scp -r --made-up"],
+      "difficulty": "edge"
+    },
+    {
+      "prompt": "Find files containing both 'foo' and 'bar' on the same line across the repo with ripgrep.",
+      "must_include": ["rg", "foo.*bar"],
+      "must_not_include": ["grep -F", "rm -rf"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Given a JSON API response, flatten nested .items[].tags arrays into a unique sorted list with jq.",
+      "must_include": ["jq", ".items[]", "unique", "-r"],
+      "must_not_include": ["sort -u", "rm -rf"],
+      "difficulty": "edge"
+    },
+    {
+      "prompt": "Count files per extension under the current tree and show the top extensions.",
+      "must_include": ["find .", "-type f", "sort", "uniq -c"],
+      "must_not_include": ["rm -rf", "uniq -d"],
+      "difficulty": "edge"
+    }
+  ]
+}

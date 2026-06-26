@@ -1,0 +1,1317 @@
+{
+  "skill": "gcp",
+  "scenarios": [
+    {
+      "prompt": "Deploy my container image us-docker.pkg.dev/acme/web/api:v3 to Cloud Run service 'api' in us-central1.",
+      "must_include": [
+        "gcloud run deploy",
+        "--image",
+        "--region"
+      ],
+      "must_not_include": [
+        "--allow-unauthenticated",
+        "gcloud cloudrun deploy"
+      ],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "How do I get kubectl credentials for my GKE cluster 'prod-cluster' in zone us-central1-a?",
+      "must_include": [
+        "gcloud container clusters get-credentials",
+        "prod-cluster",
+        "--zone"
+      ],
+      "must_not_include": [
+        "kubectl get-credentials",
+        "gcloud gke credentials"
+      ],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "Read the last 50 log entries for my Cloud Run service named 'checkout'.",
+      "must_include": [
+        "gcloud logging read",
+        "checkout",
+        "--limit"
+      ],
+      "must_not_include": [
+        "gcloud logs read",
+        "gcloud logging tail --forever"
+      ],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "Describe the Cloud Run service 'payments' in europe-west1.",
+      "must_include": [
+        "gcloud run services describe",
+        "payments",
+        "--region"
+      ],
+      "must_not_include": [
+        "gcloud run describe payments",
+        "--global"
+      ],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "List all my Pub/Sub topics in the current project.",
+      "must_include": [
+        "gcloud pubsub topics list",
+        "list"
+      ],
+      "must_not_include": [
+        "gcloud pubsub list topics",
+        "gcloud pub-sub"
+      ],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "Create a Pub/Sub topic called 'order-events'.",
+      "must_include": [
+        "gcloud pubsub topics create",
+        "order-events"
+      ],
+      "must_not_include": [
+        "gcloud pubsub create topic",
+        "--delete"
+      ],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "Run a BigQuery query to count rows in dataset analytics table events.",
+      "must_include": [
+        "bq query",
+        "--use_legacy_sql=false",
+        "count"
+      ],
+      "must_not_include": [
+        "bq run query",
+        "DROP TABLE"
+      ],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "I need to authenticate gcloud with my Google account interactively.",
+      "must_include": [
+        "gcloud auth login",
+        "auth login"
+      ],
+      "must_not_include": [
+        "gcloud login auth",
+        "gcloud auth signin"
+      ],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "Set up Application Default Credentials so my local code can call Google APIs.",
+      "must_include": [
+        "gcloud auth application-default login",
+        "application-default"
+      ],
+      "must_not_include": [
+        "gcloud auth adc login",
+        "export GOOGLE_APPLICATION_CREDENTIALS=password"
+      ],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "List my Cloud SQL instances.",
+      "must_include": [
+        "gcloud sql instances list",
+        "instances list"
+      ],
+      "must_not_include": [
+        "gcloud sql list instances",
+        "gcloud cloudsql instances"
+      ],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "List the IAM service accounts in my project.",
+      "must_include": [
+        "gcloud iam service-accounts list",
+        "service-accounts"
+      ],
+      "must_not_include": [
+        "gcloud iam list service-accounts",
+        "gcloud service-accounts list"
+      ],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "Which gcloud account am I currently logged in as?",
+      "must_include": [
+        "gcloud auth list",
+        "auth list"
+      ],
+      "must_not_include": [
+        "gcloud whoami",
+        "gcloud account show"
+      ],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "Set my active gcloud project to acme-prod-123.",
+      "must_include": [
+        "gcloud config set project",
+        "acme-prod-123"
+      ],
+      "must_not_include": [
+        "gcloud project set",
+        "gcloud set project"
+      ],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "Deploy a 2nd gen Cloud Function 'process-image' triggered by HTTP from source ./fn in us-central1, Python 3.12.",
+      "must_include": [
+        "gcloud functions deploy",
+        "--gen2",
+        "--runtime=python312",
+        "--trigger-http"
+      ],
+      "must_not_include": [
+        "--allow-unauthenticated",
+        "gcloud function deploy"
+      ],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Pull one message from Pub/Sub subscription 'order-sub' and acknowledge it.",
+      "must_include": [
+        "gcloud pubsub subscriptions pull",
+        "order-sub",
+        "--auto-ack"
+      ],
+      "must_not_include": [
+        "gcloud pubsub pull subscription",
+        "topics pull"
+      ],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Create a Pub/Sub subscription 'order-sub' on topic 'order-events' with a 60 second ack deadline.",
+      "must_include": [
+        "gcloud pubsub subscriptions create",
+        "order-sub",
+        "--topic",
+        "--ack-deadline"
+      ],
+      "must_not_include": [
+        "gcloud pubsub create subscription",
+        "--ack-timeout"
+      ],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Tail logs in real time for GKE workload in namespace 'web' filtering severity ERROR.",
+      "must_include": [
+        "gcloud logging tail",
+        "severity",
+        "ERROR"
+      ],
+      "must_not_include": [
+        "gcloud logging read --follow",
+        "kubectl logs --severity"
+      ],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Read logs from the last hour for Cloud Function 'process-image' in us-central1.",
+      "must_include": [
+        "gcloud logging read",
+        "process-image",
+        "--freshness"
+      ],
+      "must_not_include": [
+        "gcloud functions logs read --hours",
+        "--since=1h"
+      ],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Read logs only for resource type cloud_run_revision and service 'api', most recent 100, in JSON.",
+      "must_include": [
+        "gcloud logging read",
+        "resource.type=",
+        "cloud_run_revision",
+        "--format=json"
+      ],
+      "must_not_include": [
+        "--output=json",
+        "gcloud logs"
+      ],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Grant roles/run.invoker on Cloud Run service 'api' to service account svc@acme.iam.gserviceaccount.com in us-central1.",
+      "must_include": [
+        "gcloud run services add-iam-policy-binding",
+        "--member=serviceAccount:",
+        "--role=roles/run.invoker"
+      ],
+      "must_not_include": [
+        "allUsers",
+        "--allow-unauthenticated"
+      ],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Grant roles/storage.objectViewer on the project to user alice@acme.com.",
+      "must_include": [
+        "gcloud projects add-iam-policy-binding",
+        "--member=user:",
+        "--role=roles/storage.objectViewer"
+      ],
+      "must_not_include": [
+        "roles/owner",
+        "gcloud iam grant"
+      ],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Create a service account named 'deployer' with display name 'CI Deployer'.",
+      "must_include": [
+        "gcloud iam service-accounts create",
+        "deployer",
+        "--display-name"
+      ],
+      "must_not_include": [
+        "gcloud iam create service-account",
+        "--password"
+      ],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "I want to run gcloud commands impersonating the deploy service account deployer@acme.iam.gserviceaccount.com when listing buckets.",
+      "must_include": [
+        "gcloud storage buckets list",
+        "--impersonate-service-account=deployer@acme.iam.gserviceaccount.com"
+      ],
+      "must_not_include": [
+        "--key-file",
+        "gcloud auth activate-service-account"
+      ],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Set up Application Default Credentials but impersonating service account pipeline@acme.iam.gserviceaccount.com.",
+      "must_include": [
+        "gcloud auth application-default login",
+        "--impersonate-service-account=pipeline@acme.iam.gserviceaccount.com"
+      ],
+      "must_not_include": [
+        "--key-file",
+        "GOOGLE_APPLICATION_CREDENTIALS"
+      ],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Deploy Cloud Run service 'api' from source in current dir, set env var LOG_LEVEL=debug, region us-central1.",
+      "must_include": [
+        "gcloud run deploy",
+        "--source",
+        "--set-env-vars",
+        "--region"
+      ],
+      "must_not_include": [
+        "--allow-unauthenticated",
+        "--env LOG_LEVEL"
+      ],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Update Cloud Run service 'api' to use service account runtime@acme.iam.gserviceaccount.com.",
+      "must_include": [
+        "gcloud run services update",
+        "api",
+        "--service-account",
+        "--region"
+      ],
+      "must_not_include": [
+        "--allow-unauthenticated",
+        "gcloud run update api --sa"
+      ],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Show the schema of BigQuery table acme-prod:analytics.events.",
+      "must_include": [
+        "bq show",
+        "analytics.events",
+        "--schema"
+      ],
+      "must_not_include": [
+        "bq describe",
+        "ALTER TABLE"
+      ],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Estimate the bytes a query will scan over analytics.events without actually running it.",
+      "must_include": [
+        "bq query",
+        "--dry_run",
+        "--use_legacy_sql=false"
+      ],
+      "must_not_include": [
+        "--estimate",
+        "bq dry-run"
+      ],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Connect to my Cloud SQL Postgres instance 'main-db' using the gcloud sql client.",
+      "must_include": [
+        "gcloud sql connect",
+        "main-db",
+        "--user"
+      ],
+      "must_not_include": [
+        "gcloud sql login",
+        "DROP DATABASE"
+      ],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "List Vertex AI models in region us-central1.",
+      "must_include": [
+        "gcloud ai models list",
+        "--region"
+      ],
+      "must_not_include": [
+        "gcloud vertex models list",
+        "gcloud ai-platform models"
+      ],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Show me how to list custom training jobs in Vertex AI for region europe-west4.",
+      "must_include": [
+        "gcloud ai custom-jobs list",
+        "--region=europe-west4"
+      ],
+      "must_not_include": [
+        "gcloud ai-platform jobs list",
+        "gcloud ml jobs"
+      ],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "I forgot the exact flags for deploying to Cloud Run. How can I see all available options?",
+      "must_include": [
+        "gcloud run deploy --help",
+        "--help"
+      ],
+      "must_not_include": [
+        "gcloud help run deploy --all",
+        "man gcloud"
+      ],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "What gcloud commands exist under the 'ai' group? Help me discover them.",
+      "must_include": [
+        "gcloud ai --help",
+        "--help"
+      ],
+      "must_not_include": [
+        "gcloud list ai",
+        "gcloud ai commands"
+      ],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "List the available Dataflow jobs in region us-central1.",
+      "must_include": [
+        "gcloud dataflow jobs list",
+        "--region"
+      ],
+      "must_not_include": [
+        "gcloud dataflow list jobs",
+        "--global"
+      ],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Submit a PySpark job main.py to Dataproc cluster 'analytics-cluster' in us-central1.",
+      "must_include": [
+        "gcloud dataproc jobs submit pyspark",
+        "--cluster",
+        "--region",
+        "main.py"
+      ],
+      "must_not_include": [
+        "gcloud dataproc submit job",
+        "--allow-unauthenticated"
+      ],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Deploy Cloud Run service 'api' and limit memory to 512Mi and CPU to 1, region us-central1.",
+      "must_include": [
+        "gcloud run deploy",
+        "--memory=512Mi",
+        "--cpu=1",
+        "--region"
+      ],
+      "must_not_include": [
+        "--allow-unauthenticated",
+        "--ram=512"
+      ],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "GKE pods can't pull images with ImagePullBackOff. After getting credentials, what's the first kubectl command to inspect a failing pod 'web-abc' in namespace 'prod'?",
+      "must_include": [
+        "gcloud container clusters get-credentials",
+        "kubectl describe pod",
+        "-n prod"
+      ],
+      "must_not_include": [
+        "kubectl delete pod",
+        "--force --grace-period=0"
+      ],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Read logs for a specific GKE pod by name 'web-abc' in cluster project acme-prod for the last 30 minutes via Cloud Logging.",
+      "must_include": [
+        "gcloud logging read",
+        "resource.type=",
+        "k8s_container",
+        "pod_name"
+      ],
+      "must_not_include": [
+        "gcloud logs read pod",
+        "kubectl logs --since-time"
+      ],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "My Cloud Run deploy is failing with permission denied pushing to Artifact Registry. What IAM role does the Cloud Build / deploy SA need and how do I grant it?",
+      "must_include": [
+        "roles/artifactregistry.writer",
+        "gcloud projects add-iam-policy-binding",
+        "--member=serviceAccount:"
+      ],
+      "must_not_include": [
+        "roles/owner",
+        "--allow-unauthenticated"
+      ],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Allow service account a@acme.iam.gserviceaccount.com to impersonate b@acme.iam.gserviceaccount.com. What binding is needed?",
+      "must_include": [
+        "gcloud iam service-accounts add-iam-policy-binding",
+        "roles/iam.serviceAccountTokenCreator",
+        "--member=serviceAccount:a@acme.iam.gserviceaccount.com"
+      ],
+      "must_not_include": [
+        "roles/owner",
+        "roles/iam.serviceAccountAdmin"
+      ],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Deploy Cloud Run 'internal-api' that must NOT be publicly reachable (require auth) in us-central1.",
+      "must_include": [
+        "gcloud run deploy",
+        "--no-allow-unauthenticated",
+        "--region"
+      ],
+      "must_not_include": [
+        "--allow-unauthenticated",
+        "allUsers"
+      ],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Roll back Cloud Run service 'api' to route 100% traffic to revision api-00007-abc in us-central1.",
+      "must_include": [
+        "gcloud run services update-traffic",
+        "--to-revisions=api-00007-abc=100",
+        "--region"
+      ],
+      "must_not_include": [
+        "gcloud run rollback",
+        "--to-latest=true"
+      ],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Split Cloud Run traffic 90/10 between revisions api-00007 and api-00008 for a canary in us-central1.",
+      "must_include": [
+        "gcloud run services update-traffic",
+        "--to-revisions=",
+        "api-00007=90",
+        "api-00008=10"
+      ],
+      "must_not_include": [
+        "--to-latest",
+        "--allow-unauthenticated"
+      ],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Create a GKE Autopilot cluster 'ap-prod' in region us-central1.",
+      "must_include": [
+        "gcloud container clusters create-auto",
+        "ap-prod",
+        "--region"
+      ],
+      "must_not_include": [
+        "gcloud container clusters create-autopilot",
+        "--zone"
+      ],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Resize the default node pool of standard GKE cluster 'prod' to 5 nodes in us-central1-a.",
+      "must_include": [
+        "gcloud container clusters resize",
+        "prod",
+        "--num-nodes=5",
+        "--zone"
+      ],
+      "must_not_include": [
+        "gcloud container resize cluster",
+        "--delete"
+      ],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Query BigQuery and write results to destination table analytics.daily_agg, overwriting if it exists.",
+      "must_include": [
+        "bq query",
+        "--destination_table=",
+        "--replace",
+        "--use_legacy_sql=false"
+      ],
+      "must_not_include": [
+        "bq insert",
+        "DROP TABLE daily_agg"
+      ],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Load a newline-delimited JSON file gs://acme/data/events.json into BigQuery table analytics.events with autodetect schema.",
+      "must_include": [
+        "bq load",
+        "--source_format=NEWLINE_DELIMITED_JSON",
+        "--autodetect",
+        "analytics.events"
+      ],
+      "must_not_include": [
+        "bq import",
+        "--format=json"
+      ],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Export Cloud SQL instance 'main-db' database 'app' to gs://acme-backups/app.sql.gz as a SQL dump.",
+      "must_include": [
+        "gcloud sql export sql",
+        "main-db",
+        "gs://acme-backups/app.sql.gz",
+        "--database"
+      ],
+      "must_not_include": [
+        "gcloud sql dump",
+        "DROP DATABASE"
+      ],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Create a read replica 'main-db-replica' of Cloud SQL instance 'main-db'.",
+      "must_include": [
+        "gcloud sql instances create",
+        "main-db-replica",
+        "--master-instance-name=main-db"
+      ],
+      "must_not_include": [
+        "gcloud sql replicas create",
+        "--delete"
+      ],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Deploy a model to a Vertex AI endpoint 1234567890 with model 9876543210 in us-central1, machine type n1-standard-4.",
+      "must_include": [
+        "gcloud ai endpoints deploy-model",
+        "--region",
+        "--model=9876543210",
+        "--machine-type=n1-standard-4"
+      ],
+      "must_not_include": [
+        "gcloud ai-platform deploy",
+        "--global"
+      ],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Upload a model to Vertex AI Model Registry named 'classifier' with a container image and artifacts in gs://acme-models/v1, region us-central1.",
+      "must_include": [
+        "gcloud ai models upload",
+        "--display-name=classifier",
+        "--artifact-uri=gs://acme-models/v1",
+        "--region"
+      ],
+      "must_not_include": [
+        "gcloud ai-platform models create",
+        "--allow-unauthenticated"
+      ],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Create a HTTP-triggered scheduler-like Pub/Sub push subscription 'push-sub' on topic 'jobs' delivering to https://api.acme.com/hook with OIDC auth SA invoker@acme.iam.gserviceaccount.com.",
+      "must_include": [
+        "gcloud pubsub subscriptions create",
+        "--push-endpoint=https://api.acme.com/hook",
+        "--push-auth-service-account=invoker@acme.iam.gserviceaccount.com"
+      ],
+      "must_not_include": [
+        "gcloud pubsub push create",
+        "--no-auth"
+      ],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Set IAM policy so Cloud Run service 'api' is invokable by allUsers (genuinely public marketing site), us-central1. Note this is intended public.",
+      "must_include": [
+        "gcloud run services add-iam-policy-binding",
+        "--member=allUsers",
+        "--role=roles/run.invoker",
+        "--region"
+      ],
+      "must_not_include": [
+        "roles/run.admin",
+        "--allow-unauthenticated"
+      ],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "I have a JSON key file for an SA but want to avoid downloading keys. How do I authenticate as the SA without a key for a one-off bq query?",
+      "must_include": [
+        "bq query",
+        "--impersonate-service-account=",
+        "--use_legacy_sql=false"
+      ],
+      "must_not_include": [
+        "gcloud auth activate-service-account --key-file",
+        "GOOGLE_APPLICATION_CREDENTIALS"
+      ],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Cancel a running Dataflow job 2024-06-10_12_00_00-123 gracefully (drain) in us-central1.",
+      "must_include": [
+        "gcloud dataflow jobs drain",
+        "--region"
+      ],
+      "must_not_include": [
+        "gcloud dataflow jobs cancel --force",
+        "kill -9"
+      ],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Read aggregated audit logs for admin activity in the project for the last day, severity NOTICE and above, JSON output.",
+      "must_include": [
+        "gcloud logging read",
+        "logName=",
+        "cloudaudit.googleapis.com",
+        "--format=json"
+      ],
+      "must_not_include": [
+        "gcloud audit read",
+        "--output json"
+      ],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Show effective IAM policy for the whole project acme-prod-123 in JSON.",
+      "must_include": [
+        "gcloud projects get-iam-policy",
+        "acme-prod-123",
+        "--format=json"
+      ],
+      "must_not_include": [
+        "gcloud iam policy get",
+        "set-iam-policy"
+      ],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Remove user bob@acme.com from roles/editor on project acme-prod-123.",
+      "must_include": [
+        "gcloud projects remove-iam-policy-binding",
+        "--member=user:bob@acme.com",
+        "--role=roles/editor"
+      ],
+      "must_not_include": [
+        "gcloud projects delete",
+        "--member=allUsers"
+      ],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Deploy Cloud Run service 'api' connected to Cloud SQL instance acme-prod:us-central1:main-db, region us-central1.",
+      "must_include": [
+        "gcloud run deploy",
+        "--add-cloudsql-instances=acme-prod:us-central1:main-db",
+        "--region"
+      ],
+      "must_not_include": [
+        "--allow-unauthenticated",
+        "--cloudsql=main-db"
+      ],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Create a secret 'db-password' in Secret Manager from a file pw.txt and grant Cloud Run SA access.",
+      "must_include": [
+        "gcloud secrets create",
+        "db-password",
+        "--data-file=pw.txt"
+      ],
+      "must_not_include": [
+        "gcloud secrets create db-password --password",
+        "echo password"
+      ],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Mount secret 'db-password' latest version as env var DB_PASS into Cloud Run service 'api', us-central1.",
+      "must_include": [
+        "gcloud run services update",
+        "api",
+        "--set-secrets=DB_PASS=db-password:latest",
+        "--region"
+      ],
+      "must_not_include": [
+        "--set-env-vars=DB_PASS=",
+        "--allow-unauthenticated"
+      ],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Enable the Cloud Run and Artifact Registry APIs.",
+      "must_include": [
+        "gcloud services enable",
+        "run.googleapis.com",
+        "artifactregistry.googleapis.com"
+      ],
+      "must_not_include": [
+        "gcloud services disable",
+        "gcloud api enable"
+      ],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Create an Artifact Registry Docker repo 'web' in us-central1.",
+      "must_include": [
+        "gcloud artifacts repositories create",
+        "web",
+        "--repository-format=docker",
+        "--location=us-central1"
+      ],
+      "must_not_include": [
+        "gcloud container images create",
+        "--delete"
+      ],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Configure Docker auth so I can push to us-central1 Artifact Registry.",
+      "must_include": [
+        "gcloud auth configure-docker",
+        "us-central1-docker.pkg.dev"
+      ],
+      "must_not_include": [
+        "docker login --password",
+        "gcloud docker auth"
+      ],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Get the URL of my deployed Cloud Run service 'api' only (just the URL), us-central1.",
+      "must_include": [
+        "gcloud run services describe",
+        "api",
+        "--format=value(status.url)",
+        "--region"
+      ],
+      "must_not_include": [
+        "--format=json status.url",
+        "gcloud run url"
+      ],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Upgrade the control plane of GKE cluster 'prod' to 1.29 in us-central1-a.",
+      "must_include": [
+        "gcloud container clusters upgrade",
+        "prod",
+        "--master",
+        "--cluster-version=1.29",
+        "--zone"
+      ],
+      "must_not_include": [
+        "gcloud container upgrade cluster",
+        "--delete"
+      ],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Print an identity token impersonating SA caller@acme.iam.gserviceaccount.com to call an authenticated Cloud Run service.",
+      "must_include": [
+        "gcloud auth print-identity-token",
+        "--impersonate-service-account=caller@acme.iam.gserviceaccount.com"
+      ],
+      "must_not_include": [
+        "gcloud auth print-access-token",
+        "--allow-unauthenticated"
+      ],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Run a parameterized BigQuery query using a named parameter min_amount as INT64 value 100.",
+      "must_include": [
+        "bq query",
+        "--parameter=min_amount:INT64:100",
+        "--use_legacy_sql=false"
+      ],
+      "must_not_include": [
+        "--param min_amount",
+        "DROP TABLE"
+      ],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Set up a Cloud SQL Auth Proxy connection to instance acme-prod:us-central1:main-db on port 5432.",
+      "must_include": [
+        "cloud-sql-proxy",
+        "acme-prod:us-central1:main-db",
+        "--port=5432"
+      ],
+      "must_not_include": [
+        "cloud_sql_proxy -instances=...=tcp:5432",
+        "DROP DATABASE"
+      ],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Create a Cloud SQL user 'appuser' on instance 'main-db' (do not put the password in shell history).",
+      "must_include": [
+        "gcloud sql users create",
+        "appuser",
+        "--instance=main-db",
+        "--prompt-for-password"
+      ],
+      "must_not_include": [
+        "--password=hunter2",
+        "gcloud sql create user"
+      ],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Batch-predict with Vertex AI: create a batch prediction job referencing model 9876543210 in us-central1.",
+      "must_include": [
+        "gcloud ai",
+        "batch-prediction-jobs",
+        "create",
+        "--region"
+      ],
+      "must_not_include": [
+        "gcloud ai-platform predict",
+        "--global"
+      ],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "I only remember part of a gcloud command for Pub/Sub. How can I discover subcommands under 'gcloud pubsub subscriptions'?",
+      "must_include": [
+        "gcloud pubsub subscriptions --help",
+        "--help"
+      ],
+      "must_not_include": [
+        "gcloud help pubsub all",
+        "gcloud pubsub subscriptions list-commands"
+      ],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Delete Pub/Sub subscription 'old-sub' \u2014 but I want to be careful and confirm first.",
+      "must_include": [
+        "gcloud pubsub subscriptions delete",
+        "old-sub"
+      ],
+      "must_not_include": [
+        "--quiet",
+        "-q"
+      ],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Update Cloud Run service 'api' to scale between min 1 and max 10 instances, us-central1.",
+      "must_include": [
+        "gcloud run services update",
+        "api",
+        "--min-instances=1",
+        "--max-instances=10",
+        "--region"
+      ],
+      "must_not_include": [
+        "--allow-unauthenticated",
+        "--scale=1-10"
+      ],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Deploy Cloud Run service 'api' restricted to internal ingress only (VPC/internal), us-central1.",
+      "must_include": [
+        "gcloud run deploy",
+        "--ingress=internal",
+        "--region"
+      ],
+      "must_not_include": [
+        "--allow-unauthenticated",
+        "--ingress=all"
+      ],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Read the most recent error logs for Cloud Function 'process-image' via Cloud Logging in JSON.",
+      "must_include": [
+        "gcloud logging read",
+        "process-image",
+        "severity>=ERROR",
+        "--format=json"
+      ],
+      "must_not_include": [
+        "gcloud functions logs read --json",
+        "--output=json"
+      ],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Show me the IAM roles a member alice@acme.com has on project acme-prod by filtering the policy.",
+      "must_include": [
+        "gcloud projects get-iam-policy",
+        "acme-prod",
+        "--flatten=bindings",
+        "user:alice@acme.com"
+      ],
+      "must_not_include": [
+        "gcloud iam roles list alice",
+        "set-iam-policy"
+      ],
+      "difficulty": "edge"
+    },
+    {
+      "prompt": "Generate a downscoped/temporary token? Actually I just want to impersonate SA reporter@acme.iam.gserviceaccount.com for a single `gcloud logging read` of last 10 entries.",
+      "must_include": [
+        "gcloud logging read",
+        "--limit",
+        "--impersonate-service-account=reporter@acme.iam.gserviceaccount.com"
+      ],
+      "must_not_include": [
+        "gcloud auth activate-service-account",
+        "--key-file"
+      ],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "What's the correct way to set the quota/billing project for Application Default Credentials to acme-prod-123?",
+      "must_include": [
+        "gcloud auth application-default set-quota-project",
+        "acme-prod-123"
+      ],
+      "must_not_include": [
+        "gcloud config set billing",
+        "gcloud auth set-project"
+      ],
+      "difficulty": "edge"
+    },
+    {
+      "prompt": "Create a GKE node pool 'gpu-pool' with 2 nodes of machine type n1-standard-4 on cluster 'prod' in us-central1-a.",
+      "must_include": [
+        "gcloud container node-pools create",
+        "gpu-pool",
+        "--cluster=prod",
+        "--num-nodes=2",
+        "--machine-type=n1-standard-4"
+      ],
+      "must_not_include": [
+        "gcloud container nodepool create",
+        "--delete"
+      ],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Delete GKE node pool 'gpu-pool' from cluster 'prod' in us-central1-a, but warn me this is destructive.",
+      "must_include": [
+        "gcloud container node-pools delete",
+        "gpu-pool",
+        "--cluster=prod"
+      ],
+      "must_not_include": [
+        "--quiet",
+        "-q"
+      ],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Copy an entire local directory ./site to gs://acme-static/ recursively.",
+      "must_include": [
+        "gcloud storage cp",
+        "--recursive",
+        "./site",
+        "gs://acme-static"
+      ],
+      "must_not_include": [
+        "gcloud storage rm -r",
+        "gsutil rsync -d"
+      ],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Sync local build/ to gs://acme-static/ and I'm okay deleting remote files that no longer exist locally.",
+      "must_include": [
+        "gcloud storage rsync",
+        "--recursive",
+        "--delete-unmatched-destination-objects",
+        "gs://acme-static"
+      ],
+      "must_not_include": [
+        "gsutil rsync -d",
+        "rm -rf"
+      ],
+      "difficulty": "edge"
+    },
+    {
+      "prompt": "Grant a service account writer@acme.iam.gserviceaccount.com objectAdmin on bucket gs://acme-logs.",
+      "must_include": [
+        "gcloud storage buckets add-iam-policy-binding",
+        "gs://acme-logs",
+        "--member=serviceAccount:writer@acme.iam.gserviceaccount.com",
+        "--role=roles/storage.objectAdmin"
+      ],
+      "must_not_include": [
+        "allUsers",
+        "roles/owner"
+      ],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Our security policy forbids downloading SA keys. A teammate asked to create a JSON key for deployer SA. What should I recommend instead?",
+      "must_include": [
+        "--impersonate-service-account",
+        "Workload Identity"
+      ],
+      "must_not_include": [
+        "gcloud iam service-accounts keys create",
+        "--key-file"
+      ],
+      "difficulty": "edge"
+    },
+    {
+      "prompt": "Show all gcloud command groups available at the top level for discovery.",
+      "must_include": [
+        "gcloud --help",
+        "--help"
+      ],
+      "must_not_include": [
+        "gcloud list groups",
+        "gcloud commands"
+      ],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "Test connectivity: invoke authenticated Cloud Run service https://api-xyz.run.app with a bearer identity token.",
+      "must_include": [
+        "curl",
+        "Authorization: Bearer",
+        "gcloud auth print-identity-token"
+      ],
+      "must_not_include": [
+        "--allow-unauthenticated",
+        "-k --insecure-everything"
+      ],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "I want logs across ALL severities for service 'api' (cloud run) ordered newest first, last 200.",
+      "must_include": [
+        "gcloud logging read",
+        "resource.labels.service_name=\"api\"",
+        "--order=desc",
+        "--limit=200"
+      ],
+      "must_not_include": [
+        "--sort=desc",
+        "gcloud logs"
+      ],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Deploy Cloud Run job (not service) 'nightly-etl' from image and then execute it once, us-central1.",
+      "must_include": [
+        "gcloud run jobs deploy",
+        "nightly-etl",
+        "gcloud run jobs execute",
+        "--region"
+      ],
+      "must_not_include": [
+        "gcloud run deploy --job",
+        "--allow-unauthenticated"
+      ],
+      "difficulty": "edge"
+    },
+    {
+      "prompt": "Create a snapshot on Pub/Sub subscription 'order-sub' named 'pre-deploy' so I can replay if needed.",
+      "must_include": [
+        "gcloud pubsub snapshots create",
+        "pre-deploy",
+        "--subscription=order-sub"
+      ],
+      "must_not_include": [
+        "gcloud pubsub snapshot create",
+        "--delete"
+      ],
+      "difficulty": "edge"
+    },
+    {
+      "prompt": "Seek subscription 'order-sub' back to snapshot 'pre-deploy' to reprocess messages.",
+      "must_include": [
+        "gcloud pubsub subscriptions seek",
+        "order-sub",
+        "--snapshot=pre-deploy"
+      ],
+      "must_not_include": [
+        "gcloud pubsub seek snapshot",
+        "--quiet"
+      ],
+      "difficulty": "edge"
+    },
+    {
+      "prompt": "List operations on Vertex AI in us-central1 to check a long-running deploy status.",
+      "must_include": [
+        "gcloud ai operations",
+        "--region=us-central1"
+      ],
+      "must_not_include": [
+        "gcloud ai-platform operations",
+        "--global"
+      ],
+      "difficulty": "edge"
+    },
+    {
+      "prompt": "Show the equivalent REST/HTTP API call gcloud would make to list Cloud Run services (for debugging), us-central1.",
+      "must_include": [
+        "gcloud run services list",
+        "--log-http",
+        "--region"
+      ],
+      "must_not_include": [
+        "--verbose-http",
+        "gcloud debug http"
+      ],
+      "difficulty": "edge"
+    },
+    {
+      "prompt": "Increase verbosity to debug a failing gcloud run deploy to see the underlying error.",
+      "must_include": [
+        "gcloud run deploy",
+        "--verbosity=debug",
+        "--region"
+      ],
+      "must_not_include": [
+        "--allow-unauthenticated",
+        "--debug-level=high"
+      ],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Filter `gcloud compute instances list` to only running instances in zone us-central1-a, output name and IP.",
+      "must_include": [
+        "gcloud compute instances list",
+        "--filter=",
+        "--format="
+      ],
+      "must_not_include": [
+        "grep RUNNING",
+        "awk"
+      ],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Update the IAM binding to let Cloud Run service identity invoke another internal service 'billing' in us-central1.",
+      "must_include": [
+        "gcloud run services add-iam-policy-binding",
+        "billing",
+        "--role=roles/run.invoker",
+        "--member=serviceAccount:"
+      ],
+      "must_not_include": [
+        "--member=allUsers",
+        "--allow-unauthenticated"
+      ],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Activate a service account from a key file ONLY because we're in a legacy CI with no Workload Identity; key at /secrets/ci.json.",
+      "must_include": [
+        "gcloud auth activate-service-account",
+        "--key-file=/secrets/ci.json"
+      ],
+      "must_not_include": [
+        "--password",
+        "cat /secrets/ci.json | gcloud"
+      ],
+      "difficulty": "edge"
+    },
+    {
+      "prompt": "Restart/replace a Cloud Run revision to pick up a new latest image tag without changing config, us-central1.",
+      "must_include": [
+        "gcloud run services update",
+        "api",
+        "--image",
+        "--region"
+      ],
+      "must_not_include": [
+        "gcloud run restart",
+        "--allow-unauthenticated"
+      ],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Get logs for a Dataflow job by name pattern over Cloud Logging filtered to resource.type dataflow_step, last 1h JSON.",
+      "must_include": [
+        "gcloud logging read",
+        "resource.type=\"dataflow_step\"",
+        "--freshness",
+        "--format=json"
+      ],
+      "must_not_include": [
+        "gcloud dataflow logs",
+        "--output json"
+      ],
+      "difficulty": "edge"
+    },
+    {
+      "prompt": "Set default region and zone in gcloud config so I stop typing --region everywhere (us-central1 / us-central1-a).",
+      "must_include": [
+        "gcloud config set compute/region us-central1",
+        "gcloud config set compute/zone us-central1-a"
+      ],
+      "must_not_include": [
+        "gcloud config set region",
+        "gcloud set default-region"
+      ],
+      "difficulty": "medium"
+    }
+  ]
+}

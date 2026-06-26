@@ -1,0 +1,1232 @@
+{
+  "skill": "dataflow-dataproc",
+  "scenarios": [
+    {
+      "prompt": "List all the Dataflow jobs running in us-central1 for our project.",
+      "must_include": [
+        "gcloud dataflow jobs list",
+        "--region",
+        "us-central1"
+      ],
+      "must_not_include": [
+        "gcloud dataflow jobs delete",
+        "--force"
+      ],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "Show me only the active (running) Dataflow jobs, not the finished ones.",
+      "must_include": [
+        "gcloud dataflow jobs list",
+        "--status=active",
+        "--region"
+      ],
+      "must_not_include": [
+        "--status=deleted"
+      ],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "Describe the Dataflow job 2026-06-09_12_34_56-1234567890 so I can see its details.",
+      "must_include": [
+        "gcloud dataflow jobs describe",
+        "2026-06-09_12_34_56-1234567890",
+        "--region"
+      ],
+      "must_not_include": [
+        "gcloud dataflow jobs run"
+      ],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "How do I get the current state of a specific Dataflow job by its ID?",
+      "must_include": [
+        "gcloud dataflow jobs describe",
+        "currentState",
+        "--region"
+      ],
+      "must_not_include": [
+        "delete the job"
+      ],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "I need to cancel a runaway Dataflow batch job right now.",
+      "must_include": [
+        "gcloud dataflow jobs cancel",
+        "--region"
+      ],
+      "must_not_include": [
+        "gcloud dataflow jobs drain",
+        "--force-delete"
+      ],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "Our streaming Dataflow pipeline needs to be stopped cleanly without losing in-flight data. How?",
+      "must_include": [
+        "gcloud dataflow jobs drain",
+        "--region",
+        "in-flight"
+      ],
+      "must_not_include": [
+        "gcloud dataflow jobs cancel"
+      ],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "What's the difference between cancel and drain for a Dataflow job?",
+      "must_include": [
+        "drain",
+        "cancel",
+        "streaming",
+        "in-flight"
+      ],
+      "must_not_include": [
+        "they are identical"
+      ],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Pull the worker logs for Dataflow job 2026-06-10_00_11_22-9876543210 to see what went wrong.",
+      "must_include": [
+        "gcloud logging read",
+        "dataflow",
+        "2026-06-10_00_11_22-9876543210"
+      ],
+      "must_not_include": [
+        "gcloud dataflow jobs cancel"
+      ],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "How do I find which step in my Dataflow pipeline is failing from the logs?",
+      "must_include": [
+        "gcloud logging read",
+        "dataflow_step",
+        "step"
+      ],
+      "must_not_include": [
+        "rerun blindly"
+      ],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Run a Dataflow flex template from gs://my-bucket/templates/etl.json to load data.",
+      "must_include": [
+        "gcloud dataflow flex-template run",
+        "--template-file-gcs-location",
+        "--region"
+      ],
+      "must_not_include": [
+        "gcloud dataflow jobs run --template"
+      ],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Launch a classic Dataflow template job from gs://dataflow-templates/Word_Count.",
+      "must_include": [
+        "gcloud dataflow jobs run",
+        "--gcs-location",
+        "--region"
+      ],
+      "must_not_include": [
+        "--template-file-gcs-location"
+      ],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "I want to pass parameters like inputFile and outputTable to a flex-template run.",
+      "must_include": [
+        "gcloud dataflow flex-template run",
+        "--parameters",
+        "inputFile"
+      ],
+      "must_not_include": [
+        "--args"
+      ],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Our batch Dataflow job failed at 3am. Logs show a transient GCS 503 on read. Should I rerun?",
+      "must_include": [
+        "transient",
+        "rerun",
+        "gcloud dataflow flex-template run",
+        "503"
+      ],
+      "must_not_include": [
+        "it is a code bug, do not rerun"
+      ],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Batch Dataflow job failed with a NullPointerException in our ParDo. The customer wants a rerun. What do I do?",
+      "must_include": [
+        "NullPointerException",
+        "code",
+        "not transient",
+        "do not rerun"
+      ],
+      "must_not_include": [
+        "just rerun it, it will pass"
+      ],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "How can I tell if a failed Dataflow batch job is safe to retry versus needs a code fix?",
+      "must_include": [
+        "transient",
+        "logs",
+        "idempotent",
+        "error"
+      ],
+      "must_not_include": [
+        "always retry automatically"
+      ],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Our streaming Dataflow pipeline has growing system lag. How do I check and triage it?",
+      "must_include": [
+        "system lag",
+        "data freshness",
+        "gcloud dataflow jobs describe",
+        "--region"
+      ],
+      "must_not_include": [
+        "cancel the job immediately"
+      ],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "The streaming job isn't scaling up under load. How do I check autoscaling settings?",
+      "must_include": [
+        "maxWorkers",
+        "autoscaling",
+        "gcloud dataflow jobs describe"
+      ],
+      "must_not_include": [
+        "autoscaling is not supported"
+      ],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Update the max number of workers on a running streaming Dataflow job to 50.",
+      "must_include": [
+        "gcloud dataflow jobs update-options",
+        "--max-num-workers",
+        "50",
+        "--region"
+      ],
+      "must_not_include": [
+        "--maxWorkers=50 on a finished job"
+      ],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "List the Dataproc clusters in region europe-west1.",
+      "must_include": [
+        "gcloud dataproc clusters list",
+        "--region",
+        "europe-west1"
+      ],
+      "must_not_include": [
+        "gcloud dataproc clusters delete"
+      ],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "Describe the Dataproc cluster named analytics-prod.",
+      "must_include": [
+        "gcloud dataproc clusters describe",
+        "analytics-prod",
+        "--region"
+      ],
+      "must_not_include": [
+        "gcloud dataproc clusters create"
+      ],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "List all Dataproc jobs that ran on our cluster recently.",
+      "must_include": [
+        "gcloud dataproc jobs list",
+        "--region",
+        "--cluster"
+      ],
+      "must_not_include": [
+        "gcloud dataproc jobs kill --all"
+      ],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "Submit a Spark job to Dataproc cluster spark-cluster running my-app.jar.",
+      "must_include": [
+        "gcloud dataproc jobs submit spark",
+        "--cluster",
+        "--region"
+      ],
+      "must_not_include": [
+        "gcloud dataproc jobs submit beam"
+      ],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Submit a PySpark job to a Dataproc cluster from gs://my-bucket/job.py.",
+      "must_include": [
+        "gcloud dataproc jobs submit pyspark",
+        "--cluster",
+        "--region"
+      ],
+      "must_not_include": [
+        "gcloud dataproc jobs submit spark --pyfile"
+      ],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Get the driver output / logs for Dataproc job with id abcd-1234.",
+      "must_include": [
+        "gcloud dataproc jobs wait",
+        "abcd-1234",
+        "--region"
+      ],
+      "must_not_include": [
+        "gcloud dataproc jobs delete"
+      ],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "How do I describe a single Dataproc job to see its status and error?",
+      "must_include": [
+        "gcloud dataproc jobs describe",
+        "--region",
+        "status"
+      ],
+      "must_not_include": [
+        "gcloud dataproc clusters describe"
+      ],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "Our Spark job on Dataproc is failing with java.lang.OutOfMemoryError on executors. How do I fix it?",
+      "must_include": [
+        "OutOfMemoryError",
+        "spark.executor.memory",
+        "--properties"
+      ],
+      "must_not_include": [
+        "disable garbage collection"
+      ],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "The Spark driver keeps OOMing on collect(). What should I change?",
+      "must_include": [
+        "spark.driver.memory",
+        "collect",
+        "--properties"
+      ],
+      "must_not_include": [
+        "increase executor count only"
+      ],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "We're seeing data skew in a Spark join on Dataproc \u2014 one task takes 10x longer. How to triage?",
+      "must_include": [
+        "skew",
+        "partition",
+        "salt",
+        "spark.sql.shuffle.partitions"
+      ],
+      "must_not_include": [
+        "skew cannot be fixed"
+      ],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Our Dataproc cluster uses preemptible/secondary workers and jobs keep getting interrupted. What's happening?",
+      "must_include": [
+        "preemptible",
+        "secondary workers",
+        "preemption",
+        "retry"
+      ],
+      "must_not_include": [
+        "preemptible VMs never get reclaimed"
+      ],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "How do I reduce preemption-related failures on a Dataproc cluster with many preemptible VMs?",
+      "must_include": [
+        "preemptible",
+        "secondary-worker",
+        "ratio",
+        "spark"
+      ],
+      "must_not_include": [
+        "use only preemptible workers for everything"
+      ],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "There's a Dataproc cluster that's been idle for days costing money. What do I do?",
+      "must_include": [
+        "idle",
+        "gcloud dataproc clusters delete",
+        "auto-delete",
+        "--region"
+      ],
+      "must_not_include": [
+        "delete it without confirming it is unused"
+      ],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Set up a Dataproc cluster to auto-delete after it's idle for 30 minutes to save cost.",
+      "must_include": [
+        "gcloud dataproc clusters create",
+        "--max-idle",
+        "30m"
+      ],
+      "must_not_include": [
+        "--max-idle=never"
+      ],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "How can I find idle Dataproc clusters across the project to cut costs?",
+      "must_include": [
+        "gcloud dataproc clusters list",
+        "--region",
+        "idle"
+      ],
+      "must_not_include": [
+        "delete all clusters"
+      ],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Cancel a stuck Dataproc Spark job with id job-789.",
+      "must_include": [
+        "gcloud dataproc jobs kill",
+        "job-789",
+        "--region"
+      ],
+      "must_not_include": [
+        "gcloud dataproc clusters delete"
+      ],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "List Dataflow jobs and show me their IDs and names in a clean format.",
+      "must_include": [
+        "gcloud dataflow jobs list",
+        "--region",
+        "--format"
+      ],
+      "must_not_include": [
+        "--delete"
+      ],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "Filter Dataflow jobs to only ones that failed.",
+      "must_include": [
+        "gcloud dataflow jobs list",
+        "--status=failed",
+        "--region"
+      ],
+      "must_not_include": [
+        "--status=running only"
+      ],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "How do I see the job graph / steps of a Dataflow pipeline?",
+      "must_include": [
+        "gcloud dataflow jobs describe",
+        "--full",
+        "steps"
+      ],
+      "must_not_include": [
+        "job graphs are not available"
+      ],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Our flex-template launch is failing immediately. How do I debug the launcher?",
+      "must_include": [
+        "launcher",
+        "gcloud logging read",
+        "flex-template"
+      ],
+      "must_not_include": [
+        "just rerun until it works"
+      ],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "I want the Dataflow job to use a specific service account and subnetwork when launched.",
+      "must_include": [
+        "--service-account-email",
+        "--subnetwork",
+        "gcloud dataflow flex-template run"
+      ],
+      "must_not_include": [
+        "service accounts are not supported"
+      ],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Set the number of max workers when launching a flex-template Dataflow job.",
+      "must_include": [
+        "gcloud dataflow flex-template run",
+        "--max-workers",
+        "--region"
+      ],
+      "must_not_include": [
+        "--maxWorkers as a positional argument"
+      ],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "How do I disable public IPs on Dataflow workers for a flex-template run?",
+      "must_include": [
+        "--disable-public-ips",
+        "gcloud dataflow flex-template run",
+        "--subnetwork"
+      ],
+      "must_not_include": [
+        "public IPs cannot be disabled"
+      ],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "A streaming Dataflow job shows data freshness of 2 hours. What metric and next steps?",
+      "must_include": [
+        "data freshness",
+        "system lag",
+        "watermark",
+        "backlog"
+      ],
+      "must_not_include": [
+        "data freshness is not a real metric"
+      ],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "How do I check the backlog (unprocessed elements) on a streaming Dataflow pipeline?",
+      "must_include": [
+        "backlog",
+        "Cloud Monitoring",
+        "dataflow"
+      ],
+      "must_not_include": [
+        "backlog cannot be measured"
+      ],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Create a Dataproc cluster with 2 master and 4 worker nodes in us-east1.",
+      "must_include": [
+        "gcloud dataproc clusters create",
+        "--num-workers",
+        "--region",
+        "us-east1"
+      ],
+      "must_not_include": [
+        "gcloud dataproc clusters delete"
+      ],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Add secondary preemptible workers to an existing Dataproc cluster for a big batch run.",
+      "must_include": [
+        "gcloud dataproc clusters update",
+        "--num-secondary-workers",
+        "--region"
+      ],
+      "must_not_include": [
+        "--num-master-preemptible"
+      ],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Scale down a Dataproc cluster's primary workers from 10 to 4.",
+      "must_include": [
+        "gcloud dataproc clusters update",
+        "--num-workers",
+        "4",
+        "--region"
+      ],
+      "must_not_include": [
+        "delete and recreate the cluster"
+      ],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "How do I set up Dataproc autoscaling with an autoscaling policy?",
+      "must_include": [
+        "gcloud dataproc autoscaling-policies",
+        "--autoscaling-policy",
+        "clusters create"
+      ],
+      "must_not_include": [
+        "Dataproc does not autoscale"
+      ],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Submit a Spark SQL job to Dataproc that runs a query file from GCS.",
+      "must_include": [
+        "gcloud dataproc jobs submit spark-sql",
+        "--cluster",
+        "--region"
+      ],
+      "must_not_include": [
+        "gcloud dataproc jobs submit sql"
+      ],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Submit a Hadoop MapReduce job to a Dataproc cluster.",
+      "must_include": [
+        "gcloud dataproc jobs submit hadoop",
+        "--cluster",
+        "--region"
+      ],
+      "must_not_include": [
+        "gcloud dataproc jobs submit mapreduce"
+      ],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Pass Spark properties like executor cores and memory when submitting a Dataproc Spark job.",
+      "must_include": [
+        "gcloud dataproc jobs submit spark",
+        "--properties",
+        "spark.executor.cores"
+      ],
+      "must_not_include": [
+        "--conf as a top-level gcloud flag"
+      ],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "My Spark job is slow because of too few shuffle partitions. How do I tune it?",
+      "must_include": [
+        "spark.sql.shuffle.partitions",
+        "--properties",
+        "shuffle"
+      ],
+      "must_not_include": [
+        "partitions cannot be changed"
+      ],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "How do I look at the Spark UI / event logs for a finished Dataproc job to find the slow stage?",
+      "must_include": [
+        "Spark History Server",
+        "stage",
+        "spark.eventLog"
+      ],
+      "must_not_include": [
+        "Spark UI is unavailable after the job ends"
+      ],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "A Dataproc cluster failed to create. Where do I look for the error?",
+      "must_include": [
+        "gcloud dataproc clusters describe",
+        "gcloud logging read",
+        "--region"
+      ],
+      "must_not_include": [
+        "recreate it 10 times blindly"
+      ],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "How do I check the YARN application logs for a Spark job on Dataproc?",
+      "must_include": [
+        "yarn logs",
+        "applicationId",
+        "Dataproc"
+      ],
+      "must_not_include": [
+        "YARN logs are not accessible"
+      ],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Our nightly batch Dataflow job's SLA is 6am and it's now slow. Triage the slow batch job.",
+      "must_include": [
+        "SLA",
+        "gcloud dataflow jobs describe",
+        "stragglers",
+        "--region"
+      ],
+      "must_not_include": [
+        "just wait, SLAs do not matter"
+      ],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Identify the slowest stage in a Dataflow batch job that's missing SLA.",
+      "must_include": [
+        "dataflow_step",
+        "straggler",
+        "wall time",
+        "gcloud logging read"
+      ],
+      "must_not_include": [
+        "all stages run at the same speed"
+      ],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "A Dataflow streaming job keeps restarting / crash-looping. How do I find the root cause?",
+      "must_include": [
+        "gcloud logging read",
+        "worker",
+        "exception",
+        "dataflow"
+      ],
+      "must_not_include": [
+        "increase maxWorkers will fix any crash loop"
+      ],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "How do I see how many workers a Dataflow job is currently using?",
+      "must_include": [
+        "gcloud dataflow jobs describe",
+        "currentWorkers",
+        "--region"
+      ],
+      "must_not_include": [
+        "worker count is hidden"
+      ],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Our Dataflow job is stuck at 0% with no progress for an hour. What do I check first?",
+      "must_include": [
+        "gcloud dataflow jobs describe",
+        "currentState",
+        "logs",
+        "--region"
+      ],
+      "must_not_include": [
+        "cancel and forget it"
+      ],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Show me a list command for Dataproc jobs filtered to only running ones.",
+      "must_include": [
+        "gcloud dataproc jobs list",
+        "--state-filter=active",
+        "--region"
+      ],
+      "must_not_include": [
+        "--state-filter=deleted"
+      ],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "How do I delete a Dataproc cluster but make sure I'm in the right region first?",
+      "must_include": [
+        "gcloud dataproc clusters list",
+        "gcloud dataproc clusters delete",
+        "--region"
+      ],
+      "must_not_include": [
+        "--quiet without checking"
+      ],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "A teammate ran the same batch Dataflow job twice and now we have duplicate rows in BigQuery. What happened and how to prevent?",
+      "must_include": [
+        "duplicate",
+        "idempotent",
+        "WRITE_TRUNCATE",
+        "rerun"
+      ],
+      "must_not_include": [
+        "duplicates are impossible in Dataflow"
+      ],
+      "difficulty": "edge"
+    },
+    {
+      "prompt": "Before rerunning a failed batch ETL into a partitioned BigQuery table, what should I verify?",
+      "must_include": [
+        "partition",
+        "idempotent",
+        "WRITE_TRUNCATE",
+        "transient"
+      ],
+      "must_not_include": [
+        "just rerun, output is always overwritten"
+      ],
+      "difficulty": "edge"
+    },
+    {
+      "prompt": "Our Dataflow job failed because the input GCS path didn't exist. Is rerunning the fix?",
+      "must_include": [
+        "input",
+        "does not exist",
+        "fix the input",
+        "not transient"
+      ],
+      "must_not_include": [
+        "rerunning with the same path will succeed"
+      ],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "A batch Dataflow job hit a quota error (CPU quota exceeded). Rerun now or wait?",
+      "must_include": [
+        "quota",
+        "transient",
+        "rerun",
+        "maxWorkers"
+      ],
+      "must_not_include": [
+        "quota errors are permanent code bugs"
+      ],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "How do I lower the worker machine type to save cost on a Dataflow flex-template run?",
+      "must_include": [
+        "--worker-machine-type",
+        "gcloud dataflow flex-template run",
+        "cost"
+      ],
+      "must_not_include": [
+        "machine type cannot be set"
+      ],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Set a maximum number of workers AND number of workers at launch for a flex template.",
+      "must_include": [
+        "--max-workers",
+        "--num-workers",
+        "gcloud dataflow flex-template run"
+      ],
+      "must_not_include": [
+        "--workers as a single flag"
+      ],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "How do I enable Streaming Engine for a streaming Dataflow flex-template job?",
+      "must_include": [
+        "--enable-streaming-engine",
+        "gcloud dataflow flex-template run",
+        "streaming"
+      ],
+      "must_not_include": [
+        "Streaming Engine is deprecated"
+      ],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Our streaming Dataflow job autoscaled to maxWorkers and lag is still growing. What now?",
+      "must_include": [
+        "maxWorkers",
+        "system lag",
+        "Streaming Engine",
+        "bottleneck"
+      ],
+      "must_not_include": [
+        "there is nothing else you can do"
+      ],
+      "difficulty": "edge"
+    },
+    {
+      "prompt": "How do I tell if a Dataflow streaming job's autoscaling is throttled by quota?",
+      "must_include": [
+        "quota",
+        "autoscaling",
+        "gcloud logging read",
+        "maxWorkers"
+      ],
+      "must_not_include": [
+        "quota never affects autoscaling"
+      ],
+      "difficulty": "edge"
+    },
+    {
+      "prompt": "Submit a Spark job to Dataproc and have it wait for completion and stream logs.",
+      "must_include": [
+        "gcloud dataproc jobs submit spark",
+        "--cluster",
+        "--region"
+      ],
+      "must_not_include": [
+        "--no-wait then assume success"
+      ],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "How do I run a Spark job on Dataproc Serverless (batches) instead of a cluster?",
+      "must_include": [
+        "gcloud dataproc batches submit spark",
+        "--region"
+      ],
+      "must_not_include": [
+        "--cluster is required for serverless"
+      ],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "List Dataproc Serverless batch workloads and describe one.",
+      "must_include": [
+        "gcloud dataproc batches list",
+        "gcloud dataproc batches describe",
+        "--region"
+      ],
+      "must_not_include": [
+        "gcloud dataproc clusters list for batches"
+      ],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "A Dataproc Serverless batch failed with an OOM. How do I give it more memory?",
+      "must_include": [
+        "gcloud dataproc batches submit spark",
+        "--properties",
+        "spark.executor.memory"
+      ],
+      "must_not_include": [
+        "serverless cannot be tuned"
+      ],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "How do I check the cost driver of a long-running Dataproc cluster (vCPU-hours)?",
+      "must_include": [
+        "gcloud dataproc clusters describe",
+        "machine type",
+        "num-workers"
+      ],
+      "must_not_include": [
+        "Dataproc is always free"
+      ],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Our Spark stage is slow due to too much shuffle spill to disk. What do I tune?",
+      "must_include": [
+        "shuffle",
+        "spill",
+        "spark.executor.memory",
+        "--properties"
+      ],
+      "must_not_include": [
+        "disk spill cannot be reduced"
+      ],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "How do I find which Dataproc executor failed and why from the job output?",
+      "must_include": [
+        "gcloud dataproc jobs describe",
+        "yarn logs",
+        "executor"
+      ],
+      "must_not_include": [
+        "executor failures are not logged"
+      ],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Cancel ALL my active Dataflow jobs in a region \u2014 show me a safe approach.",
+      "must_include": [
+        "gcloud dataflow jobs list",
+        "--status=active",
+        "gcloud dataflow jobs cancel"
+      ],
+      "must_not_include": [
+        "xargs cancel without listing first"
+      ],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Drain a streaming Dataflow job and confirm it reaches the Drained state.",
+      "must_include": [
+        "gcloud dataflow jobs drain",
+        "gcloud dataflow jobs describe",
+        "--region"
+      ],
+      "must_not_include": [
+        "cancel forces a clean drain"
+      ],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "How do I update a running streaming Dataflow pipeline with new code without losing state?",
+      "must_include": [
+        "--update",
+        "transform name mapping",
+        "streaming"
+      ],
+      "must_not_include": [
+        "cancel and start fresh always preserves state"
+      ],
+      "difficulty": "edge"
+    },
+    {
+      "prompt": "When updating a streaming Dataflow job and a step was renamed, what's needed?",
+      "must_include": [
+        "--transform-name-mappings",
+        "--update",
+        "compatibility"
+      ],
+      "must_not_include": [
+        "renames are handled automatically"
+      ],
+      "difficulty": "edge"
+    },
+    {
+      "prompt": "How do I get metrics like elementCount for each Dataflow step?",
+      "must_include": [
+        "gcloud dataflow metrics list",
+        "--region",
+        "step"
+      ],
+      "must_not_include": [
+        "metrics are not exposed via gcloud"
+      ],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Show me the gcloud command to list Dataflow metrics for a specific job.",
+      "must_include": [
+        "gcloud dataflow metrics list",
+        "--job-id",
+        "--region"
+      ],
+      "must_not_include": [
+        "gcloud dataflow jobs metrics"
+      ],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Our Dataproc job failed with 'Container killed by YARN for exceeding memory limits'. What does this mean and how to fix?",
+      "must_include": [
+        "YARN",
+        "memory",
+        "spark.executor.memoryOverhead",
+        "--properties"
+      ],
+      "must_not_include": [
+        "ignore the YARN warning"
+      ],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "How do I increase memoryOverhead on a Dataproc Spark job to stop YARN container kills?",
+      "must_include": [
+        "spark.executor.memoryOverhead",
+        "--properties",
+        "gcloud dataproc jobs submit spark"
+      ],
+      "must_not_include": [
+        "memoryOverhead does not exist"
+      ],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "A streaming Dataflow job's data freshness spiked after a deploy. Roll back or scale?",
+      "must_include": [
+        "data freshness",
+        "deploy",
+        "rollback",
+        "logs"
+      ],
+      "must_not_include": [
+        "always scale up, never roll back"
+      ],
+      "difficulty": "edge"
+    },
+    {
+      "prompt": "How do I cancel a Dataflow job but keep the option to inspect its state afterwards?",
+      "must_include": [
+        "gcloud dataflow jobs cancel",
+        "gcloud dataflow jobs describe",
+        "--region"
+      ],
+      "must_not_include": [
+        "cancel permanently deletes all job info"
+      ],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "What region issues should I watch for when listing Dataflow jobs across multiple regions?",
+      "must_include": [
+        "--region",
+        "per-region",
+        "gcloud dataflow jobs list"
+      ],
+      "must_not_include": [
+        "Dataflow is region-agnostic"
+      ],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "List Dataflow jobs in every region we use without omitting any.",
+      "must_include": [
+        "gcloud dataflow jobs list",
+        "--region",
+        "each region"
+      ],
+      "must_not_include": [
+        "a single global list shows all regions"
+      ],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Restart a Dataproc cluster's stuck job \u2014 kill it then resubmit. Show the steps.",
+      "must_include": [
+        "gcloud dataproc jobs kill",
+        "gcloud dataproc jobs submit",
+        "--region"
+      ],
+      "must_not_include": [
+        "delete the cluster to restart a job"
+      ],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "How do I set initialization actions when creating a Dataproc cluster?",
+      "must_include": [
+        "gcloud dataproc clusters create",
+        "--initialization-actions",
+        "gs://"
+      ],
+      "must_not_include": [
+        "init actions are not supported"
+      ],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Create a Dataproc cluster with a specific image version and component gateway.",
+      "must_include": [
+        "gcloud dataproc clusters create",
+        "--image-version",
+        "--enable-component-gateway"
+      ],
+      "must_not_include": [
+        "image version is fixed and unchangeable"
+      ],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Our Spark job reads a tiny table but spawns 20000 tasks. How do I reduce partitions?",
+      "must_include": [
+        "coalesce",
+        "repartition",
+        "spark.sql.shuffle.partitions"
+      ],
+      "must_not_include": [
+        "task count cannot be controlled"
+      ],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "How do I enable adaptive query execution to auto-handle skew in Spark on Dataproc?",
+      "must_include": [
+        "spark.sql.adaptive.enabled",
+        "skewJoin",
+        "--properties"
+      ],
+      "must_not_include": [
+        "AQE makes skew worse"
+      ],
+      "difficulty": "edge"
+    },
+    {
+      "prompt": "A Dataflow streaming job is dropping data due to late arrivals past the window. What controls this?",
+      "must_include": [
+        "allowed lateness",
+        "watermark",
+        "windowing"
+      ],
+      "must_not_include": [
+        "late data is always kept by default forever"
+      ],
+      "difficulty": "edge"
+    },
+    {
+      "prompt": "How do I check the watermark progression on a Dataflow streaming pipeline?",
+      "must_include": [
+        "watermark",
+        "data freshness",
+        "gcloud dataflow jobs describe"
+      ],
+      "must_not_include": [
+        "watermarks are internal and invisible"
+      ],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Submit a Dataproc Spark job and tag it with a label so we can track cost.",
+      "must_include": [
+        "gcloud dataproc jobs submit spark",
+        "--labels",
+        "--region"
+      ],
+      "must_not_include": [
+        "labels are not allowed on jobs"
+      ],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "How do I find all Dataproc jobs that failed on a cluster in the last day?",
+      "must_include": [
+        "gcloud dataproc jobs list",
+        "--state-filter",
+        "--cluster"
+      ],
+      "must_not_include": [
+        "failed jobs are purged immediately"
+      ],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "We need to drain a streaming job before a maintenance deploy, then relaunch from the same template.",
+      "must_include": [
+        "gcloud dataflow jobs drain",
+        "gcloud dataflow flex-template run",
+        "--region"
+      ],
+      "must_not_include": [
+        "cancel keeps in-flight data safe"
+      ],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "A batch Dataflow rerun keeps failing at the same step with the same error. Stop retrying \u2014 what do I tell the customer?",
+      "must_include": [
+        "not transient",
+        "code",
+        "stop",
+        "fix"
+      ],
+      "must_not_include": [
+        "keep retrying, it will eventually pass"
+      ],
+      "difficulty": "edge"
+    }
+  ]
+}

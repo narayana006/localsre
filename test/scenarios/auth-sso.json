@@ -1,0 +1,605 @@
+{
+  "skill": "auth-sso",
+  "scenarios": [
+    {
+      "prompt": "I logged into our internal dashboard through PingID in Chrome. How do I find the session cookie so I can reuse it for an API call?",
+      "must_include": ["DevTools", "Application", "Cookie", "JSESSIONID"],
+      "must_not_include": ["store the password in code"],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "Give me a basic curl command that sends my captured session cookie to https://api.internal.corp/v1/orders.",
+      "must_include": ["curl", "-H", "Cookie:", "JSESSIONID="],
+      "must_not_include": ["--insecure -k always"],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "Show me how to use a Python requests.Session() to hold cookies between calls to our internal API.",
+      "must_include": ["requests.Session()", "session.get", "cookies"],
+      "must_not_include": ["verify=False"],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "After SSO login the API keeps returning 401. What's the most likely cause and first thing to check?",
+      "must_include": ["401", "Cookie", "session", "expired"],
+      "must_not_include": ["the API is down"],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "How do I tell curl to save cookies from a login response into a file?",
+      "must_include": ["curl", "-c", "cookie jar", "-c jar.txt"],
+      "must_not_include": ["-c is for compression"],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "How do I send the cookies I previously saved in a jar file on a follow-up curl request?",
+      "must_include": ["curl", "-b", "jar.txt", "Cookie"],
+      "must_not_include": ["-b enables binary mode"],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "What is PingFederate and how does it relate to the session cookie I get after logging in?",
+      "must_include": ["PingFederate", "SSO", "session", "cookie"],
+      "must_not_include": ["PingFederate is a database"],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "My internal API uses Bearer tokens, not cookies. Show me the header to pass an access token with curl.",
+      "must_include": ["Authorization: Bearer", "curl", "-H"],
+      "must_not_include": ["Authorization: Basic password"],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "Explain the difference between SAML and OIDC in the context of our PingID SSO.",
+      "must_include": ["SAML", "OIDC", "assertion", "ID token"],
+      "must_not_include": ["SAML and OIDC are the same protocol"],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "For a backend service account, how do I get a token from PingFederate without a user logging in?",
+      "must_include": ["client_credentials", "grant_type", "token endpoint", "client_id"],
+      "must_not_include": ["use the user's password"],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "Write the curl for an OAuth2 client_credentials token request against PingFederate's /as/token.oauth2 endpoint.",
+      "must_include": ["curl", "grant_type=client_credentials", "client_id", "client_secret", "/as/token.oauth2"],
+      "must_not_include": ["grant_type=password"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "I get an XSRF-TOKEN cookie after login. How do I use it on a POST request?",
+      "must_include": ["XSRF-TOKEN", "X-XSRF-TOKEN", "header", "POST"],
+      "must_not_include": ["XSRF tokens are optional and can be ignored"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Explain CSRF protection and why the API rejects my POST with 403 even though my cookie is valid.",
+      "must_include": ["CSRF", "403", "X-CSRF-Token", "header"],
+      "must_not_include": ["403 means your cookie expired"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Show me how to load cookies captured from the browser into a Python requests.Session().",
+      "must_include": ["requests.Session()", "session.cookies.set", "JSESSIONID"],
+      "must_not_include": ["hardcode the password"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "My curl request gets a 302 redirect to the PingFederate login page instead of JSON. What's happening?",
+      "must_include": ["302", "login", "session", "cookie", "expired"],
+      "must_not_include": ["302 means success"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "How do I follow redirects in curl AND keep cookies through the whole SSO chain?",
+      "must_include": ["curl", "-L", "-c", "-b"],
+      "must_not_include": ["redirects always break cookies"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "I need to script a login through the SP-initiated SAML flow and grab the resulting app session cookie. Outline the steps.",
+      "must_include": ["SP-initiated", "SAMLResponse", "RelayState", "session cookie"],
+      "must_not_include": ["SAML doesn't use cookies"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Walk me through capturing the cookie using browser DevTools Network tab so I can replay an authenticated request.",
+      "must_include": ["Network", "Copy as cURL", "Cookie:", "DevTools"],
+      "must_not_include": ["screenshot the password field"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "What cookie attributes (HttpOnly, Secure, SameSite) affect whether I can reuse a session cookie from a script?",
+      "must_include": ["HttpOnly", "Secure", "SameSite", "domain"],
+      "must_not_include": ["HttpOnly cookies can be read by JavaScript"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "My session cookie works in the browser but not in my Python script. The cookie is HttpOnly. Can I still use it?",
+      "must_include": ["HttpOnly", "DevTools", "Cookie", "requests.Session()"],
+      "must_not_include": ["document.cookie"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "How do I check when my PingFederate session cookie expires?",
+      "must_include": ["Expires", "Max-Age", "DevTools", "cookie"],
+      "must_not_include": ["cookies never expire"],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "The cookie has Domain=.corp.example.com. Will it be sent to api.internal.corp.example.com?",
+      "must_include": ["Domain", "subdomain", "scope", "sent"],
+      "must_not_include": ["cookies ignore the domain attribute"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Show a requests example that posts JSON to the internal API including both the session cookie and the CSRF header.",
+      "must_include": ["requests.Session()", "X-CSRF-Token", "json=", "session.post"],
+      "must_not_include": ["disable CSRF on the server"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "I have an OIDC ID token but the API wants an access token. What's the difference and which do I send?",
+      "must_include": ["ID token", "access token", "Authorization: Bearer", "audience"],
+      "must_not_include": ["always send the ID token to APIs"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Decode my JWT access token so I can check the exp and aud claims. How?",
+      "must_include": ["JWT", "exp", "aud", "base64"],
+      "must_not_include": ["paste the token into a random public website"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "My client_credentials token request returns invalid_client. What should I check?",
+      "must_include": ["invalid_client", "client_id", "client_secret", "Basic"],
+      "must_not_include": ["the token endpoint is wrong by default"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "How do I pass client_id and client_secret using HTTP Basic auth on the token endpoint instead of in the body?",
+      "must_include": ["Authorization: Basic", "client_id:client_secret", "base64", "token endpoint"],
+      "must_not_include": ["put the secret in the query string"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "The token response includes a scope I didn't request. Can I add a scope param to client_credentials?",
+      "must_include": ["scope", "grant_type=client_credentials", "scope=", "token"],
+      "must_not_include": ["scopes cannot be requested"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Show me how to store the OAuth client_secret safely for my SRE script rather than hardcoding it.",
+      "must_include": ["environment variable", "os.environ", "secret manager", "client_secret"],
+      "must_not_include": ["commit the secret to git"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "After grabbing the JSESSIONID I still get 403 on /admin endpoints but 200 on /me. Why?",
+      "must_include": ["403", "authorization", "role", "permission"],
+      "must_not_include": ["403 means the cookie is invalid"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "My PingID login does MFA. Can I bypass MFA in my automation by reusing the post-MFA session cookie?",
+      "must_include": ["session cookie", "after MFA", "reuse", "expires"],
+      "must_not_include": ["bypass MFA by disabling it"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Convert a 'Copy as cURL' command from DevTools into a clean reusable curl that only keeps the auth cookie.",
+      "must_include": ["Copy as cURL", "Cookie:", "JSESSIONID", "curl"],
+      "must_not_include": ["keep the password header"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Write a Python snippet that reads the session cookie from an env var and calls the internal API.",
+      "must_include": ["os.environ", "requests.Session()", "Cookie", "JSESSIONID"],
+      "must_not_include": ["print(token)"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "How can I refresh an expired access token for my service account automatically?",
+      "must_include": ["client_credentials", "re-request", "token endpoint", "expires_in"],
+      "must_not_include": ["refresh_token for client_credentials"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Explain why client_credentials flow does NOT return a refresh token.",
+      "must_include": ["client_credentials", "no refresh token", "re-authenticate", "client_secret"],
+      "must_not_include": ["client_credentials returns a refresh token"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "My cookie jar from curl is empty after login. The login used a 302. What went wrong?",
+      "must_include": ["-L", "-c", "302", "Set-Cookie"],
+      "must_not_include": ["curl can't save cookies"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Show how to inspect Set-Cookie headers from the login response with curl -v.",
+      "must_include": ["curl", "-v", "Set-Cookie", "<"],
+      "must_not_include": ["curl -v shows the decrypted TLS key"],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "The API needs both an Authorization Bearer token and a session cookie. Show the curl with both.",
+      "must_include": ["Authorization: Bearer", "Cookie:", "curl", "-H"],
+      "must_not_include": ["you can only send one auth header"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "How do I confirm whether my 401 is due to an expired cookie vs a missing CSRF token?",
+      "must_include": ["401", "Set-Cookie", "WWW-Authenticate", "CSRF"],
+      "must_not_include": ["401 and 403 are interchangeable"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Build a Python function that performs client_credentials and returns the access_token string.",
+      "must_include": ["grant_type", "client_credentials", "access_token", "requests.post"],
+      "must_not_include": ["hardcode client_secret"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "What headers does PingFederate's token endpoint require for a form-encoded client_credentials request?",
+      "must_include": ["Content-Type: application/x-www-form-urlencoded", "grant_type", "client_credentials"],
+      "must_not_include": ["Content-Type: application/json is required"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "I want my script to log in via the OIDC authorization code flow headlessly. Is that feasible and what's the catch?",
+      "must_include": ["authorization code", "redirect_uri", "code", "interactive"],
+      "must_not_include": ["just send the password to /token"],
+      "difficulty": "edge"
+    },
+    {
+      "prompt": "The session cookie name is different per environment (SESSION vs JSESSIONID). How do I make my script robust?",
+      "must_include": ["cookie name", "session.cookies", "Set-Cookie", "configurable"],
+      "must_not_include": ["cookie names are always JSESSIONID"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Explain how to map the PingFederate PF cookie to the downstream app session and why I might need both.",
+      "must_include": ["PF", "PingFederate", "app session", "cookie"],
+      "must_not_include": ["the PF cookie alone authenticates every API"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "My requests.Session() loses the cookie after a redirect to a different subdomain. Why and how to fix?",
+      "must_include": ["domain", "Set-Cookie", "requests.Session()", "redirect"],
+      "must_not_include": ["requests never follows redirects"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "How do I extract a specific cookie value from a curl cookie jar file for use in a header?",
+      "must_include": ["jar.txt", "grep", "Cookie:", "value"],
+      "must_not_include": ["the jar file is binary and unreadable"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Give me a one-liner to test whether my session cookie is still valid against /api/health.",
+      "must_include": ["curl", "Cookie:", "-w", "%{http_code}"],
+      "must_not_include": ["health endpoints never require auth"],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "Our API returns 403 with body 'CSRF token mismatch' on PUT. Fix my requests code.",
+      "must_include": ["XSRF-TOKEN", "X-XSRF-TOKEN", "session.cookies", "requests.Session()"],
+      "must_not_include": ["ignore the CSRF error"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "How do I capture the SAMLResponse from the IdP POST so I can debug an SSO failure?",
+      "must_include": ["SAMLResponse", "POST", "base64", "decode"],
+      "must_not_include": ["SAMLResponse is sent as a cookie"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Explain SameSite=Strict and how it can cause my cross-site scripted request to drop the session cookie.",
+      "must_include": ["SameSite", "Strict", "cross-site", "cookie"],
+      "must_not_include": ["SameSite has no effect on requests"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Write a curl that does client_credentials and pipes the access_token straight into a second authenticated curl.",
+      "must_include": ["client_credentials", "access_token", "jq", "Authorization: Bearer"],
+      "must_not_include": ["echo the token to a log file"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "What's the safest way to log API errors in my SRE script without leaking the bearer token?",
+      "must_include": ["redact", "Authorization", "do not log", "token"],
+      "must_not_include": ["log the full Authorization header"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "My token works for 5 minutes then 401. How do I detect expiry and re-fetch in Python?",
+      "must_include": ["expires_in", "401", "client_credentials", "re-request"],
+      "must_not_include": ["tokens last forever"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "How do I list all cookies currently in my requests.Session() to debug what's being sent?",
+      "must_include": ["session.cookies", "requests.Session()", "get_dict", "print"],
+      "must_not_include": ["sessions don't store cookies"],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "The internal API is behind a corporate proxy that injects its own auth. How do I pass the session cookie through?",
+      "must_include": ["proxy", "Cookie:", "curl", "--proxy"],
+      "must_not_include": ["disable the proxy to fix auth"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Show me how to persist a requests.Session() cookie jar to disk and reload it across script runs.",
+      "must_include": ["http.cookiejar", "MozillaCookieJar", "save", "load"],
+      "must_not_include": ["pickle the password"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "I keep getting redirected to /idp/startSSO. What does that path indicate and how do I handle it?",
+      "must_include": ["startSSO", "PingFederate", "IdP", "session"],
+      "must_not_include": ["startSSO is your API endpoint"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Explain what a PingFederate PF.PERSISTENT cookie is and whether I should reuse it.",
+      "must_include": ["PingFederate", "PF", "persistent", "session"],
+      "must_not_include": ["the persistent cookie is your API key"],
+      "difficulty": "edge"
+    },
+    {
+      "prompt": "Build a minimal Python client that does OIDC client_credentials, caches the token, and reuses until exp.",
+      "must_include": ["client_credentials", "access_token", "exp", "expires_in"],
+      "must_not_include": ["fetch a new token on every call no matter what"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "My curl returns 200 but HTML login page, not JSON. status code lies. How do I detect this?",
+      "must_include": ["Content-Type", "HTML", "login", "302"],
+      "must_not_include": ["200 always means authenticated"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "How do I send multiple cookies (session + csrf) in a single curl Cookie header?",
+      "must_include": ["Cookie:", "JSESSIONID=", "XSRF-TOKEN=", ";"],
+      "must_not_include": ["only one cookie per request"],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "Explain why my Authorization: Bearer token gets 401 with error 'invalid audience'.",
+      "must_include": ["aud", "audience", "401", "resource"],
+      "must_not_include": ["audience is never validated"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "I need to call the API as a service account from a cron job. What auth approach should I use and why?",
+      "must_include": ["client_credentials", "service account", "client_secret", "Authorization: Bearer"],
+      "must_not_include": ["reuse a human user's session cookie"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "How do I verify the JWT signature of a token from PingFederate using its JWKS?",
+      "must_include": ["JWKS", "jwks_uri", "signature", "kid"],
+      "must_not_include": ["skip signature verification"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "My session cookie has Secure flag and I'm testing over http://localhost. It's not sent. Why?",
+      "must_include": ["Secure", "https", "not sent", "cookie"],
+      "must_not_include": ["Secure cookies work over http"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Write a requests example that disables auto-redirect so I can inspect the 302 Location to the IdP.",
+      "must_include": ["allow_redirects=False", "302", "Location", "requests"],
+      "must_not_include": ["requests cannot disable redirects"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "What's the right way to handle the WWW-Authenticate header coming back on a 401 from our OIDC-protected API?",
+      "must_include": ["WWW-Authenticate", "Bearer", "401", "error"],
+      "must_not_include": ["ignore WWW-Authenticate"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "I have a HAR file from the login flow. How do I pull the auth cookie out of it for scripting?",
+      "must_include": ["HAR", "Set-Cookie", "cookies", "JSESSIONID"],
+      "must_not_include": ["HAR files don't contain headers"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Explain the risk of committing a captured session cookie into our git repo for the test suite.",
+      "must_include": ["session", "cookie", "rotate", "secret"],
+      "must_not_include": ["committing cookies is safe"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "How do I pass a bearer token from a file into curl without it showing in the process list?",
+      "must_include": ["curl", "-H", "@", "Authorization: Bearer"],
+      "must_not_include": ["put the token on the command line for everyone to see"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "My OIDC token endpoint requires mTLS. How does that change my client_credentials curl?",
+      "must_include": ["--cert", "--key", "client_credentials", "mTLS"],
+      "must_not_include": ["mTLS is the same as basic auth"],
+      "difficulty": "edge"
+    },
+    {
+      "prompt": "Show how to detect a 302 to login inside a Python loop and stop hammering the API.",
+      "must_include": ["302", "allow_redirects=False", "Location", "break"],
+      "must_not_include": ["retry forever on 302"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "What does the PingFederate error 'Session not found or expired' mean for my reused cookie?",
+      "must_include": ["session", "expired", "PingFederate", "re-authenticate"],
+      "must_not_include": ["the cookie is permanently valid"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "How do I scope a cookie to only the API host in my requests.Session() to avoid sending it everywhere?",
+      "must_include": ["domain", "requests.cookies", "Set", "path"],
+      "must_not_include": ["send the cookie to every domain"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Give me a curl that sends the access token and prints only the HTTP status to confirm auth works.",
+      "must_include": ["curl", "Authorization: Bearer", "-o /dev/null", "%{http_code}"],
+      "must_not_include": ["status 000 means success"],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "Our SSO uses OIDC with PKCE for the UI. Does my backend service account need PKCE too?",
+      "must_include": ["PKCE", "authorization code", "client_credentials", "not"],
+      "must_not_include": ["client_credentials requires PKCE"],
+      "difficulty": "edge"
+    },
+    {
+      "prompt": "How do I tell if the 403 is from the WAF/proxy versus the application itself?",
+      "must_include": ["403", "Server", "header", "WAF"],
+      "must_not_include": ["403 always comes from the app"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Write a Python retry wrapper that re-fetches the token on a single 401 then retries once.",
+      "must_include": ["401", "client_credentials", "retry", "access_token"],
+      "must_not_include": ["retry indefinitely"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "My JSESSIONID changes on every request and auth breaks. What server behavior causes this?",
+      "must_include": ["Set-Cookie", "session fixation", "JSESSIONID", "cookie"],
+      "must_not_include": ["JSESSIONID must change each request"],
+      "difficulty": "edge"
+    },
+    {
+      "prompt": "How do I include the RelayState when manually completing a SAML POST binding?",
+      "must_include": ["RelayState", "SAMLResponse", "POST", "form"],
+      "must_not_include": ["RelayState is optional and ignored"],
+      "difficulty": "edge"
+    },
+    {
+      "prompt": "Show me how to base64-decode a SAMLResponse to inspect the assertion conditions.",
+      "must_include": ["base64", "SAMLResponse", "Conditions", "NotOnOrAfter"],
+      "must_not_include": ["SAMLResponse is plain JSON"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "My client_credentials token has no scopes and the API returns 403. How do I grant scopes to the service account?",
+      "must_include": ["scope", "client", "403", "grant"],
+      "must_not_include": ["scopes are assigned automatically to all clients"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "How do I confirm the Set-Cookie domain matches the API host I'm calling?",
+      "must_include": ["Set-Cookie", "Domain", "host", "match"],
+      "must_not_include": ["the domain attribute is decorative"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Give a Python example using requests.Session() that handles the login form POST and keeps cookies.",
+      "must_include": ["requests.Session()", "session.post", "data=", "cookies"],
+      "must_not_include": ["store the password in code"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "How do I rotate the captured cookie in my CI secrets when it expires nightly?",
+      "must_include": ["rotate", "secret", "expires", "session"],
+      "must_not_include": ["never rotate the cookie"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Explain why I should prefer client_credentials over screen-scraping the SSO login for automation.",
+      "must_include": ["client_credentials", "service account", "MFA", "brittle"],
+      "must_not_include": ["screen-scraping login is best practice"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "My curl with --cookie works locally but the cookie has Path=/app and I'm hitting /api. Problem?",
+      "must_include": ["Path", "/app", "/api", "not sent"],
+      "must_not_include": ["path attribute doesn't matter"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Show how to pass the XSRF-TOKEN cookie value as the X-XSRF-TOKEN header in curl.",
+      "must_include": ["XSRF-TOKEN", "X-XSRF-TOKEN", "curl", "-H"],
+      "must_not_include": ["the header and cookie must differ randomly"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "How do I debug an intermittent 401 that only happens after ~30 minutes of my long-running job?",
+      "must_include": ["expires_in", "token", "refresh", "401"],
+      "must_not_include": ["401 is always a network glitch"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "What's the correct grant_type and params for a service-to-service token in OIDC?",
+      "must_include": ["grant_type=client_credentials", "client_id", "client_secret", "scope"],
+      "must_not_include": ["grant_type=implicit"],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "My requests call sends the cookie but the server says missing Origin/Referer for CSRF. How to add them?",
+      "must_include": ["Origin", "Referer", "headers", "CSRF"],
+      "must_not_include": ["Origin and Referer are forbidden headers"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "How can I tell from the token response whether I got an opaque token vs a JWT?",
+      "must_include": ["JWT", "opaque", "introspect", "dots"],
+      "must_not_include": ["all tokens are JWTs"],
+      "difficulty": "edge"
+    },
+    {
+      "prompt": "If my token is opaque, how do I validate it server-side via PingFederate introspection?",
+      "must_include": ["introspect", "active", "client_id", "token"],
+      "must_not_include": ["decode an opaque token with base64"],
+      "difficulty": "edge"
+    },
+    {
+      "prompt": "Write the curl to call PingFederate's /as/introspect.oauth2 endpoint for a token.",
+      "must_include": ["curl", "/as/introspect.oauth2", "token=", "active"],
+      "must_not_include": ["introspection needs the user's password"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "My session cookie reuse leaks between two parallel test workers. How do I isolate sessions?",
+      "must_include": ["requests.Session()", "per-worker", "isolate", "cookies"],
+      "must_not_include": ["share one global session across workers"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "How do I confirm the API actually requires CSRF for GET vs only state-changing methods?",
+      "must_include": ["CSRF", "GET", "POST", "state-changing"],
+      "must_not_include": ["GET requests always need CSRF tokens"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Explain double-submit cookie CSRF pattern and how it maps to XSRF-TOKEN and X-XSRF-TOKEN.",
+      "must_include": ["double-submit", "XSRF-TOKEN", "X-XSRF-TOKEN", "match"],
+      "must_not_include": ["double-submit doesn't use cookies"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "My OIDC access token is accepted but a downstream microservice 403s. Could it be token audience scoping?",
+      "must_include": ["aud", "audience", "scope", "403"],
+      "must_not_include": ["one token works for every microservice unconditionally"],
+      "difficulty": "edge"
+    },
+    {
+      "prompt": "Give me a clean curl to capture cookies on login and immediately reuse them on a protected GET, in one script.",
+      "must_include": ["curl", "-c jar.txt", "-b jar.txt", "-L"],
+      "must_not_include": ["cookies cannot be reused in the same script"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "I captured a cookie but it's URL-encoded in the jar. How do I send it correctly?",
+      "must_include": ["URL-encoded", "Cookie:", "decode", "value"],
+      "must_not_include": ["never decode cookie values"],
+      "difficulty": "edge"
+    }
+  ]
+}

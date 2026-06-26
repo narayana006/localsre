@@ -1,0 +1,605 @@
+{
+  "skill": "bigquery",
+  "scenarios": [
+    {
+      "prompt": "Run a simple query to count rows in the table `myproj.logs.events`.",
+      "must_include": ["bq query", "--use_legacy_sql=false", "COUNT(*)", "FROM `myproj.logs.events`"],
+      "must_not_include": ["--use_legacy_sql=true"],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "How do I list all datasets in my current project with the bq CLI?",
+      "must_include": ["bq ls", "--datasets"],
+      "must_not_include": ["DROP"],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "List all tables in the dataset `analytics` using bq.",
+      "must_include": ["bq ls", "analytics"],
+      "must_not_include": ["SELECT *"],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "Show the schema of the table `myproj.analytics.sessions`.",
+      "must_include": ["bq show", "myproj.analytics.sessions"],
+      "must_not_include": ["DROP TABLE"],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "I want to see the schema as JSON for `myproj.analytics.sessions`. What command?",
+      "must_include": ["bq show", "--schema", "--format=prettyjson"],
+      "must_not_include": ["legacy"],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "Before running an expensive query, how can I estimate how many bytes it will scan without actually running it?",
+      "must_include": ["--dry_run", "bq query", "--use_legacy_sql=false"],
+      "must_not_include": ["actually runs"],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "Cap a query so it fails if it would scan more than 10 GB. Query is SELECT user_id FROM `proj.ds.big`.",
+      "must_include": ["maximum_bytes_billed", "10737418240", "bq query"],
+      "must_not_include": ["SELECT *"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "I keep getting huge bills. How do I make bq queries safe by default on cost? Give me both dry run and a byte cap example.",
+      "must_include": ["--dry_run", "--maximum_bytes_billed", "--use_legacy_sql=false"],
+      "must_not_include": ["SELECT * FROM"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Get only the latest event per user_id from `proj.ds.events` ordered by event_time, using a window function instead of a subquery.",
+      "must_include": ["QUALIFY", "ROW_NUMBER()", "OVER (PARTITION BY user_id", "ORDER BY event_time DESC"],
+      "must_not_include": ["--use_legacy_sql=true"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "The column `tags` is a repeated STRING (array). How do I flatten it and count occurrences of each tag?",
+      "must_include": ["UNNEST(tags)", "GROUP BY", "COUNT(*)"],
+      "must_not_include": ["FLATTEN("],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "My table `proj.ds.logs` is partitioned by a DATE column `log_date`. Query just yesterday's data efficiently.",
+      "must_include": ["WHERE log_date", "DATE_SUB(CURRENT_DATE()", "INTERVAL 1 DAY"],
+      "must_not_include": ["WHERE TRUE"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "The table is ingestion-time partitioned. How do I filter on the partition to only scan the last 3 days?",
+      "must_include": ["_PARTITIONTIME", "TIMESTAMP_SUB", "INTERVAL 3 DAY"],
+      "must_not_include": ["SELECT * FROM"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Export the table `proj.ds.report` to a GCS bucket as a CSV file.",
+      "must_include": ["bq extract", "gs://", "proj.ds.report"],
+      "must_not_include": ["bq load"],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "Export `proj.ds.events` to GCS as gzip-compressed Avro.",
+      "must_include": ["bq extract", "--destination_format=AVRO", "--compression=", "gs://"],
+      "must_not_include": ["CSV"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "How do I find which tables in dataset `analytics` are largest by storage using INFORMATION_SCHEMA?",
+      "must_include": ["INFORMATION_SCHEMA.TABLE_STORAGE", "total_logical_bytes", "ORDER BY"],
+      "must_not_include": ["bq show --schema"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "List all columns and their data types for the table `orders` in dataset `sales` via INFORMATION_SCHEMA.",
+      "must_include": ["INFORMATION_SCHEMA.COLUMNS", "WHERE table_name = 'orders'", "data_type"],
+      "must_not_include": ["bq show --schema"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Which queries in the last 24 hours scanned the most bytes? Use the jobs INFORMATION_SCHEMA view.",
+      "must_include": ["INFORMATION_SCHEMA.JOBS", "total_bytes_processed", "ORDER BY", "creation_time"],
+      "must_not_include": ["legacy"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Run a query and save the results to a new table `proj.ds.daily_summary`, overwriting if it exists.",
+      "must_include": ["bq query", "--destination_table", "--replace", "--use_legacy_sql=false"],
+      "must_not_include": ["--append_table --replace"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Append query results to existing table `proj.ds.rollup`.",
+      "must_include": ["bq query", "--append_table", "--destination_table"],
+      "must_not_include": ["--replace"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "I need the output of a quick aggregation as CSV to pipe into another tool. How do I get bq to print CSV?",
+      "must_include": ["bq query", "--format=csv", "--use_legacy_sql=false"],
+      "must_not_include": ["prettyjson only"],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "Join `proj.ds.orders` o to `proj.ds.customers` c on customer_id and return order_id with customer name.",
+      "must_include": ["JOIN", "ON o.customer_id = c.customer_id", "bq query"],
+      "must_not_include": ["CROSS JOIN"],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "Compute a 7-day moving average of daily request counts using a window function over an ordered date column.",
+      "must_include": ["AVG(", "OVER (", "ORDER BY", "ROWS BETWEEN 6 PRECEDING AND CURRENT ROW"],
+      "must_not_include": ["legacy"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Create a date-partitioned table partitioned by `event_date` from a SELECT.",
+      "must_include": ["CREATE TABLE", "PARTITION BY event_date", "AS SELECT"],
+      "must_not_include": ["CREATE LEGACY"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Create a table partitioned by day on a TIMESTAMP column `created_at` and clustered by `region`.",
+      "must_include": ["PARTITION BY DATE(created_at)", "CLUSTER BY region", "CREATE TABLE"],
+      "must_not_include": ["PARTITION BY created_at,"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Load a newline-delimited JSON file from GCS into table `proj.ds.imports`, autodetecting the schema.",
+      "must_include": ["bq load", "--source_format=NEWLINE_DELIMITED_JSON", "--autodetect", "gs://"],
+      "must_not_include": ["bq extract"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Load a CSV from GCS skipping the header row into `proj.ds.t`.",
+      "must_include": ["bq load", "--skip_leading_rows=1", "--source_format=CSV"],
+      "must_not_include": ["bq extract"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Only the dry-run byte estimate matters here: estimate cost of SELECT col_a, col_b FROM `proj.ds.huge` WHERE dt = '2026-06-01'.",
+      "must_include": ["--dry_run", "--use_legacy_sql=false", "This query will process"],
+      "must_not_include": ["SELECT *"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Pull the last hour of error logs from a TIMESTAMP-partitioned table `proj.obs.app_logs` partitioned on `ts`, where severity = 'ERROR'.",
+      "must_include": ["WHERE ts >=", "TIMESTAMP_SUB(CURRENT_TIMESTAMP()", "INTERVAL 1 HOUR", "severity = 'ERROR'"],
+      "must_not_include": ["SELECT *"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Find the p95 latency per service over the last day from `proj.obs.spans` (columns service, latency_ms, ts).",
+      "must_include": ["APPROX_QUANTILES(latency_ms", "service", "GROUP BY service"],
+      "must_not_include": ["PERCENTILE_CONT without OVER"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Show the number of partitions and total rows per partition for `proj.ds.events` using INFORMATION_SCHEMA.",
+      "must_include": ["INFORMATION_SCHEMA.PARTITIONS", "partition_id", "total_rows"],
+      "must_not_include": ["bq show"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "I want to copy table `proj.ds.src` to `proj.ds.dst` without re-querying. What's the cheapest way?",
+      "must_include": ["bq cp", "proj.ds.src", "proj.ds.dst"],
+      "must_not_include": ["bq query"],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "Deduplicate rows in `proj.ds.events` keeping the most recent by `updated_at` per `id`. Give me a GoogleSQL query.",
+      "must_include": ["QUALIFY", "ROW_NUMBER() OVER (PARTITION BY id ORDER BY updated_at DESC)", "= 1"],
+      "must_not_include": ["DISTINCT *"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "How can I see the total bytes a specific past job processed if I have its job ID `bqjob_r123`?",
+      "must_include": ["bq show", "--job", "bqjob_r123"],
+      "must_not_include": ["bq query"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Set the default dataset so I don't have to fully qualify tables. How?",
+      "must_include": ["bq query", "--dataset_id"],
+      "must_not_include": ["bq mk --dataset_id"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Create a new empty dataset `staging` in the US multi-region.",
+      "must_include": ["bq mk", "--location=US", "staging"],
+      "must_not_include": ["bq rm"],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "Create a dataset with a default table expiration of 7 days.",
+      "must_include": ["bq mk", "--default_table_expiration", "604800"],
+      "must_not_include": ["bq rm"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Delete the table `proj.ds.tmp_scratch` without an interactive prompt.",
+      "must_include": ["bq rm", "-f", "proj.ds.tmp_scratch"],
+      "must_not_include": ["bq mk"],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "How do I count distinct users approximately and cheaply over a billion-row table?",
+      "must_include": ["APPROX_COUNT_DISTINCT(", "--use_legacy_sql=false"],
+      "must_not_include": ["COUNT(DISTINCT"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Pivot daily counts by status into columns using PIVOT for the last week.",
+      "must_include": ["PIVOT", "COUNT(*)", "FOR status IN"],
+      "must_not_include": ["legacy"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Unnest a STRUCT array `items` (each with sku and qty) and sum qty per sku.",
+      "must_include": ["UNNEST(items)", "SUM(", "GROUP BY"],
+      "must_not_include": ["FLATTEN"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Run a parameterized query passing a date parameter `run_date` of type DATE.",
+      "must_include": ["bq query", "--parameter=run_date:DATE:", "@run_date"],
+      "must_not_include": ["string concatenation"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Show me the current cost-saving best practice: query only the columns I need from `proj.ds.wide` (50 columns) when I just want id and name.",
+      "must_include": ["SELECT id, name", "FROM `proj.ds.wide`"],
+      "must_not_include": ["SELECT *"],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "I need to scan a sharded wildcard table `proj.ds.events_*` only for shards in June 2026 using _TABLE_SUFFIX.",
+      "must_include": ["_TABLE_SUFFIX", "events_*", "BETWEEN '20260601' AND '20260630'"],
+      "must_not_include": ["SELECT * FROM `proj.ds.events_*`"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Generate a synthetic series of the last 30 days and left join to my daily metrics to fill gaps with zero.",
+      "must_include": ["GENERATE_DATE_ARRAY", "UNNEST(", "LEFT JOIN", "IFNULL("],
+      "must_not_include": ["legacy"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "What command shows the bytes processed and slot ms after I run a query interactively?",
+      "must_include": ["bq query", "--format=prettyjson", "totalBytesProcessed"],
+      "must_not_include": ["bq extract"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Estimate cost for a query that does SELECT * FROM `proj.ds.huge` — but warn me why this is bad.",
+      "must_include": ["--dry_run", "scans every column", "SELECT only the columns"],
+      "must_not_include": ["This is the cheapest approach"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Create an authorized view `proj.reporting.safe_events` exposing only non-PII columns from `proj.raw.events`.",
+      "must_include": ["CREATE VIEW", "proj.reporting.safe_events", "AS SELECT"],
+      "must_not_include": ["SELECT *"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Compute error rate per minute over the last hour from `proj.obs.requests` (ts TIMESTAMP, status INT64).",
+      "must_include": ["TIMESTAMP_TRUNC(ts, MINUTE)", "COUNTIF(status >= 500)", "GROUP BY"],
+      "must_not_include": ["SELECT *"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Get the top 10 most expensive queries by total billed bytes from JOBS_BY_PROJECT in the last 7 days, including the user email.",
+      "must_include": ["INFORMATION_SCHEMA.JOBS_BY_PROJECT", "total_bytes_billed", "user_email", "LIMIT 10"],
+      "must_not_include": ["legacy"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "How do I add maximum_bytes_billed as a default for all my queries at the project level rather than per query?",
+      "must_include": ["maximum_bytes_billed", ".bigqueryrc", "bq query"],
+      "must_not_include": ["impossible to configure"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Run a query against a specific project that is not my default, billing to project `bill-proj`.",
+      "must_include": ["bq", "--project_id=bill-proj", "query", "--use_legacy_sql=false"],
+      "must_not_include": ["legacy"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Find rows where a JSON column `payload` has field `event` equal to 'login'.",
+      "must_include": ["JSON_VALUE(payload", "$.event", "= 'login'"],
+      "must_not_include": ["JSON_EXTRACT_SCALAR is removed"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Sessionize events: assign a session id when the gap between consecutive events per user exceeds 30 minutes.",
+      "must_include": ["LAG(", "OVER (PARTITION BY user_id ORDER BY", "SUM(", "TIMESTAMP_DIFF"],
+      "must_not_include": ["legacy"],
+      "difficulty": "edge"
+    },
+    {
+      "prompt": "Show table metadata including creation time and row count for all tables in dataset `prod` via INFORMATION_SCHEMA.TABLES and TABLE_STORAGE.",
+      "must_include": ["INFORMATION_SCHEMA.TABLES", "INFORMATION_SCHEMA.TABLE_STORAGE", "row_count"],
+      "must_not_include": ["bq show"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Cancel a long-running query job with id `bqjob_r999`.",
+      "must_include": ["bq cancel", "bqjob_r999"],
+      "must_not_include": ["bq rm"],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "Compute the difference between each row's value and the previous row's value per series id, ordered by ts.",
+      "must_include": ["LAG(value)", "OVER (PARTITION BY series_id ORDER BY ts)", "value -"],
+      "must_not_include": ["legacy"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Rank services by total request volume and show only the top 3 per region using QUALIFY.",
+      "must_include": ["QUALIFY", "RANK() OVER (PARTITION BY region ORDER BY", "<= 3"],
+      "must_not_include": ["LIMIT 3"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Export query results (not a whole table) to GCS. The result is too big for a direct extract — what's the pattern?",
+      "must_include": ["--destination_table", "bq extract", "gs://"],
+      "must_not_include": ["bq extract '(SELECT"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Find tables that have NOT been queried in 90 days to clean up. Use JOBS to find referenced tables.",
+      "must_include": ["INFORMATION_SCHEMA.JOBS", "referenced_tables", "creation_time"],
+      "must_not_include": ["bq rm without checking"],
+      "difficulty": "edge"
+    },
+    {
+      "prompt": "I want a cheap sampling of 1% of a huge table for exploration.",
+      "must_include": ["TABLESAMPLE SYSTEM (1 PERCENT)", "FROM `"],
+      "must_not_include": ["ORDER BY RAND() LIMIT"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Get distinct values of `country` and how many rows each has, sorted descending.",
+      "must_include": ["GROUP BY country", "COUNT(*)", "ORDER BY", "DESC"],
+      "must_not_include": ["legacy"],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "How do I run SQL from a file instead of inline? File is query.sql.",
+      "must_include": ["bq query", "--use_legacy_sql=false", "< query.sql"],
+      "must_not_include": ["bq load query.sql"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Compute cumulative sum of daily revenue ordered by date.",
+      "must_include": ["SUM(revenue)", "OVER (ORDER BY date", "ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW"],
+      "must_not_include": ["legacy"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Filter a clustered table on the cluster key to benefit from clustering: table clustered by `tenant_id`, get tenant 'acme'.",
+      "must_include": ["WHERE tenant_id = 'acme'", "FROM `"],
+      "must_not_include": ["WHERE LOWER(tenant_id)"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Detect a sudden spike: compare today's request count to the 7-day average and flag if >2x.",
+      "must_include": ["AVG(", "OVER (", "CASE WHEN", "> 2 *"],
+      "must_not_include": ["legacy"],
+      "difficulty": "edge"
+    },
+    {
+      "prompt": "Update the schema of `proj.ds.t` to add a new nullable column `notes STRING` without rewriting data.",
+      "must_include": ["ALTER TABLE", "ADD COLUMN notes STRING"],
+      "must_not_include": ["DROP TABLE"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Set partition expiration to 30 days on an existing partitioned table `proj.ds.logs`.",
+      "must_include": ["bq update", "--time_partitioning_expiration", "2592000", "proj.ds.logs"],
+      "must_not_include": ["bq mk"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Query a table in another project's public dataset, e.g. bigquery-public-data.samples.shakespeare, count words.",
+      "must_include": ["bq query", "--use_legacy_sql=false", "`bigquery-public-data.samples.shakespeare`"],
+      "must_not_include": ["--use_legacy_sql=true"],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "Show me how to use a CTE to first filter then aggregate in GoogleSQL.",
+      "must_include": ["WITH", "AS (", "SELECT", "FROM"],
+      "must_not_include": ["legacy"],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "Compute month-over-month growth of revenue using LAG over month buckets.",
+      "must_include": ["DATE_TRUNC(", "MONTH", "LAG(", "OVER (ORDER BY"],
+      "must_not_include": ["legacy"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "I need to limit a one-off exploratory query to scan at most 1 GB and bail otherwise.",
+      "must_include": ["--maximum_bytes_billed=1073741824", "bq query", "--use_legacy_sql=false"],
+      "must_not_include": ["SELECT *"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "What's the safest first step before querying an unfamiliar large table to understand partitioning?",
+      "must_include": ["bq show", "--format=prettyjson", "timePartitioning"],
+      "must_not_include": ["SELECT * FROM"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Aggregate request counts into 5-minute buckets over the last 2 hours from `proj.obs.req` (ts TIMESTAMP).",
+      "must_include": ["TIMESTAMP_TRUNC", "INTERVAL", "GROUP BY", "TIMESTAMP_SUB(CURRENT_TIMESTAMP()"],
+      "must_not_include": ["SELECT *"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Convert a UNIX epoch millis column `ts_ms` to a TIMESTAMP and truncate to hour.",
+      "must_include": ["TIMESTAMP_MILLIS(ts_ms)", "TIMESTAMP_TRUNC", "HOUR"],
+      "must_not_include": ["FROM_UNIXTIME"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Find the most recent partition's date that exists in `proj.ds.events` cheaply.",
+      "must_include": ["INFORMATION_SCHEMA.PARTITIONS", "MAX(partition_id)", "table_name = 'events'"],
+      "must_not_include": ["MAX(event_date) FROM `proj.ds.events`"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Join orders to a SCD-style customers table picking the version valid at order time (effective_from/effective_to).",
+      "must_include": ["JOIN", "BETWEEN c.effective_from AND c.effective_to", "o.order_time"],
+      "must_not_include": ["legacy"],
+      "difficulty": "edge"
+    },
+    {
+      "prompt": "Anti-join: find user_ids in `proj.ds.signups` that have no row in `proj.ds.purchases`.",
+      "must_include": ["LEFT JOIN", "IS NULL", "WHERE p.user_id IS NULL"],
+      "must_not_include": ["NOT IN (SELECT user_id"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Safely divide error_count by total_count to get a rate, avoiding divide-by-zero.",
+      "must_include": ["SAFE_DIVIDE(error_count, total_count)", "AS rate"],
+      "must_not_include": ["error_count / total_count"],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "Parse a string column `dt_str` like '2026-06-01' into a DATE.",
+      "must_include": ["PARSE_DATE('%Y-%m-%d', dt_str)", "--use_legacy_sql=false"],
+      "must_not_include": ["STR_TO_DATE"],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "Show me how to materialize a heavy CTE result into a temp table within a script to avoid recomputation.",
+      "must_include": ["CREATE TEMP TABLE", "AS SELECT", "BEGIN"],
+      "must_not_include": ["legacy"],
+      "difficulty": "edge"
+    },
+    {
+      "prompt": "Get the schema diff: which columns are in `proj.ds.t_new` but not in `proj.ds.t_old` using INFORMATION_SCHEMA.COLUMNS.",
+      "must_include": ["INFORMATION_SCHEMA.COLUMNS", "EXCEPT DISTINCT", "column_name"],
+      "must_not_include": ["bq show --schema"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Compute the 50th, 90th, and 99th latency percentiles in one query for `proj.obs.spans`.",
+      "must_include": ["APPROX_QUANTILES(latency_ms, 100)", "[OFFSET(50)]", "[OFFSET(90)]", "[OFFSET(99)]"],
+      "must_not_include": ["MEDIAN("],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Run a query but only show the first 5 rows without scanning less data — clarify that LIMIT does not reduce bytes scanned.",
+      "must_include": ["LIMIT 5", "does not reduce", "bytes scanned"],
+      "must_not_include": ["LIMIT reduces cost"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Export a table to GCS sharded across multiple files because it's large.",
+      "must_include": ["bq extract", "gs://", "*.csv"],
+      "must_not_include": ["single file guaranteed for large"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Set the location explicitly when running a query against an EU dataset.",
+      "must_include": ["bq", "--location=EU", "query"],
+      "must_not_include": ["--location=US for EU"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Compute distinct count per day but it must be exact for billing reconciliation.",
+      "must_include": ["COUNT(DISTINCT", "GROUP BY", "DATE("],
+      "must_not_include": ["APPROX_COUNT_DISTINCT"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Find duplicate primary keys: which `id` values appear more than once in `proj.ds.dim`?",
+      "must_include": ["GROUP BY id", "HAVING COUNT(*) > 1"],
+      "must_not_include": ["QUALIFY ROW_NUMBER without"],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "Coalesce several nullable contact columns into one, returning the first non-null.",
+      "must_include": ["COALESCE(", "AS contact"],
+      "must_not_include": ["IFNULL nested incorrectly"],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "Restrict a query on a partitioned-by-date table to a literal date so the optimizer prunes partitions; date is 2026-06-01.",
+      "must_include": ["WHERE event_date = DATE '2026-06-01'", "FROM `"],
+      "must_not_include": ["WHERE CAST(event_date AS STRING)"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Show how require_partition_filter protects against full scans and how to set it on a new table.",
+      "must_include": ["require_partition_filter", "PARTITION BY", "OPTIONS("],
+      "must_not_include": ["legacy"],
+      "difficulty": "edge"
+    },
+    {
+      "prompt": "Query a table that requires a partition filter, but I forgot it and got an error. Add the minimal partition filter for `dt` to get the last day.",
+      "must_include": ["WHERE dt >=", "DATE_SUB(CURRENT_DATE()", "INTERVAL 1 DAY"],
+      "must_not_include": ["WHERE 1=1"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Aggregate array elements back: collect all event names per user into an array.",
+      "must_include": ["ARRAY_AGG(", "GROUP BY user_id"],
+      "must_not_include": ["GROUP_CONCAT"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "I need a rough cost-per-query budget. The query scanned 2.5 TB on-demand. Roughly what does it cost and how do I prevent surprises?",
+      "must_include": ["maximum_bytes_billed", "--dry_run", "per TB"],
+      "must_not_include": ["queries are always free"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Build a daily availability SLI: fraction of minutes with zero 5xx out of total minutes, per service, last 24h.",
+      "must_include": ["COUNTIF(", "SAFE_DIVIDE(", "TIMESTAMP_TRUNC(ts, MINUTE)", "GROUP BY"],
+      "must_not_include": ["legacy"],
+      "difficulty": "edge"
+    },
+    {
+      "prompt": "Flatten a deeply nested record: events with nested array `events.params` (key/value structs), extract param where key='page'.",
+      "must_include": ["UNNEST(", "WHERE", "key = 'page'"],
+      "must_not_include": ["FLATTEN"],
+      "difficulty": "edge"
+    },
+    {
+      "prompt": "Find the slot-hours consumed by each user over the last 30 days from JOBS_BY_PROJECT.",
+      "must_include": ["INFORMATION_SCHEMA.JOBS_BY_PROJECT", "total_slot_ms", "user_email", "GROUP BY"],
+      "must_not_include": ["legacy"],
+      "difficulty": "hard"
+    },
+    {
+      "prompt": "Quick check: is my SQL valid without running it or scanning data?",
+      "must_include": ["--dry_run", "bq query", "--use_legacy_sql=false"],
+      "must_not_include": ["runs the full query"],
+      "difficulty": "easy"
+    },
+    {
+      "prompt": "Merge upsert: update existing rows and insert new ones from staging `proj.ds.stg` into target `proj.ds.dim` keyed on id.",
+      "must_include": ["MERGE", "proj.ds.dim", "ON T.id = S.id", "WHEN MATCHED THEN UPDATE"],
+      "must_not_include": ["legacy"],
+      "difficulty": "edge"
+    },
+    {
+      "prompt": "List the partitioning and clustering config of a table quickly from the CLI.",
+      "must_include": ["bq show", "--format=prettyjson", "clustering"],
+      "must_not_include": ["bq query SELECT *"],
+      "difficulty": "medium"
+    },
+    {
+      "prompt": "Count rows added in each of the last 7 ingestion-time partitions cheaply.",
+      "must_include": ["_PARTITIONDATE", "GROUP BY", "DATE_SUB(CURRENT_DATE()", "INTERVAL 7 DAY"],
+      "must_not_include": ["SELECT *"],
+      "difficulty": "hard"
+    }
+  ]
+}
