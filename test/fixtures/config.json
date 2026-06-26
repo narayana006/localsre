@@ -1,0 +1,5 @@
+{
+  "databse": "postgres://localhost:5432/myapp",
+  "timeout": 30,
+  "retries": 3
+}
