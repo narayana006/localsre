@@ -2,7 +2,7 @@
   "name": "localsre",
   "displayName": "LocalSRE",
   "description": "Lightweight local AI coding + SRE agent for VS Code. Local models (Qwen3/DeepSeek), GitHub Copilot, or Claude. 23 SRE skills, per-repo memory, 100% private.",
-  "version": "0.21.9",
+  "version": "0.22.0",
   "publisher": "narayana006",
   "engines": {
     "vscode": "^1.85.0"
@@ -76,6 +76,11 @@
           "type": "number",
           "default": 50,
           "description": "Max tool-call iterations per request before the agent stops."
+        },
+        "localsre.maxTokens": {
+          "type": "number",
+          "default": 8192,
+          "description": "Max tokens the model can generate per response. Must be large enough to write whole files in one write_file call — too low truncates the tool-call JSON and causes 'unexpected end of JSON input' errors. Raise to 16384 for very large files."
         },
         "localsre.autoApproveCommands": {
           "type": "boolean",

@@ -17,6 +17,7 @@ function cfg() {
     model: c.get("model") || "qwen3-coder",
     temperature: Number.isFinite(c.get("temperature")) ? c.get("temperature") : 0.2,
     maxIterations: Number(c.get("maxIterations")) > 0 ? Number(c.get("maxIterations")) : 50,
+    maxTokens: Number(c.get("maxTokens")) > 0 ? Number(c.get("maxTokens")) : 8192, // big enough to write full files
     autoApprove: !!c.get("autoApproveCommands"),
     apiKey: c.get("apiKey") || "",
     provider: c.get("provider") || "local",
@@ -908,9 +909,16 @@ async function callModelHTTP(messages, onDelta) {
   try {
     const res = await fetch(c.endpoint + "/chat/completions", {
       method: "POST", headers, signal: ctrl.signal,
-      body: JSON.stringify({ model: await localModelName(), messages, tools: getTools(), tool_choice: "auto", temperature: c.temperature, stream: !!onDelta, max_tokens: 4096, think: false, enable_thinking: false, keep_alive: "30m" }),
+      body: JSON.stringify({ model: await localModelName(), messages, tools: getTools(), tool_choice: "auto", temperature: c.temperature, stream: !!onDelta, max_tokens: c.maxTokens, think: false, enable_thinking: false, keep_alive: "30m" }),
     });
-    if (!res.ok) throw new Error("HTTP " + res.status + ": " + (await res.text()).slice(0, 300));
+    if (!res.ok) {
+      const body = (await res.text()).slice(0, 300);
+      // Common llama.cpp case: the model's tool-call JSON got truncated mid-write (file too big for max_tokens).
+      if (/invalid tool call arguments|unexpected end of JSON/i.test(body)) {
+        throw new Error("The model's file/tool output was cut off mid-write (too large for one response). Raise localsre.maxTokens to 16384 in Settings, or ask it to write the file in smaller parts. [" + res.status + "]");
+      }
+      throw new Error("HTTP " + res.status + ": " + body);
+    }
     // Stream when asked (real servers); fall back to JSON when there's no readable body (tests/non-stream).
     if (onDelta && res.body && typeof res.body.getReader === "function") return await parseSSE(res.body, onDelta);
     const data = await res.json();
@@ -1269,7 +1277,7 @@ async function callModelAnthropic(messages) {
     const res = await fetch("https://api.anthropic.com/v1/messages", {
       method: "POST", signal: ctrl.signal,
       headers: { "content-type": "application/json", "x-api-key": key, "anthropic-version": "2023-06-01" },
-      body: JSON.stringify({ model, max_tokens: 4096, system: system || undefined, messages: conv, tools }),
+      body: JSON.stringify({ model, max_tokens: 8192, system: system || undefined, messages: conv, tools }),
     });
     if (!res.ok) throw new Error("Anthropic HTTP " + res.status + ": " + (await res.text()).slice(0, 300));
     const data = await res.json();
