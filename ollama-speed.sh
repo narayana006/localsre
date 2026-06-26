@@ -7,18 +7,35 @@
 # Safe to re-run. Does NOT touch any network/cloud — purely local Ollama config.
 set -euo pipefail
 
-BASE_MODEL="${1:-qwen3-coder:30b}"   # change if your office model tag differs
 FAST_MODEL="qwen3-coder:fast"
 CTX="${OLLAMA_CTX:-16384}"           # 16K is plenty for SRE/coding; lower = faster prefill
 
 echo "==> LocalSRE Ollama speed tuning"
-echo "    base model: ${BASE_MODEL}   ->   ${FAST_MODEL}   (ctx ${CTX})"
 
 if ! command -v ollama >/dev/null 2>&1; then
   echo "ERROR: 'ollama' not found. Install Ollama first (https://ollama.com)."; exit 1
 fi
-if ! ollama list 2>/dev/null | grep -q "${BASE_MODEL%%:*}"; then
-  echo "ERROR: base model '${BASE_MODEL}' not pulled. Run: ollama pull ${BASE_MODEL}"; exit 1
+
+# Auto-detect the base model: use arg 1 if given, else first qwen*coder, else first model.
+BASE_MODEL="${1:-}"
+if [ -z "$BASE_MODEL" ]; then
+  BASE_MODEL="$(ollama list 2>/dev/null | awk 'NR>1{print $1}' | grep -i 'qwen.*coder' | head -1 || true)"
+  [ -z "$BASE_MODEL" ] && BASE_MODEL="$(ollama list 2>/dev/null | awk 'NR>1{print $1}' | head -1 || true)"
+fi
+if [ -z "$BASE_MODEL" ]; then
+  echo "ERROR: no models found. Pull one first, e.g.: ollama pull qwen3-coder:30b"; exit 1
+fi
+echo "    base model: ${BASE_MODEL}   ->   ${FAST_MODEL}   (ctx ${CTX})"
+
+# RAM advisory: a 30B model wants ~24GB+ free. On a low-RAM laptop a 14B is much faster.
+RAM_GB="$(sysctl -n hw.memsize 2>/dev/null | awk '{printf "%d", $1/1024/1024/1024}')"
+echo "    machine RAM: ${RAM_GB} GB"
+if [ "${RAM_GB:-0}" -lt 32 ] && echo "$BASE_MODEL" | grep -qiE '30b|32b'; then
+  echo "    NOTE: ${RAM_GB}GB RAM with a 30B model may spill to CPU (slow)."
+  if ollama list 2>/dev/null | awk 'NR>1{print $1}' | grep -qi '14b'; then
+    SMALLER="$(ollama list 2>/dev/null | awk 'NR>1{print $1}' | grep -i '14b' | head -1)"
+    echo "    A faster option is installed: ${SMALLER}. Re-run as:  bash ollama-speed.sh ${SMALLER}"
+  fi
 fi
 
 # 1) Persistent env so the menubar Ollama.app picks these up on every launch.
