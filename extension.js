@@ -22,6 +22,8 @@ function cfg() {
     apiKey: c.get("apiKey") || "",
     provider: c.get("provider") || "local",
     anthropicApiKey: c.get("anthropicApiKey") || "",
+    geminiApiKey: c.get("geminiApiKey") || "",
+    geminiModel: c.get("geminiModel") || "gemini-flash-latest",
     editorContext: !!c.get("editorContext"), // off by default — it can distract local models
     memoryPaths: Array.isArray(c.get("memoryPaths")) ? c.get("memoryPaths") : [],
   };
@@ -833,6 +835,9 @@ async function listModels() {
   // Claude via Anthropic key — only shown if a key is in the keychain/settings
   const akey = await getAnthropicKey();
   if (akey) for (const m of ["claude-opus-4-8", "claude-sonnet-4-6", "claude-haiku-4-5"]) items.push({ label: "$(sparkle) " + m, description: "Claude (Anthropic API)", _p: "anthropic", _m: m });
+  // Google Gemini — only shown if a key is present (keychain/settings/env)
+  const gkey = await getGeminiKey();
+  if (gkey) for (const m of ["gemini-flash-latest", "gemini-2.5-flash", "gemini-2.5-pro"]) items.push({ label: "$(sparkle) " + m, description: "Google Gemini API", _p: "gemini", _m: m });
   return items;
 }
 async function selectModel() {
@@ -882,12 +887,17 @@ async function getSecret(key, fallback) {
 async function getAnthropicKey() {
   return (await getSecret("localsre.anthropicApiKey", cfg().anthropicApiKey)) || process.env.ANTHROPIC_API_KEY || "";
 }
+// Gemini key resolution: keychain → settings → GEMINI_API_KEY env. Never hardcoded / never in git.
+async function getGeminiKey() {
+  return (await getSecret("localsre.geminiApiKey", cfg().geminiApiKey)) || process.env.GEMINI_API_KEY || "";
+}
 
 // ---------- model call (dispatches to local HTTP / Copilot / Claude) ----------
 async function callModel(messages, onDelta) {
   const p = curProvider();
   if (p === "copilot") return callModelLM(messages, onDelta);
   if (p === "anthropic") return callModelAnthropic(messages);
+  if (p === "gemini") return callModelGemini(messages);
   return callModelHTTP(messages, onDelta);
 }
 
@@ -1307,6 +1317,78 @@ async function callModelAnthropic(messages) {
   } finally { clearTimeout(to); }
 }
 
+// Google Gemini (e.g. gemini-flash-latest). Key from keychain/settings/env — never hardcoded.
+// Gemini's API differs from OpenAI: contents[]/parts[], functionCall/functionResponse, systemInstruction.
+function geminiSanitizeSchema(s) {
+  if (!s || typeof s !== "object") return s;
+  const out = {};
+  for (const [k, v] of Object.entries(s)) {
+    if (["$schema", "additionalProperties", "default", "examples", "title"].includes(k)) continue;
+    if (k === "properties" && v && typeof v === "object") {
+      out.properties = {}; for (const [pk, pv] of Object.entries(v)) out.properties[pk] = geminiSanitizeSchema(pv);
+    } else if (k === "items") out.items = geminiSanitizeSchema(v);
+    else out[k] = v;
+  }
+  return out;
+}
+async function callModelGemini(messages) {
+  const key = await getGeminiKey();
+  if (!key) throw new Error("No Gemini key. Run 'LocalSRE: Set Gemini API Key', or set localsre.geminiApiKey / GEMINI_API_KEY.");
+  const model = (/gemini/i.test(curModel()) ? curModel() : null) || cfg().geminiModel;
+  const system = messages.filter((m) => m.role === "system").map((m) => m.content).filter(Boolean).join("\n\n");
+  // Map tool_call_id → tool name (Gemini's functionResponse is keyed by name, not id).
+  const idToName = {};
+  for (const m of messages) for (const tc of (m.tool_calls || [])) if (tc.id) idToName[tc.id] = tc.function.name;
+  const contents = [];
+  for (const m of messages) {
+    if (m.role === "system") continue;
+    if (m.role === "user") contents.push({ role: "user", parts: [{ text: String(m.content || "") }] });
+    else if (m.role === "assistant") {
+      const parts = [];
+      if (m.content) parts.push({ text: String(m.content) });
+      for (const tc of m.tool_calls || []) {
+        let args = {}; try { args = JSON.parse(tc.function.arguments || "{}"); } catch (_) {}
+        parts.push({ functionCall: { name: tc.function.name, args } });
+      }
+      if (parts.length) contents.push({ role: "model", parts });
+    } else if (m.role === "tool") {
+      contents.push({ role: "user", parts: [{ functionResponse: { name: idToName[m.tool_call_id] || "tool", response: { result: String(m.content || "(empty)") } } }] });
+    }
+  }
+  const decls = getTools().map((t) => {
+    const d = { name: t.function.name, description: t.function.description };
+    const p = geminiSanitizeSchema(t.function.parameters);
+    if (p && p.properties && Object.keys(p.properties).length) d.parameters = p; // Gemini rejects empty params
+    return d;
+  });
+  const ctrl = new AbortController();
+  const to = setTimeout(() => ctrl.abort(), 180000);
+  try {
+    const res = await fetch("https://generativelanguage.googleapis.com/v1beta/models/" + model + ":generateContent", {
+      method: "POST", signal: ctrl.signal,
+      headers: { "Content-Type": "application/json", "X-goog-api-key": key },
+      body: JSON.stringify({
+        systemInstruction: system ? { parts: [{ text: system }] } : undefined,
+        contents,
+        tools: decls.length ? [{ functionDeclarations: decls }] : undefined,
+        generationConfig: { temperature: cfg().temperature, maxOutputTokens: cfg().maxTokens },
+      }),
+    });
+    if (!res.ok) throw new Error("Gemini HTTP " + res.status + ": " + (await res.text()).slice(0, 300));
+    const data = await res.json();
+    const cand = data.candidates && data.candidates[0];
+    let content = ""; const toolCalls = [];
+    for (const part of (cand && cand.content && cand.content.parts) || []) {
+      if (part.text) content += part.text;
+      else if (part.functionCall) toolCalls.push({ function: { name: part.functionCall.name, arguments: JSON.stringify(part.functionCall.args || {}) } });
+    }
+    return { content, tool_calls: toolCalls.length ? toolCalls : undefined };
+  } catch (e) {
+    if (e.name === "AbortError") throw new Error("Gemini timed out (180s).");
+    throw e;
+  } finally { clearTimeout(to); }
+}
+
 // ---------- webview ----------
 class ChatProvider {
   constructor(context) {
@@ -1552,6 +1634,10 @@ function activate(context) {
     vscode.commands.registerCommand("localsre.setClaudeKey", async () => {
       const k = await vscode.window.showInputBox({ password: true, ignoreFocusOut: true, prompt: "Anthropic API key (stored in the OS keychain, not settings)" });
       if (k) { await SECRETS.store("localsre.anthropicApiKey", k.trim()); vscode.window.showInformationMessage("Claude key saved to keychain."); }
+    }),
+    vscode.commands.registerCommand("localsre.setGeminiKey", async () => {
+      const k = await vscode.window.showInputBox({ password: true, ignoreFocusOut: true, prompt: "Google Gemini API key (stored in the OS keychain, not settings/git)" });
+      if (k) { await SECRETS.store("localsre.geminiApiKey", k.trim()); vscode.window.showInformationMessage("Gemini key saved to keychain. Switch to it via 'LocalSRE: Switch Model'."); }
     }),
     vscode.workspace.onDidChangeConfiguration((e) => {
       if (e.affectsConfiguration("localsre.endpoint") || e.affectsConfiguration("localsre.model")) autoLocalModel = null; // re-detect

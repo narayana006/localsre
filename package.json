@@ -2,7 +2,7 @@
   "name": "localsre",
   "displayName": "LocalSRE",
   "description": "Lightweight local AI coding + SRE agent for VS Code. Local models (Qwen3/DeepSeek), GitHub Copilot, or Claude. 23 SRE skills, per-repo memory, 100% private.",
-  "version": "0.22.3",
+  "version": "0.23.0",
   "publisher": "narayana006",
   "engines": {
     "vscode": "^1.85.0"
@@ -33,6 +33,10 @@
       {
         "command": "localsre.setClaudeKey",
         "title": "LocalSRE: Set Claude API Key"
+      },
+      {
+        "command": "localsre.setGeminiKey",
+        "title": "LocalSRE: Set Gemini API Key"
       }
     ],
     "viewsContainers": {
@@ -98,16 +102,28 @@
           "enum": [
             "local",
             "copilot",
-            "anthropic"
+            "anthropic",
+            "gemini"
           ],
           "default": "local",
-          "description": "Model backend: 'local' = your llama.cpp/Ollama endpoint; 'copilot' = GitHub Copilot models (includes Claude); 'anthropic' = Claude via API key. Use the 'Switch Model' command to pick interactively."
+          "description": "Model backend: 'local' = your llama.cpp/Ollama endpoint; 'copilot' = GitHub Copilot models (includes Claude); 'anthropic' = Claude via API key; 'gemini' = Google Gemini via API key. Use the 'Switch Model' command to pick interactively."
         },
         "localsre.anthropicApiKey": {
           "type": "string",
           "default": "",
           "scope": "machine",
           "description": "Optional Claude API key. Resolution order: keychain ('Set Claude API Key' command) → this setting → ANTHROPIC_API_KEY env var (same one Claude Code uses; requires launching VS Code from a terminal via `code .`). Tip: Claude is also free via the 'copilot' provider if your plan includes it."
+        },
+        "localsre.geminiApiKey": {
+          "type": "string",
+          "default": "",
+          "scope": "machine",
+          "description": "Optional Google Gemini API key. Resolution order: keychain ('Set Gemini API Key' command) → this setting → GEMINI_API_KEY env var (requires launching VS Code from a terminal via `code .`). Get a key at https://aistudio.google.com/api-keys"
+        },
+        "localsre.geminiModel": {
+          "type": "string",
+          "default": "gemini-flash-latest",
+          "description": "Which Gemini model to use when provider is 'gemini' (e.g. gemini-flash-latest, gemini-2.5-flash, gemini-2.5-pro)."
         },
         "localsre.editorContext": {
           "type": "boolean",
