@@ -79,8 +79,7 @@ def classify(repo, gh, cutoff):
     if st in (404, 0) or "total_count" not in wf:
         return [repo, "NA", "NA", "NA", "NA", "inaccessible"]
     configured = wf.get("total_count", 0)
-    _, runs = gh.get(f"/repos/{repo}/actions/runs", {"per_page": "1"})
-    total_runs = runs.get("total_count", 0)
+    total_runs = ""  # skipped by default (saves 1 call/repo → 1500 repos fit one rate-limit window)
     _, rec = gh.get(f"/repos/{repo}/actions/runs", {"per_page": "1", "created": f">={cutoff}"})
     recent_runs = rec.get("total_count", 0)
     jst, _ = gh.get(f"/repos/{repo}/contents/Jenkinsfile")
