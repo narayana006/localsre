@@ -1363,18 +1363,32 @@ async function callModelGemini(messages) {
   });
   const ctrl = new AbortController();
   const to = setTimeout(() => ctrl.abort(), 180000);
+  const body = JSON.stringify({
+    systemInstruction: system ? { parts: [{ text: system }] } : undefined,
+    contents,
+    tools: decls.length ? [{ functionDeclarations: decls }] : undefined,
+    generationConfig: { temperature: cfg().temperature, maxOutputTokens: cfg().maxTokens },
+  });
+  const url = "https://generativelanguage.googleapis.com/v1beta/models/" + model + ":generateContent";
   try {
-    const res = await fetch("https://generativelanguage.googleapis.com/v1beta/models/" + model + ":generateContent", {
-      method: "POST", signal: ctrl.signal,
-      headers: { "Content-Type": "application/json", "X-goog-api-key": key },
-      body: JSON.stringify({
-        systemInstruction: system ? { parts: [{ text: system }] } : undefined,
-        contents,
-        tools: decls.length ? [{ functionDeclarations: decls }] : undefined,
-        generationConfig: { temperature: cfg().temperature, maxOutputTokens: cfg().maxTokens },
-      }),
-    });
-    if (!res.ok) throw new Error("Gemini HTTP " + res.status + ": " + (await res.text()).slice(0, 300));
+    // Gemini 503 (overloaded) / 429 (rate) are transient → retry with backoff before failing.
+    let res, lastErr = "";
+    for (let attempt = 0; attempt < 4; attempt++) {
+      res = await fetch(url, { method: "POST", signal: ctrl.signal,
+        headers: { "Content-Type": "application/json", "X-goog-api-key": key }, body });
+      if (res.ok) break;
+      lastErr = (await res.text()).slice(0, 300);
+      if ((res.status === 503 || res.status === 429 || /overloaded|UNAVAILABLE/i.test(lastErr)) && attempt < 3) {
+        await new Promise((r) => setTimeout(r, 1500 * (attempt + 1))); // 1.5s, 3s, 4.5s
+        continue;
+      }
+      break;
+    }
+    if (!res.ok) {
+      if (res.status === 503 || /overloaded|UNAVAILABLE/i.test(lastErr))
+        throw new Error("Gemini is overloaded right now (503) — it retried a few times. Try again in a moment, or switch localsre.geminiModel to gemini-2.5-flash.");
+      throw new Error("Gemini HTTP " + res.status + ": " + lastErr);
+    }
     const data = await res.json();
     const cand = data.candidates && data.candidates[0];
     let content = ""; const toolCalls = [];
