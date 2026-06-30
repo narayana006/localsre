@@ -45,4 +45,4 @@ echo "==> Installing into VS Code ..."
 "$CODE_BIN" --install-extension "${TMP}/${VSIX}" --force
 
 echo ""
-echo "==> Done. Reload VS Code (Cmd+Shift+P → 'Developer: Reload Window') to activate LocalSRE ${VERSION}."
+echo "==> Done. Reload VS Code (Cmd+Shift+P → 'Developer: Reload Window') to activate LocalSRE."
