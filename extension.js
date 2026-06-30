@@ -1348,7 +1348,9 @@ async function callModelGemini(messages) {
       if (m.content) parts.push({ text: String(m.content) });
       for (const tc of m.tool_calls || []) {
         let args = {}; try { args = JSON.parse(tc.function.arguments || "{}"); } catch (_) {}
-        parts.push({ functionCall: { name: tc.function.name, args } });
+        const fcPart = { functionCall: { name: tc.function.name, args } };
+        if (tc._geminiSig) fcPart.thoughtSignature = tc._geminiSig; // Gemini 2.5 requires the signature back
+        parts.push(fcPart);
       }
       if (parts.length) contents.push({ role: "model", parts });
     } else if (m.role === "tool") {
@@ -1394,7 +1396,7 @@ async function callModelGemini(messages) {
     let content = ""; const toolCalls = [];
     for (const part of (cand && cand.content && cand.content.parts) || []) {
       if (part.text) content += part.text;
-      else if (part.functionCall) toolCalls.push({ function: { name: part.functionCall.name, arguments: JSON.stringify(part.functionCall.args || {}) } });
+      else if (part.functionCall) toolCalls.push({ function: { name: part.functionCall.name, arguments: JSON.stringify(part.functionCall.args || {}) }, _geminiSig: part.thoughtSignature });
     }
     return { content, tool_calls: toolCalls.length ? toolCalls : undefined };
   } catch (e) {
