@@ -37,12 +37,8 @@ function wsRoot() {
 // Session working directory — persists across tool calls so the model doesn't snap back to wsRoot.
 let sessionCwd = null;
 // Files touched this session — injected into system prompt so trim never erases "what was I editing".
+// (Keyed by RESOLVED absolute path so the read-before-edit gate can't be dodged by path spelling.)
 const sessionFiles = { read: new Set(), written: new Set() };
-// Pinned context facts — survive trims, injected into system prompt. Max 10 entries.
-const sessionPins = new Map();
-const PIN_CAP = 10;
-// Task checkpoint — structured snapshot of problem/findings/changes/remaining, survives trims.
-let activeCheckpoint = null;
 function getCwd() { return sessionCwd || wsRoot(); }
 function setCwd(p) {
   const resolved = path.resolve(p);
@@ -192,7 +188,8 @@ function loadSkills(extPath) {
 const activeSkills = new Set();
 const SKILL_STOP = new Set("the and for use using via your you this that with run get set name code files file text data only not are can may all any into your need want help make build fix find read write".split(" "));
 function relevantSkills(text) {
-  const t = " " + String(text || "").toLowerCase() + " ";
+  // Normalize punctuation to spaces so "github-actions" and "github actions" both match.
+  const t = " " + String(text || "").toLowerCase().replace(/[^a-z0-9.+/]+/g, " ") + " ";
   const scored = [];
   for (const s of SKILLS) {
     const kw = (s.name.replace(/[-_]/g, " ") + " " + s.description).toLowerCase().match(/[a-z][a-z0-9.+/]{2,}/g) || [];
@@ -203,7 +200,13 @@ function relevantSkills(text) {
       seen.add(k);
       if (t.includes(" " + k + " ") || t.includes(" " + k + "s ") || t.includes("/" + k)) score++;
     }
-    if (score >= 3 && t.length > 22) scored.push({ s, score });
+    // Explicit skill-name mention is an unambiguous signal — load regardless of fuzzy score.
+    // ("kubernetes pod crashing" MUST load the kubernetes skill; the score>=3 threshold only
+    // guards fuzzy description-keyword matches against false positives on short messages.)
+    const nameWords = s.name.toLowerCase().split(/[-_]/).filter((w) => w.length > 2 && !SKILL_STOP.has(w));
+    const nameHit = nameWords.length > 0 && nameWords.every((w) => t.includes(" " + w + " ") || t.includes(" " + w + "s "));
+    if (nameHit) score += 3;
+    if (nameHit || (score >= 3 && t.length > 22)) scored.push({ s, score });
   }
   scored.sort((a, b) => b.score - a.score);
   return scored.slice(0, 2).map((x) => x.s);
@@ -217,8 +220,6 @@ function SYSTEM() {
   const cwdLine = sessionCwd ? `\n## Current working directory\n${sessionCwd}\nAll relative paths, run_command, and file ops resolve from here. Call change_dir to switch.` : "";
   const touched = [...sessionFiles.written].map(f => "✎ " + f).concat([...sessionFiles.read].filter(f => !sessionFiles.written.has(f)).map(f => "👁 " + f));
   const filesLine = touched.length ? "\n## Files touched this session (re-read before editing if context was trimmed)\n" + touched.join("\n") : "";
-  const pinsLine = sessionPins.size ? "\n## Pinned context (survives trims — do not re-derive these)\n" + [...sessionPins.entries()].map(([k, v]) => "- " + k + ": " + v).join("\n") : "";
-  const cpLine = activeCheckpoint ? "\n## Task checkpoint (resume from here after any trim)\nProblem: " + activeCheckpoint.problem + (activeCheckpoint.findings ? "\nFindings: " + activeCheckpoint.findings : "") + (activeCheckpoint.changes_made ? "\nChanges made: " + activeCheckpoint.changes_made : "") + "\nRemaining: " + activeCheckpoint.remaining : "";
   return [
     "You are LocalSRE, an autonomous SRE + coding agent in the user's VS Code on macOS. SRE/production questions are about Linux servers by default — give the canonical Linux command.",
     "ANSWER vs ACT: if it's a knowledge/how-to question, just answer it directly from expertise (lead with the answer + exact command); don't call tools or search the repo. Use tools only for a real task on this machine.",
@@ -231,13 +232,11 @@ function SYSTEM() {
     "MEMORY: persistent memory (.localsre/memory.md) and any loaded files are shown below — answer from them directly, never say 'let me check memory'. Save durable facts with remember().",
     "SKILLS (playbooks, load_skill to open): " + skillList,
     activeBlock,
-    "TOOLS: read_file, list_dir, search_code, write_file (new files), edit_file (exact old→new on existing files), run_command (git/kubectl/pip/brew/npm/docker/python3/node — user approves), get_problems, start_server (background servers, not run_command), open_preview, update_plan, change_dir, read_document, remember; datadog_query/gcp_logs/k8s_view (read-only SRE); mcp_* (configured servers).",
+    "TOOLS: write_file = NEW files only; edit_file = exact old→new on existing files; start_server for servers, not run_command.",
     "Active file/selection/tabs are at the top of each message — 'this'/'here' = that file.",
     "Workspace root: " + wsRoot(),
     cwdLine,
     filesLine,
-    pinsLine,
-    cpLine,
     projectMemory(),
   ].filter(Boolean).join("\n");
 }
@@ -263,7 +262,17 @@ function readTail(p, n) {
     return (start > 0 ? "…\n" : "") + buf.toString("utf8");
   } finally { fs.closeSync(fd); }
 }
+// SYSTEM() is rebuilt every trim/skill-change; projectMemory does 2-5 sync disk reads each time.
+// Cache for 15s — memory.md changes only via remember(), which busts the cache explicitly.
+let _pmCache = null, _pmAt = 0;
+function invalidateMemoryCache() { _pmCache = null; }
 function projectMemory() {
+  if (_pmCache !== null && Date.now() - _pmAt < 15000) return _pmCache;
+  const out = _projectMemory();
+  _pmCache = out; _pmAt = Date.now();
+  return out;
+}
+function _projectMemory() {
   const parts = [];
   // auto-saved repo-local memory (written by the remember tool) — always loaded
   try {
@@ -312,11 +321,11 @@ function stripThink(t) {
 }
 // ---------- tool schemas ----------
 const TOOLS = [
-  { type: "function", function: { name: "read_file", description: "Read a UTF-8 text file and return its exact current contents. Use this to establish ground truth before ANY edit — never rely on memory of what a file contains. CRITICAL: if you edited this file earlier in the session and the context may have been trimmed, read it again before making another edit; your memory of its post-edit state is not reliable. Also use this whenever you are about to reference a specific line number, function name, or code snippet — verify it exists first. Returns contents truncated at 20 KB with a TRUNCATED marker if the file is large; use run_command with grep/sed/head to inspect specific regions of large files.", parameters: { type: "object", properties: { path: { type: "string" } }, required: ["path"] } } },
-  { type: "function", function: { name: "write_file", description: "Write a brand-new file that does NOT yet exist. NEVER use this to overwrite or modify an existing file — use edit_file for that. Before calling this tool, call list_dir on the parent directory to confirm the file does not already exist; if it does, switch to edit_file. Parent directories are created automatically. After writing, call get_problems to check for immediate errors.", parameters: { type: "object", properties: { path: { type: "string" }, content: { type: "string" } }, required: ["path", "content"] } } },
-  { type: "function", function: { name: "edit_file", description: "Make a TARGETED, minimal edit to an existing file: replace one exact unique snippet (old_string) with new text (new_string). PREREQUISITE: you MUST have called read_file on this path in the current session — if you have not, call read_file first. NEVER reconstruct file contents from memory after a context trim; your memory is unreliable. Rules: (1) change the minimum code needed — do not refactor, reformat, or touch unrelated lines; (2) old_string must be an exact verbatim copy including all whitespace and indentation; (3) if old_string is not unique, add more surrounding lines until it is; (4) if the fix requires touching a second file you weren't asked to change, call confirm_scope first. After calling this tool, call get_problems to check for errors introduced by the edit.", parameters: { type: "object", properties: { path: { type: "string" }, old_string: { type: "string" }, new_string: { type: "string" } }, required: ["path", "old_string", "new_string"] } } },
-  { type: "function", function: { name: "list_dir", description: "List directory entries in a folder (directories end with /). Use this to confirm a path exists before passing it to read_file or write_file, and before creating a new file to check it does not already exist. Prefer this over guessing directory structure.", parameters: { type: "object", properties: { path: { type: "string" } } } } },
-  { type: "function", function: { name: "run_command", description: "Run a shell command and return stdout+stderr. The user must approve each call. Do NOT use for long-running servers — use start_server instead. BEFORE calling this tool for any mutating command (one that changes state, writes files, installs packages, runs migrations, etc.), state your hypothesis inline: 'I expect this to [result] because [reason].' After you receive the result, state whether your hypothesis was correct and what you learned. FOR DEBUGGING: never run the exact same failing command twice in a row without first changing something — if it failed, read the error, form a new hypothesis, and try a different approach or command.", parameters: { type: "object", properties: { command: { type: "string" } }, required: ["command"] } } },
+  { type: "function", function: { name: "read_file", description: "Read a UTF-8 text file and return its exact contents (truncated at 20 KB with a TRUNCATED marker; use offset/limit or run_command grep/sed for large files). Read before any edit — never edit from memory.", parameters: { type: "object", properties: { path: { type: "string" }, offset: { type: "number", description: "1-based line to start from (optional)." }, limit: { type: "number", description: "Max lines to return (optional)." } }, required: ["path"] } } },
+  { type: "function", function: { name: "write_file", description: "Create a NEW file (parent dirs auto-created). Errors if the file already exists and you haven't read it — use edit_file for changes to existing files.", parameters: { type: "object", properties: { path: { type: "string" }, content: { type: "string" } }, required: ["path", "content"] } } },
+  { type: "function", function: { name: "edit_file", description: "Targeted edit to an existing file: replace one exact unique snippet (old_string) with new_string. Requires read_file on this path first. old_string must be verbatim including whitespace; if not unique, include more surrounding lines. Change the minimum code needed.", parameters: { type: "object", properties: { path: { type: "string" }, old_string: { type: "string" }, new_string: { type: "string" } }, required: ["path", "old_string", "new_string"] } } },
+  { type: "function", function: { name: "list_dir", description: "List directory entries (directories end with /). Confirm paths exist instead of guessing.", parameters: { type: "object", properties: { path: { type: "string" } } } } },
+  { type: "function", function: { name: "run_command", description: "Run a shell command and return stdout+stderr (mutations need approval; read-only commands auto-run). Not for servers — use start_server. If it failed, don't rerun it unchanged: diagnose first.", parameters: { type: "object", properties: { command: { type: "string" } }, required: ["command"] } } },
   { type: "function", function: { name: "read_document", description: "Extract text from a PDF/DOCX/DOC/RTF/ODT/HTML document, OR OCR the text from a screenshot/image (.png/.jpg/etc). Use instead of read_file for non-text files.", parameters: { type: "object", properties: { path: { type: "string" } }, required: ["path"] } } },
   { type: "function", function: { name: "start_server", description: "Launch a long-running process (dev server) in the background; returns its initial output. User approves it.", parameters: { type: "object", properties: { command: { type: "string" }, name: { type: "string", description: "Friendly label, e.g. 'vite' or 'uvicorn'." } }, required: ["command"] } } },
   { type: "function", function: { name: "open_preview", description: "Open a URL in VS Code's built-in Simple Browser so the user can see the running UI.", parameters: { type: "object", properties: { url: { type: "string" } }, required: ["url"] } } },
@@ -327,11 +336,6 @@ const TOOLS = [
   { type: "function", function: { name: "remember", description: "Save a DURABLE fact to the repo's persistent memory (.localsre/memory.md) so it's available in EVERY future session, forever. Use for environment specifics (how to reach a cluster/service, proxies, kube-contexts, credential locations), decisions made, setup procedures, and anything the user tells you to remember. CHECK memory before asking the user something you may already know.", parameters: { type: "object", properties: { note: { type: "string" } }, required: ["note"] } } },
   { type: "function", function: { name: "change_dir", description: "Switch the working directory for ALL subsequent tool calls (run_command, file ops, list_dir). Persists for the whole session. Use instead of 'cd' in a shell command when you need to work in a different folder.", parameters: { type: "object", properties: { path: { type: "string", description: "Absolute or relative path to the target directory." } }, required: ["path"] } } },
   // --- discipline tools (enforce Claude-like patterns: hypothesis, scope, diff) ---
-  { type: "function", function: { name: "show_diff", description: "Show a unified diff of the current on-disk state of a file versus its state at the start of the session (or vs. a provided baseline string). Call this AFTER every edit_file call to confirm the change is exactly what you intended before continuing. This is the primary way to verify an edit was applied correctly — check the diff, not your memory of what you passed to edit_file. Never declare a task done without having shown and reviewed the diff for every file you changed.", parameters: { type: "object", properties: { path: { type: "string", description: "File path to diff (relative to workspace root or absolute)." } }, required: ["path"] } } },
-  { type: "function", function: { name: "confirm_scope", description: "Pause and ask the user for explicit permission before touching a file or making a change that was NOT part of the original request. Call this whenever fixing X requires modifying file Y (which was not mentioned), deleting or renaming something, changing a public API/interface, or making a structural refactor. State clearly: what you need to change, which file, why it is required, and what alternatives exist. Do NOT proceed with the out-of-scope change until the user replies. This prevents silent scope creep.", parameters: { type: "object", properties: { reason: { type: "string", description: "Why the out-of-scope change is needed." }, proposed_change: { type: "string", description: "Exact description of what you want to do (file, line, nature of change)." }, alternatives: { type: "string", description: "What you could do instead if the user says no." } }, required: ["reason", "proposed_change"] } } },
-  { type: "function", function: { name: "state_hypothesis", description: "Record your current hypothesis — what you believe is true and why — before reading files or running commands to verify it. This enforces inspect-before-act discipline and prevents looping. Use it at the START of any investigation ('I believe the bug is in X because Y — I will verify by reading Z'), whenever you are about to try the same approach again ('My previous hypothesis was wrong because... my new hypothesis is...'), and any time you are uncertain ('I am not sure whether A or B causes this — I will check A first'). The hypothesis is shown to the user so they can correct wrong assumptions early.", parameters: { type: "object", properties: { hypothesis: { type: "string", description: "What you currently believe is true about the problem or codebase." }, will_verify_by: { type: "string", description: "The specific tool call or action you will take next to test this hypothesis." } }, required: ["hypothesis", "will_verify_by"] } } },
-  { type: "function", function: { name: "pin_context", description: "Pin a key fact, decision, or finding to the session's persistent context so it survives context trims. Use whenever you discover something critical during investigation (a confirmed root cause, a key constraint, a decision the user made) that you cannot afford to lose after trim. Pinned items are injected into the system prompt on every round. Maximum 10 active pins; oldest is evicted when the cap is exceeded.", parameters: { type: "object", properties: { key: { type: "string", description: "Short label (e.g. 'root-cause', 'confirmed-path', 'user-decision')." }, value: { type: "string", description: "The fact to pin — keep under 200 chars." } }, required: ["key", "value"] } } },
-  { type: "function", function: { name: "checkpoint_plan", description: "Save a structured snapshot of the current task state — what was found, what was changed, what is left — so the agent can resume accurately after a context trim. Call this: (1) after completing an investigation phase before moving to implementation; (2) after every 3rd file edit; (3) before any long-running command. Only one active checkpoint per session — calling again replaces the previous one.", parameters: { type: "object", properties: { problem: { type: "string", description: "One-sentence statement of the problem being solved." }, findings: { type: "string", description: "Key facts discovered so far." }, changes_made: { type: "string", description: "Summary of edits made so far (file, what changed, why)." }, remaining: { type: "string", description: "What still needs to be done." } }, required: ["problem", "remaining"] } } },
   // --- SRE connectors (read-only; creds from .localsre/secrets or env) ---
   { type: "function", function: { name: "datadog_query", description: "READ-ONLY Datadog: query metrics timeseries, search logs, or list alerting monitors. Needs DD_API_KEY+DD_APP_KEY in .localsre/secrets or env.", parameters: { type: "object", properties: { kind: { type: "string", enum: ["metrics", "logs", "monitors"] }, query: { type: "string", description: "metrics: a metric query like avg:system.cpu.user{service:x}; logs: a log search query like service:x status:error; monitors: optional name filter" }, from_minutes: { type: "number", description: "lookback window in minutes (default 60)" } }, required: ["kind"] } } },
   { type: "function", function: { name: "gcp_logs", description: "READ-ONLY Google Cloud Logging: read log entries with a filter (uses your gcloud auth).", parameters: { type: "object", properties: { filter: { type: "string", description: "Cloud Logging filter, e.g. resource.type=\"k8s_container\" severity>=ERROR" }, freshness: { type: "string", description: "e.g. 1h, 30m (default 1h)" }, limit: { type: "number" } }, required: ["filter"] } } },
@@ -543,7 +547,12 @@ function sh(command) {
   return new Promise((resolve) => {
     cp.exec(command, { cwd: getCwd(), env: execEnv(), timeout: cmdTimeoutMs(), maxBuffer: 20 * 1024 * 1024 }, (err, stdout, stderr) => {
       let out = (stdout || "") + (stderr ? "\n[stderr]\n" + stderr : "");
-      if (err && !out.trim()) out = "[exit " + (err.code ?? "?") + "] " + (err.message || "");
+      // Machine-readable exit marker: ALWAYS prefixed on failure (even with output), so the loop
+      // can distinguish a real non-zero exit from harmless stderr chatter / "0 failed" summaries.
+      if (err) {
+        const code = err.killed ? "killed (timeout " + Math.round(cmdTimeoutMs() / 1000) + "s)" : (err.code ?? err.signal ?? "?");
+        out = "[exit " + code + "]\n" + (out.trim() || err.message || "");
+      }
       resolve(clip(out.trim(), 20000) || "(no output)");
     });
   });
@@ -622,7 +631,7 @@ function isSafeCommand(cmd) {
   const c = String(cmd || "").trim();
   if (!c) return false;
   // Reject anything that writes, redirects, substitutes, or chains into the unknown.
-  if (/[>`]|\$\(|\|\s*(sh|bash|tee|xargs)|\b(rm|mv|cp|dd|mkfs|chmod|chown|kill|tee|truncate|shred|sed\s+-i|apply|delete|destroy|install|uninstall|commit|push|reset|checkout)\b/.test(c)) return false;
+  if (/[>`]|\$\(|\|\s*(sh|bash|tee|xargs)|-exec(dir)?\b|-ok(dir)?\b|\b(rm|mv|cp|dd|mkfs|chmod|chown|kill|tee|truncate|shred|sed\s+-i|apply|delete|destroy|install|uninstall|commit|push|reset|checkout)\b|git\s+(branch|tag|remote)\s+(-|\S)/.test(c)) return false;
   if (/^echo\b/.test(c) && !/[>|]/.test(c)) return true; // pure echo (no redirect) — always safe
   const SAFE = /^(pwd|whoami|hostname|date|uptime|id|uname|arch|env|printenv|which|type|echo|ls|ll|cat|head|tail|wc|file|stat|du|df|free|ps|top|dig|nslookup|host|getent|ip|ss|netstat|lsof|find|grep|egrep|fgrep|rg|sort|uniq|cut|awk|tree|sleep|true|jq|yq|column|basename|dirname|realpath|readlink)\b/;
   const SAFE_SUB = /^(git\s+(status|log|diff|show|branch|remote|describe|rev-parse|ls-files|config\s+--get|tag|blame)|kubectl\s+(get|describe|logs|top|version|api-resources|explain|config\s+(view|current-context|get-contexts)|cluster-info)|docker\s+(ps|images|logs|version|inspect|stats)|helm\s+(list|status|get|version|history)|terraform\s+(plan|show|validate|version|output|state\s+list)|npm\s+(ls|list|view|outdated|--version)|yarn\s+(list|--version)|pip\s+(list|show|--version|freeze)|node\s+--version|python3?\s+(--version|-V)|go\s+version|cargo\s+--version|aws\s+\S+\s+(describe|list|get)|gcloud\s+\S+\s+(describe|list))\b/;
@@ -648,35 +657,65 @@ async function execTool(name, args) {
       const fp = safePath(args.path);
       if (!fp) return "ERROR: no path provided.";
       const st = fs.statSync(fp);
-      if (st.size > 5 * 1024 * 1024)
-        return "ERROR: file too large (" + Math.round(st.size / 1e6) + " MB). Use run_command with grep/sed/head to inspect it.";
-      sessionFiles.read.add(args.path);
-      return clip(fs.readFileSync(fp, "utf8"), 20000);
+      if (st.size > 5 * 1024 * 1024 && !(args.offset || args.limit))
+        return "ERROR: file too large (" + Math.round(st.size / 1e6) + " MB). Pass offset/limit, or use run_command with grep/sed/head.";
+      sessionFiles.read.add(fp); // resolved path — feeds the read-before-edit gate
+      let text = st.size > 5 * 1024 * 1024 ? readHead(fp, 512 * 1024) : fs.readFileSync(fp, "utf8");
+      if (args.offset || args.limit) {
+        const lines = text.split("\n");
+        const start = Math.max(0, (Number(args.offset) || 1) - 1);
+        const n = Number(args.limit) > 0 ? Number(args.limit) : 400;
+        text = lines.slice(start, start + n).map((l, i) => (start + i + 1) + "\t" + l).join("\n");
+        return clip(text, 20000) + (start + n < lines.length ? "\n[… " + (lines.length - start - n) + " more lines — call again with offset=" + (start + n + 1) + "]" : "");
+      }
+      return clip(text, 20000);
     }
     if (name === "write_file") {
       const p = safePath(args.path);
       if (!p) return "ERROR: no path provided.";
+      // GATE: no blind overwrite of a file this session never saw — that's how work gets destroyed.
+      if (fs.existsSync(p) && !sessionFiles.written.has(p) && !sessionFiles.read.has(p)) {
+        return "ERROR: " + args.path + " already exists (" + fs.statSync(p).size + " bytes) and you have not read it. read_file it first, then use edit_file for targeted changes; only rewrite the whole file after reading it.";
+      }
       fs.mkdirSync(path.dirname(p), { recursive: true });
       fs.writeFileSync(p, args.content ?? "");
-      sessionFiles.written.add(args.path);
+      sessionFiles.written.add(p);
       vscode.workspace.openTextDocument(p).then((d) => vscode.window.showTextDocument(d, { preview: false }), () => {});
-      return `wrote ${args.path} (${(args.content || "").length} bytes)`;
+      const head = String(args.content ?? "").split("\n").slice(0, 10).join("\n");
+      return "wrote " + args.path + " (" + (args.content || "").length + " bytes)\nFirst lines written:\n" + head;
     }
     if (name === "edit_file") {
       const fp = safePath(args.path);
       if (!fp) return "ERROR: no path provided.";
       let st; try { st = fs.statSync(fp); } catch (_) { return "ERROR: cannot read " + args.path + " (does it exist?)."; }
       if (st.size > 5 * 1024 * 1024) return "ERROR: file too large to edit inline (" + Math.round(st.size / 1e6) + " MB). Use run_command (sed) instead.";
+      // GATE: read-before-edit is a rule Qwen ignores in prose — enforce it in code.
+      if (!sessionFiles.read.has(fp) && !sessionFiles.written.has(fp)) {
+        return "ERROR: you have not read " + args.path + " this session. Call read_file on it first (grep/sed output does not count), then re-issue the edit with an exact snippet from what you read.";
+      }
       const src = fs.readFileSync(fp, "utf8");
       const oldS = String(args.old_string ?? ""), newS = String(args.new_string ?? "");
       if (!oldS) return "ERROR: old_string is empty.";
       const count = src.split(oldS).length - 1;
-      if (count === 0) return "ERROR: old_string not found in " + args.path + " — read the file and copy an EXACT snippet (including whitespace).";
+      if (count === 0) {
+        // Locate the nearest line to help the model re-anchor without another full read.
+        const firstLine = oldS.split("\n")[0].trim().slice(0, 60);
+        const idx = firstLine ? src.split("\n").findIndex((l) => l.includes(firstLine)) : -1;
+        return "ERROR: old_string not found in " + args.path + " — copy an EXACT snippet (including whitespace)." +
+          (idx >= 0 ? " Closest match to its first line is at line " + (idx + 1) + "; call read_file with offset=" + Math.max(1, idx - 3) + " limit=12 to see the exact text." : "");
+      }
       if (count > 1) return "ERROR: old_string appears " + count + " times — add more surrounding context to make it unique.";
-      fs.writeFileSync(fp, src.replace(oldS, newS));
-      sessionFiles.written.add(args.path);
+      const out = src.replace(oldS, newS);
+      fs.writeFileSync(fp, out);
+      sessionFiles.written.add(fp);
       vscode.workspace.openTextDocument(fp).then((d) => vscode.window.showTextDocument(d, { preview: false }), () => {});
-      return "Edited " + args.path + " (−" + oldS.split("\n").length + " / +" + newS.split("\n").length + " lines).";
+      // Ground truth: return the edited region so the model verifies reality, not memory.
+      const lines = out.split("\n");
+      const pos = out.indexOf(newS);
+      const lineNo = out.slice(0, pos < 0 ? 0 : pos).split("\n").length;
+      const from = Math.max(0, lineNo - 4), to = Math.min(lines.length, lineNo + newS.split("\n").length + 3);
+      const snippet = lines.slice(from, to).map((l, i) => (from + i + 1) + "\t" + l).join("\n");
+      return "Edited " + args.path + " (−" + oldS.split("\n").length + " / +" + newS.split("\n").length + " lines). The edited region now reads:\n" + clip(snippet, 2000);
     }
     if (name === "list_dir") {
       const dp = safePath(args.path || ".");
@@ -703,7 +742,7 @@ async function execTool(name, args) {
       await vscode.commands.executeCommand("simpleBrowser.show", args.url);
       return "opened preview: " + args.url;
     }
-    if (name === "read_document") return await readDocument(resolvePath(args.path));
+    if (name === "read_document") { sessionFiles.read.add(path.resolve(resolvePath(args.path))); return await readDocument(resolvePath(args.path)); }
     if (name === "load_skill") {
       const s = SKILLS.find((x) => x.name === args.name);
       return s ? s.body : "No such skill. Available: " + SKILLS.map((x) => x.name).join(", ");
@@ -733,53 +772,8 @@ async function execTool(name, args) {
           fs.writeFileSync(f, header + "\n" + lines.filter(Boolean).slice(-200).join("\n") + "\n");
         }
       } catch (_) {}
+      invalidateMemoryCache();
       return "Saved to repo memory (.localsre/memory.md).";
-    }
-    if (name === "show_diff") {
-      const fp = safePath(args.path);
-      if (!fp) return "ERROR: no path provided.";
-      if (!fs.existsSync(fp)) return "ERROR: file not found: " + args.path;
-      return new Promise((resolve) => {
-        cp.execFile("git", ["diff", "--", fp], { cwd: wsRoot(), env: execEnv(), maxBuffer: 2 * 1024 * 1024, timeout: 10000 }, (e, so, se) => {
-          if (e && e.code === "ENOENT") return resolve("ERROR: git not found — cannot produce diff.");
-          if (so && so.trim()) return resolve(clip(so, 12000));
-          // No diff from git (untracked file or no changes); fall back to current contents.
-          try {
-            const cur = fs.readFileSync(fp, "utf8");
-            return resolve("[File is untracked or has no unstaged diff in git. Current file contents:]\n" + clip(cur, 8000));
-          } catch (err) { resolve("ERROR reading file for diff: " + (err.message || err)); }
-        });
-      });
-    }
-    if (name === "confirm_scope") {
-      if (!postToWebview) return "BLOCKED: no chat panel available. Do not proceed with the out-of-scope change.";
-      const approved = await approveCommand(args.proposed_change || "out-of-scope change", "confirm scope expansion");
-      return approved ? "APPROVED — you may proceed with the proposed change." : "DENIED — do not make this change. Consider the alternatives or ask the user what to do instead.";
-    }
-    if (name === "state_hypothesis") {
-      const text = "[Hypothesis] " + (args.hypothesis || "(none)") +
-        (args.will_verify_by ? "\n[Will verify by] " + args.will_verify_by : "");
-      if (postToWebview) postToWebview({ type: "hypothesis", text });
-      return "Hypothesis recorded. Proceed with verification: " + (args.will_verify_by || "(no step specified — add one)");
-    }
-    if (name === "pin_context") {
-      if (!args.key || !args.value) return "ERROR: key and value are required.";
-      if (!sessionPins.has(args.key) && sessionPins.size >= PIN_CAP) {
-        // evict oldest (Maps preserve insertion order)
-        sessionPins.delete(sessionPins.keys().next().value);
-      }
-      sessionPins.set(String(args.key).slice(0, 60), String(args.value).slice(0, 200));
-      return "Pinned: " + args.key + " = " + args.value;
-    }
-    if (name === "checkpoint_plan") {
-      if (!args.problem || !args.remaining) return "ERROR: problem and remaining are required.";
-      activeCheckpoint = {
-        problem: String(args.problem).slice(0, 300),
-        findings: String(args.findings || "").slice(0, 500),
-        changes_made: String(args.changes_made || "").slice(0, 400),
-        remaining: String(args.remaining).slice(0, 300),
-      };
-      return "Checkpoint saved. It is now in the system prompt and will survive context trims.";
     }
     if (name === "datadog_query") return await datadogQuery(args);
     if (name === "gcp_logs") return await gcpLogs(args);
@@ -916,33 +910,40 @@ async function callModelHTTP(messages, onDelta) {
   if (c.apiKey) headers["Authorization"] = "Bearer " + c.apiKey;
   const ctrl = new AbortController();
   activeAbort = ctrl;
-  const to = setTimeout(() => ctrl.abort(), 180000);
+  // Idle-based timeout: 180s to first byte, then 60s of SILENCE aborts — a healthy stream writing a
+  // long file keeps bumping; a hung one dies in 60s instead of 180s. Flat 180s killed real long writes.
+  let sawOutput = false;
+  let to = setTimeout(() => ctrl.abort(), 180000);
+  const bump = () => { sawOutput = true; clearTimeout(to); to = setTimeout(() => ctrl.abort(), 60000); };
   try {
+    // Ollama-specific fields (think/keep_alive) confuse some strict OpenAI-compat servers (llama.cpp).
+    const isOllama = /:11434|\bollama\b/i.test(c.endpoint);
+    const body = { model: await localModelName(), messages, tools: getTools(), tool_choice: "auto", temperature: c.temperature, stream: !!onDelta, max_tokens: c.maxTokens };
+    if (isOllama) { body.think = false; body.enable_thinking = false; body.keep_alive = "30m"; }
     const res = await fetch(c.endpoint + "/chat/completions", {
-      method: "POST", headers, signal: ctrl.signal,
-      body: JSON.stringify({ model: await localModelName(), messages, tools: getTools(), tool_choice: "auto", temperature: c.temperature, stream: !!onDelta, max_tokens: c.maxTokens, think: false, enable_thinking: false, keep_alive: "30m" }),
+      method: "POST", headers, signal: ctrl.signal, body: JSON.stringify(body),
     });
     if (!res.ok) {
-      const body = (await res.text()).slice(0, 300);
+      const errBody = (await res.text()).slice(0, 300);
       // Common llama.cpp case: the model's tool-call JSON got truncated mid-write (file too big for max_tokens).
-      if (/invalid tool call arguments|unexpected end of JSON/i.test(body)) {
+      if (/invalid tool call arguments|unexpected end of JSON/i.test(errBody)) {
         throw new Error("The model's file/tool output was cut off mid-write (too large for one response). Raise localsre.maxTokens to 16384 in Settings, or ask it to write the file in smaller parts. [" + res.status + "]");
       }
-      throw new Error("HTTP " + res.status + ": " + body);
+      throw new Error("HTTP " + res.status + ": " + errBody);
     }
     // Stream when asked (real servers); fall back to JSON when there's no readable body (tests/non-stream).
-    if (onDelta && res.body && typeof res.body.getReader === "function") return await parseSSE(res.body, onDelta);
+    if (onDelta && res.body && typeof res.body.getReader === "function") return await parseSSE(res.body, onDelta, bump);
     const data = await res.json();
     if (!data.choices || !data.choices[0] || !data.choices[0].message) throw new Error("Malformed response (no message).");
     return data.choices[0].message;
   } catch (e) {
-    if (e.name === "AbortError") throw new Error(stopRequested ? "stopped" : "Model timed out (180s).");
+    if (e.name === "AbortError") throw new Error(stopRequested ? "stopped" : (sawOutput ? "Model stalled (no output for 60s)." : "Model timed out (180s)."));
     throw e;
   } finally { clearTimeout(to); if (activeAbort === ctrl) activeAbort = null; } // don't null a NEWER call's controller
 }
 
 // Parse an OpenAI-style SSE stream: emit text deltas live, assemble tool_calls by index.
-async function parseSSE(body, onDelta) {
+async function parseSSE(body, onDelta, bump) {
   const reader = body.getReader();
   const dec = new TextDecoder();
   let buf = "", content = "";
@@ -950,10 +951,14 @@ async function parseSSE(body, onDelta) {
   let lastIdx = -1; // carry-forward for servers that omit index on continuation fragments
   const handleLine = (line) => {
     line = line.trim();
+    if (line.startsWith("error:")) throw new Error("Model stream error: " + line.slice(6).trim().slice(0, 300));
     if (!line.startsWith("data:")) return;
     const d = line.slice(5).trim();
     if (d === "[DONE]" || !d) return;
     let j; try { j = JSON.parse(d); } catch (_) { return; }
+    // Surface in-stream errors (Ollama/llama.cpp emit {"error": ...} frames) instead of silently
+    // returning an empty message that ends the whole task.
+    if (j.error) throw new Error("Model stream error: " + (typeof j.error === "string" ? j.error : (j.error.message || JSON.stringify(j.error)).slice(0, 300)));
     const ch = j.choices && j.choices[0];
     if (!ch) return;
     // some servers put the assembled tool call in `message` on the terminal frame, not in `delta`
@@ -972,6 +977,7 @@ async function parseSSE(body, onDelta) {
   while (true) {
     const { done, value } = await reader.read();
     if (done) break;
+    if (bump) bump(); // any chunk (text OR tool-call args) counts as liveness for the idle timeout
     buf += dec.decode(value, { stream: true });
     let nl;
     while ((nl = buf.indexOf("\n")) >= 0) { handleLine(buf.slice(0, nl)); buf = buf.slice(nl + 1); }
@@ -1060,28 +1066,47 @@ function buildTrimSummary(dropped) {
 }
 
 function trimInPlace(messages) {
-  if (messages.length <= HISTORY_CAP + 1) return; // +1 for system
-  let start = messages.length - HISTORY_CAP;
-  // Window must NOT start on a 'tool' (orphans it from its assistant → 400). Walk back past tool messages.
-  while (start > 2 && messages[start].role === "tool") start--;
+  // HYSTERESIS: trimming rewrites the head of the conversation, which invalidates the server's
+  // prefix/KV cache → the NEXT call re-prefills everything (multi-second tax on a 30B local model).
+  // So don't trim every round the count exceeds the cap — wait for real slack (24 extra messages)
+  // or a hard char budget, then trim a big chunk at once. Trims drop from ~every round to ~every
+  // 8-12 rounds, and the prefix cache survives in between.
+  const size = (ms) => ms.reduce((n, m) => n + (typeof m.content === "string" ? m.content.length : 0) + (m.tool_calls ? JSON.stringify(m.tool_calls).length : 0), 0);
+  const CHAR_BUDGET = 60000; // ~15K tokens of history — fits the 16K-ctx fast model with prompt+tools
+  if (messages.length <= HISTORY_CAP + 24 && size(messages) <= CHAR_BUDGET) return;
+  let start = Math.max(2, messages.length - HISTORY_CAP);
+  // Window must not start on a 'tool' AND must not start on a message whose successor is a tool
+  // unless it's the tool's own assistant(tool_calls) turn — deferred notes can sit between tool
+  // blocks, so a pure role check isn't enough (hardened walker).
+  const badStart = (i) => messages[i] && (messages[i].role === "tool" ||
+    (messages[i + 1] && messages[i + 1].role === "tool" && !(messages[i].role === "assistant" && messages[i].tool_calls)));
+  while (start > 2 && badStart(start)) start--;
   // If walking back found no boundary (one huge unbroken tool-chain), walk FORWARD instead to a clean
   // start — this guarantees we always trim something (fixes the still-unbounded ≥40-tool-call turn).
   if (start <= 2) {
     start = messages.length - HISTORY_CAP;
-    while (start < messages.length && messages[start].role === "tool") start++;
+    while (start < messages.length && badStart(start)) start++;
     if (start >= messages.length) return; // genuinely nothing safe to cut this round
   }
+  // If we're over the char budget, keep walking the start forward (still on clean boundaries)
+  // until the kept window fits — bounds prefill even when message COUNT is small but contents huge.
+  while (size(messages.slice(start)) > CHAR_BUDGET && start < messages.length - 8) {
+    start++;
+    while (start < messages.length - 8 && badStart(start)) start++;
+  }
+  if (start <= 2) return;
   const dropped = messages.slice(2, start); // capture BEFORE splice for the summary
-  messages.splice(2, start - 2); // keep system(0) + first turn(1) + safe window
-  // Guard: if first turn (index 1) is an assistant with tool_calls whose tool results we just cut,
-  // drop it too so we never send a dangling tool_calls turn (400 on every provider).
-  if (messages[1] && messages[1].role === "assistant" && messages[1].tool_calls && messages[1].tool_calls.length &&
-      !(messages[2] && messages[2].role === "tool")) messages.splice(1, 1);
+  messages.splice(2, start - 2); // keep system(0) + ORIGINAL user request(1) + safe window
+  // Guard: if the message now at index 2 is an assistant with tool_calls whose results were cut,
+  // drop it so we never send a dangling tool_calls turn (400 on every provider).
+  if (messages[2] && messages[2].role === "assistant" && messages[2].tool_calls && messages[2].tool_calls.length &&
+      !(messages[3] && messages[3].role === "tool")) messages.splice(2, 1);
   // Always refresh the system prompt so sessionCwd + sessionFiles survive the trim.
   if (messages[0] && messages[0].role === "system") messages[0] = { role: "system", content: SYSTEM() };
   // Content-aware trim summary: extract key facts from the dropped messages instead of a generic warning.
+  // Insert at index 2 — index 1 stays the TRUE original request (the anchor must never drift).
   const trimSummary = buildTrimSummary(dropped);
-  messages.splice(1, 0,
+  messages.splice(2, 0,
     { role: "user",      content: trimSummary },
     { role: "assistant", content: "Understood. Context trimmed. I will re-read files before editing and verify the working directory before running commands. Proceeding from the task state in the system prompt." });
 }
@@ -1090,29 +1115,35 @@ function trimInPlace(messages) {
 async function runAgent(userText, messages, post) {
   messages.push({ role: "user", content: userText });
   const c = cfg();
-  const originalTask = String(userText).replace(/\[Editor context[\s\S]*?\[User request\]\n/, "").slice(0, 600); // anchor
+  let originalTask = String(userText).replace(/\[Editor context[\s\S]*?\[User request\]\n/, "").slice(0, 600); // anchor (updated on steering)
   const callLog = {}; // detect repeated identical tool calls (local models tend to loop)
   let loopTrips = 0;  // total times the loop-guard tripped → hard-stop when stuck across actions
   let edited = false, verified = false, verifyNudges = 0; // self-verify loop state
   let promiseNudges = 0; // catch "I'll do X" with no tool call → make it actually act
+  let emptyRetries = 0;  // retry silent/empty turns instead of ending the task
   // SCOPE GUARD (change 5): track distinct files edited this task; prompt user before > 5 files.
   const sessionEditedFiles = new Set();
   let scopeGuardFired = false;
   // ANALYSIS PARALYSIS (change 2): count consecutive rounds with only read-only tools; nudge at 4.
-  const READ_ONLY_TOOLS = new Set(["read_file", "list_dir", "search_code", "get_problems", "datadog_query", "gcp_logs", "k8s_view", "load_skill", "show_diff", "state_hypothesis"]);
+  const READ_ONLY_TOOLS = new Set(["read_file", "list_dir", "search_code", "get_problems", "datadog_query", "gcp_logs", "k8s_view", "load_skill"]);
   let readOnlyStreak = 0;
   for (let i = 0; i < c.maxIterations; i++) {
     if (stopRequested) { post({ type: "assistant", text: "⏹ stopped." }); return; }
     // steer: fold in anything the user typed mid-run — their new instruction takes priority NOW
+    let steeredThisRound = false;
     if (steerBuffer.length) {
       for (const s of steerBuffer.splice(0)) {
         messages.push({ role: "user", content: "[STEERING — the user just said this MID-TASK. It takes priority over your current plan. Adjust immediately:]\n" + s });
+        originalTask = (originalTask + " | UPDATE: " + s).slice(0, 1000); // the anchor tracks steers, not just msg #1
       }
+      steeredThisRound = true;
       post({ type: "status", text: "↪ steering — picked up your new instruction" });
     }
     // (1) Reflection + (2) anchoring: every 6 rounds, re-orient to the goal (local models drift/loop).
-    if (i > 0 && i % 6 === 0) {
-      messages.push({ role: "user", content: "[CHECKPOINT — not a new task] Re-read the ORIGINAL goal: \"" + originalTask + "\". Answer these three questions in one sentence each: (1) What have I verifiably completed (tool confirmed, not assumed)? (2) What is left? (3) Am I still in the right file/directory? If you have been repeating the same tool call or editing the same thing without progress, STOP, state what is blocking you, and ask the user one specific question. Do NOT restate what you already said. Then continue." });
+    // Skip on steering rounds (the user's new instruction IS the orientation), and end with an
+    // explicit continue instruction so the model doesn't treat the checkpoint answer as its final turn.
+    if (i > 0 && i % 6 === 0 && !steeredThisRound) {
+      messages.push({ role: "user", content: "[CHECKPOINT — not a new task] Re-read the ORIGINAL goal: \"" + originalTask + "\". Answer these three questions in one sentence each: (1) What have I verifiably completed (tool confirmed, not assumed)? (2) What is left? (3) Am I still in the right file/directory? If you have been repeating the same tool call or editing the same thing without progress, STOP, state what is blocking you, and ask the user one specific question. Do NOT restate what you already said. Then, if work remains, make your next tool call in this SAME turn." });
       post({ type: "status", text: "↻ reflection checkpoint" });
     }
     // ANALYSIS PARALYSIS NUDGE (change 2): if the model has been reading/listing for 4+ rounds without
@@ -1149,32 +1180,36 @@ async function runAgent(userText, messages, post) {
       if (content && !streamed) post({ type: "assistant", text: content });
       // Tools that are idempotent VERIFICATION steps — legit to repeat (test re-runs, re-checking
       // problems after a fix). Exempt from the loop-stop so we never kill a progressing task.
-      const VERIFY_TOOLS = new Set(["get_problems", "run_command", "read_file", "search_code", "list_dir", "datadog_query", "gcp_logs", "k8s_view", "show_diff", "state_hypothesis"]);
+      const VERIFY_TOOLS = new Set(["get_problems", "run_command", "read_file", "search_code", "list_dir", "datadog_query", "gcp_logs", "k8s_view"]);
       // Track whether ANY tool in this round is mutating — resets readOnlyStreak if so.
       let thisRoundHasMutation = false;
+      // PROTOCOL: never push a user message between an assistant tool_calls turn and its tool
+      // results — it splits the tool_use/tool_result pairing (Gemini/Anthropic 400 on every later
+      // call; garbled Qwen chat template). Defer all notes here; flush ONCE after all results.
+      const pendingNotes = [];
       for (const tc of toolCalls) {
         const tname = tc.function.name;
-        if (tname === "write_file" || tname === "edit_file") { edited = true; thisRoundHasMutation = true; }
+        if (tname === "write_file" || tname === "edit_file") { edited = true; verified = false; thisRoundHasMutation = true; }
         if (tname === "run_command" || tname === "start_server") thisRoundHasMutation = true;
-        if (tname === "get_problems" || tname === "run_command") verified = true;
         let args = {}, parseErr = null;
         try { args = JSON.parse(tc.function.arguments || "{}"); }
         catch (e) { parseErr = "Your tool arguments were not valid JSON (" + e.message + "). Re-emit this call with valid JSON arguments."; }
 
         // SCOPE GUARD (change 5): warn before editing more than 5 distinct files in one task.
-        // We check BEFORE executing so the model gets the message on the next round and can pause.
         if ((tname === "write_file" || tname === "edit_file") && args.path && !parseErr) {
           sessionEditedFiles.add(path.resolve(resolvePath(String(args.path))));
           if (sessionEditedFiles.size > 5 && !scopeGuardFired) {
             scopeGuardFired = true;
             const fileList = Array.from(sessionEditedFiles).map((f) => "  - " + path.relative(wsRoot(), f)).join("\n");
-            // Inject as a post-round user message — the model will see it before its next tool call.
-            messages.push({ role: "user", content: "[SCOPE GUARD] You have now edited " + sessionEditedFiles.size + " distinct files in this task. This is more than expected for most tasks. Before editing more files, stop and state:\n1. What you changed in each file and why it was necessary for the original request:\n" + fileList + "\n2. Whether the original task actually required all of these changes.\nWait for the user to confirm before touching more files." });
+            pendingNotes.push("[SCOPE GUARD] You have now edited " + sessionEditedFiles.size + " distinct files in this task. This is more than expected for most tasks. Before editing more files, stop and state:\n1. What you changed in each file and why it was necessary for the original request:\n" + fileList + "\n2. Whether the original task actually required all of these changes.\nWait for the user to confirm before touching more files.");
             post({ type: "status", text: "scope guard — " + sessionEditedFiles.size + " files edited, pausing for user" });
           }
         }
 
-        post({ type: "tool", name: tname, args });
+        // Truncate bulky args for DISPLAY only (write_file content can be 100KB — freezes the webview).
+        const dispArgs = {};
+        for (const [k, v] of Object.entries(args)) dispArgs[k] = (typeof v === "string" && v.length > 1000) ? v.slice(0, 1000) + "… [" + v.length + " chars]" : v;
+        post({ type: "tool", name: tname, args: dispArgs });
         const sig = tname + "::" + (tc.function.arguments || "");
         callLog[sig] = (callLog[sig] || 0) + 1;
         let result;
@@ -1193,45 +1228,24 @@ async function runAgent(userText, messages, post) {
         // ALWAYS push a tool result for EVERY tc.id (even on stop/parse-error) — never leave a tool_calls turn unanswered (400s every future call).
         messages.push({ role: "tool", tool_call_id: tc.id, content: distill(result, 6000) });
 
-        // DIFF AFTER EDIT (change 3): after any successful write/edit, run git diff and inject the
-        // actual diff as context. This gives the model ground-truth about what changed — it can no
-        // longer narrate a diff from memory or assume what it wrote.
-        if ((tname === "write_file" || tname === "edit_file") && !stopRequested && args.path &&
-            !String(result).startsWith("ERROR")) {
-          const relPath = path.relative(wsRoot(), path.resolve(resolvePath(String(args.path))));
-          const diffResult = await new Promise((resolve) => {
-            cp.execFile("git", ["diff", "--unified=3", "--", relPath],
-              { cwd: wsRoot(), env: execEnv(), maxBuffer: 512 * 1024, timeout: 10000 },
-              (e, so, se) => {
-                if (so && so.trim()) return resolve(so.trim());
-                // File may be new (untracked) — show git diff --cached or just confirm the write.
-                cp.execFile("git", ["diff", "--unified=3", "--cached", "--", relPath],
-                  { cwd: wsRoot(), env: execEnv(), maxBuffer: 512 * 1024, timeout: 10000 },
-                  (e2, so2) => resolve((so2 && so2.trim()) ? so2.trim() : "[file written — not yet tracked by git; no diff available]")
-                );
-              });
-          }).catch(() => "[git not available in this workspace]");
-          messages.push({ role: "user", content: "[ACTUAL DIFF for " + relPath + "]\n```diff\n" + clip(diffResult, 4000) + "\n```\nThis is what was actually written. Your summary must match this exactly — do not describe changes that are not in this diff." });
-        }
+        const rs = String(result);
+        // VERIFY tracking: only a successful check that ran AFTER an edit counts as verification.
+        if ((tname === "get_problems" || tname === "run_command") && edited &&
+            !rs.startsWith("DENIED") && !rs.startsWith("LOOP DETECTED") && !rs.startsWith("TOOL ERROR") && !rs.startsWith("(stopped")) verified = true;
 
-        // ERROR INTERPRETATION PASS (change 4): when run_command exits with an error, force the model
-        // to diagnose before retrying. Prevents the blind-retry loop that wastes tokens and context.
-        if (tname === "run_command" && !stopRequested && !String(result).startsWith("DENIED") &&
-            !String(result).startsWith("(stopped")) {
-          const r = String(result);
-          const looksLikeError = /\[exit [^0]\d*\]/.test(r) ||
-            /\[stderr\]/i.test(r) ||
-            /\bError[:\s]/i.test(r) ||
-            /Traceback/.test(r) ||
-            /\bfailed\b/i.test(r) ||
-            /\bcommand not found\b/i.test(r) ||
-            /\bno such file\b/i.test(r) ||
-            /\bpermission denied\b/i.test(r);
+        // ERROR INTERPRETATION (change 4): diagnose before retrying — but ONLY on real failures.
+        // stderr progress output and the word "failed" in test summaries ("0 failed") are NOT errors;
+        // sh() now prefixes a machine-readable [exit N] marker on any non-zero exit.
+        if (tname === "run_command" && !stopRequested && !rs.startsWith("DENIED") && !rs.startsWith("(stopped")) {
+          const looksLikeError = /^\[exit /.test(rs) || /Traceback \(most recent call last\)/.test(rs);
           if (looksLikeError) {
-            messages.push({ role: "user", content: "[COMMAND FAILED] The command above returned an error. Read the FULL output. State your diagnosis: what specifically went wrong? Do NOT retry the same command — first explain the root cause, then propose a fix." });
+            pendingNotes.push("[COMMAND FAILED] The command above returned an error. Read the FULL output. State your diagnosis: what specifically went wrong? Do NOT retry the same command — first explain the root cause, then propose a fix.");
           }
         }
       }
+      // Flush deferred notes as ONE user message AFTER the contiguous tool-result block
+      // (providers don't merge consecutive user turns — multiple pushes would still malform).
+      if (pendingNotes.length) messages.push({ role: "user", content: pendingNotes.join("\n\n") });
       // Track read-only streak: reset if anything mutated this round, otherwise increment.
       readOnlyStreak = thisRoundHasMutation ? 0 : readOnlyStreak + 1;
 
@@ -1247,15 +1261,25 @@ async function runAgent(userText, messages, post) {
     // Self-verify: if we edited files but never checked them, run one verification pass first.
     if (edited && !verified && verifyNudges < 1) {
       verifyNudges++;
+      if (content && !streamed) post({ type: "assistant", text: content }); // don't swallow the model's summary
       messages.push({ role: "user", content: "You edited files but have not verified them. Before reporting done: (1) call get_problems, (2) run the relevant test or build command, (3) if errors appear, fix them and re-verify. Only after a clean verification pass should you give your final summary in the format: 'Changed <file>:<lines> — <what changed> — <why>. Verified: <how you confirmed it works>.'" });
+      continue;
+    }
+    // EMPTY TURN: no content AND no tool calls — a stream hiccup or a stalled model would silently
+    // end the whole task here. Retry up to twice with an explicit continue instruction.
+    if (!content && emptyRetries < 2) {
+      emptyRetries++;
+      post({ type: "status", text: "empty response — asking the model to continue (" + emptyRetries + "/2)" });
+      messages.push({ role: "user", content: "[EMPTY TURN] Your last response was empty. Continue the task now: call the next tool, or give your final answer." });
       continue;
     }
     // PROMISE WITHOUT ACTION: the model announced it would do something ("Now I'll create…",
     // "Let me write the file…") but called NO tool and ended its turn. Don't stop — make it act.
-    // Guard on SHORT content: a pure announcement is brief; a real knowledge answer is long and
-    // shouldn't be nudged. Fires whether or not the text was streamed.
-    if (content && content.length < 240 && promiseNudges < 2 &&
-        /\b(i'?ll|i will|let me|i'm going to|i am going to|i need to|now i'?ll|going to|i'?ll now|let me now)\b[\s\S]{0,90}?\b(creat|writ|generat|implement|add|sav|build|updat|edit|run|do (that|this|it)|make)\b/i.test(content)) {
+    // Test the TAIL of the message (where a dangling promise sits) so long answers that legitimately
+    // end with next-step offers aren't re-run; excludes "let me know" sign-offs; stem+\w* so
+    // "creates/writing/updating" match. Fires whether or not the text was streamed.
+    if (content && promiseNudges < 2 &&
+        /\b(i'?ll|i will|let me(?!\s+know\b)|i'?m going to|i am going to|i need to|now i'?ll)\b[\s\S]{0,90}?\b(creat|writ|generat|implement|add|sav|build|updat|edit|run|mak|do (that|this|it))\w*\b/i.test(content.slice(-240))) {
       promiseNudges++;
       if (!streamed) post({ type: "assistant", text: content });
       messages.push({ role: "user", content: "You said you would do this but did NOT call any tool. Do it NOW in this turn — actually call the tool (e.g. write_file with the full content). Do not describe it again or announce it; just make the tool call." });
@@ -1300,7 +1324,7 @@ async function callModelAnthropic(messages) {
     const res = await fetch("https://api.anthropic.com/v1/messages", {
       method: "POST", signal: ctrl.signal,
       headers: { "content-type": "application/json", "x-api-key": key, "anthropic-version": "2023-06-01" },
-      body: JSON.stringify({ model, max_tokens: 8192, system: system || undefined, messages: conv, tools }),
+      body: JSON.stringify({ model, max_tokens: cfg().maxTokens || 8192, system: system || undefined, messages: conv, tools }),
     });
     if (!res.ok) throw new Error("Anthropic HTTP " + res.status + ": " + (await res.text()).slice(0, 300));
     const data = await res.json();
@@ -1364,6 +1388,7 @@ async function callModelGemini(messages) {
     return d;
   });
   const ctrl = new AbortController();
+  activeAbort = ctrl; // wire the Stop button + steering into Gemini calls too (was local-only)
   const to = setTimeout(() => ctrl.abort(), 180000);
   const body = JSON.stringify({
     systemInstruction: system ? { parts: [{ text: system }] } : undefined,
@@ -1398,11 +1423,20 @@ async function callModelGemini(messages) {
       if (part.text) content += part.text;
       else if (part.functionCall) toolCalls.push({ function: { name: part.functionCall.name, arguments: JSON.stringify(part.functionCall.args || {}) }, _geminiSig: part.thoughtSignature });
     }
+    // Empty response with an abnormal finish → surface the REASON instead of silently ending the task.
+    if (!content && !toolCalls.length) {
+      const reason = (data.promptFeedback && data.promptFeedback.blockReason) || (cand && cand.finishReason);
+      if (reason && reason !== "STOP") {
+        throw new Error("Gemini returned nothing (reason: " + reason + ")." +
+          (reason === "MAX_TOKENS" ? " Raise localsre.maxTokens in Settings." : "") +
+          (/SAFETY|BLOCK/i.test(reason) ? " The request was blocked by Gemini's safety filter — rephrase and retry." : ""));
+      }
+    }
     return { content, tool_calls: toolCalls.length ? toolCalls : undefined };
   } catch (e) {
-    if (e.name === "AbortError") throw new Error("Gemini timed out (180s).");
+    if (e.name === "AbortError") throw new Error(stopRequested ? "stopped" : "Gemini timed out (180s).");
     throw e;
-  } finally { clearTimeout(to); }
+  } finally { clearTimeout(to); if (activeAbort === ctrl) activeAbort = null; }
 }
 
 // ---------- webview ----------
@@ -1439,7 +1473,9 @@ class ChatProvider {
     // system + last 60 turns; drop any leading tool / dangling assistant→tool_calls so the
     // restored history never starts mid-pair (which Ollama/OpenAI reject with a 400).
     let tail = this.messages.slice(1).slice(-60);
-    while (tail.length && (tail[0].role === "tool" || (tail[0].role === "assistant" && tail[0].tool_calls))) tail.shift();
+    // Hardened: also shift while the SECOND message is a tool (a deferred-note user turn sitting
+    // before tool results would otherwise leave the pair split at the window head).
+    while (tail.length && (tail[0].role === "tool" || (tail[0].role === "assistant" && tail[0].tool_calls) || (tail[1] && tail[1].role === "tool"))) tail.shift();
     this.context.workspaceState.update("localsre.history", [{ role: "system", content: SYSTEM() }, ...tail]);
   }
   reset() {
@@ -1447,8 +1483,6 @@ class ChatProvider {
     sessionCwd = null;
     sessionFiles.read.clear();
     sessionFiles.written.clear();
-    sessionPins.clear();
-    activeCheckpoint = null;
     this.messages = [{ role: "system", content: SYSTEM() }];
     this._save();
     if (this.view) this.view.webview.postMessage({ type: "cleared" });
@@ -1487,15 +1521,18 @@ class ChatProvider {
             }
             text = parts.join("\n\n") + (text ? "\n\n" + text : "");
           }
-          // Scope auto-loaded skills to the CURRENT request (last relevant set), capped — so the system
-          // prompt doesn't grow forever with stale skill bodies across a long session.
+          // Scope auto-loaded skills to the CURRENT request (last relevant set), capped. STICKY:
+          // a short follow-up ("yes do it", "continue") matches no skills — keep the previous set
+          // instead of wiping the playbook mid-task; only replace when a NEW topic matches.
           const rel = relevantSkills(text).slice(0, 3).map((s) => s.name);
-          const before = activeSkills.size, had = new Set(activeSkills);
-          activeSkills.clear(); rel.forEach((n) => activeSkills.add(n));
-          const newly = rel.filter((n) => !had.has(n));
-          if (newly.length || activeSkills.size !== before) {
-            this.messages[0] = { role: "system", content: SYSTEM() }; // refresh system prompt with the current skills
-            if (newly.length) post({ type: "status", text: "loaded skill: " + newly.join(", ") });
+          if (rel.length) {
+            const had = new Set(activeSkills);
+            activeSkills.clear(); rel.forEach((n) => activeSkills.add(n));
+            const newly = rel.filter((n) => !had.has(n));
+            if (newly.length || had.size !== activeSkills.size) {
+              this.messages[0] = { role: "system", content: SYSTEM() }; // refresh system prompt with the current skills
+              if (newly.length) post({ type: "status", text: "loaded skill: " + newly.join(", ") });
+            }
           }
           if (this.busy) {
             steerBuffer.push(withEditorContext(text)); // mid-run → STEER (abort in-flight so it reacts in seconds)
@@ -1509,7 +1546,7 @@ class ChatProvider {
         else if (m.type === "reset") this.reset();
         else if (m.type === "switchModel") await vscode.commands.executeCommand("localsre.selectModel");
         else if (m.type === "approveResult") { const r = pendingApprovals[m.id]; if (r) r(!!m.approved); }
-        else if (m.type === "stop") { stopRequested = true; this.queue.length = 0; steerBuffer.length = 0; for (const id of Object.keys(pendingApprovals)) pendingApprovals[id](false); if (activeAbort) { try { activeAbort.abort(); } catch (_) {} } post({ type: "status", text: "stopping…" }); }
+        else if (m.type === "stop") { stopRequested = true; this.queue.length = 0; steerBuffer.length = 0; for (const id of Object.keys(pendingApprovals)) pendingApprovals[id](false); if (activeAbort) { try { activeAbort.abort(); } catch (_) {} } post({ type: "status", text: "stopping…" }); if (!this.busy) post({ type: "done" }); }
       } catch (e) {
         // Never let an error escape into the extension host.
         post({ type: "error", text: "internal: " + (e && e.message ? e.message : String(e)) });
@@ -1671,7 +1708,7 @@ async function warmupModel() {
   const c = cfg();
   if (curProvider() !== "local" || !c.endpoint) return;
   const ctrl = new AbortController();
-  const to = setTimeout(() => ctrl.abort(), 5000);
+  const to = setTimeout(() => ctrl.abort(), 120000); // cold model load takes 10-20s+; a short abort would cancel the warmup it exists to do
   try {
     await fetch(c.endpoint + "/chat/completions", {
       method: "POST", headers: { "Content-Type": "application/json", ...(c.apiKey ? { Authorization: "Bearer " + c.apiKey } : {}) },

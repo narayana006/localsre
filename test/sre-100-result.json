@@ -1,20 +1,74 @@
 {
-  "model": "qwen3-coder:30b",
-  "sysChars": 7527,
+  "model": "qwen3-coder:fast",
+  "sysChars": 2669,
   "summary": {
-    "passed": 6,
-    "total": 6,
-    "avgSecs": 13.641333333333334,
-    "avgQ": 4.833333333333333,
+    "passed": 98,
+    "total": 100,
+    "avgSecs": 5.1385799999999975,
+    "avgQ": 4.86,
     "refusals": 0,
-    "noCommand": 0
+    "noCommand": 7
   },
   "cats": {
     "k8s": {
-      "n": 6,
-      "pass": 6,
-      "q": 29,
-      "secs": 81.848
+      "n": 15,
+      "pass": 15,
+      "q": 75,
+      "secs": 53.527
+    },
+    "incident": {
+      "n": 13,
+      "pass": 13,
+      "q": 53,
+      "secs": 59.045
+    },
+    "linux": {
+      "n": 15,
+      "pass": 15,
+      "q": 75,
+      "secs": 51.987
+    },
+    "network": {
+      "n": 11,
+      "pass": 11,
+      "q": 55,
+      "secs": 53.965999999999994
+    },
+    "db": {
+      "n": 10,
+      "pass": 9,
+      "q": 50,
+      "secs": 72.227
+    },
+    "observability": {
+      "n": 10,
+      "pass": 10,
+      "q": 50,
+      "secs": 70.60000000000001
+    },
+    "cicd": {
+      "n": 9,
+      "pass": 9,
+      "q": 45,
+      "secs": 55.77499999999999
+    },
+    "cloud": {
+      "n": 8,
+      "pass": 8,
+      "q": 38,
+      "secs": 52.322
+    },
+    "security": {
+      "n": 5,
+      "pass": 4,
+      "q": 25,
+      "secs": 26.356
+    },
+    "tricky": {
+      "n": 4,
+      "pass": 4,
+      "q": 20,
+      "secs": 18.053
     }
   },
   "results": [
@@ -25,8 +79,8 @@
       "pass": true,
       "hits": 1,
       "quality": 5,
-      "secs": 5.387,
-      "answer": "The single most useful first command to see why a pod is stuck in `CrashLoopBackOff` is:\n\n```bash\nkubectl describe pod <pod-name> -n <namespace>\n```\n\nThis command provides detailed information about the pod's events, status, and any errors that occurred during its lifecycle. It will show you things like:\n\n- Last seen events (e.g., image pull failures, container crashes)\n- Container restart counts\n- Any error messages from the application or Kubernetes itself\n\nIf you don't know the namespace, you can also run:\n\n```bash\nkubectl get pods --all-namespaces\n```\n\nto find it.\n\nLet me know if you'd like help interpreting what `kubectl describe` shows!"
+      "secs": 7.671,
+      "answer": "The single most useful first command to diagnose why a pod is stuck in `CrashLoopBackOff` is:\n\n```bash\nkubectl describe pod <pod-name> -n <namespace>\n```\n\nThis command provides detailed information about the pod's events, status changes, and errors that led to the crash loop. Look for lines containing \"Error\", \"Failed\", or \"BackOff\" in the output.\n\nIf you don't know the namespace, you can also run:\n\n```bash\nkubectl get pods --all-namespaces | grep CrashLoopBackOff\n```\n\nto find the pod and its namespace."
     },
     {
       "id": 2,
@@ -35,8 +89,8 @@
       "pass": true,
       "hits": 3,
       "quality": 5,
-      "secs": 10.047,
-      "answer": "To see the logs from a container that has already restarted, you need to use the `--previous` or `-p` flag with `kubectl logs`. This flag allows you to access logs from the previous instance of a container (i.e., before it was restarted).\n\nHere's how you can do it:\n\n```bash\nkubectl logs <pod-name> -p\n```\n\nIf you're using a specific container within a pod, you can also specify that:\n\n```bash\nkubectl logs <pod-name> -c <container-name> -p\n```\n\n### Example:\nLet’s say you have a pod named `my-pod` and a container named `my-container`. To get the logs from the previous instance of this container, run:\n\n```bash\nkubectl logs my-pod -c my-container -p\n```\n\nThis will show you the logs from the last time that container was running before it was restarted.\n\n### Notes:\n- The `-p` or `--previous` flag only works if the pod has been restarted at least once.\n- If the pod is in a crash loop, you might want to check both current and previous logs for troubleshooting.\n- Make sure you're using the correct kube-context and have access to the cluster where the pod is running.\n\nLet me know if you'd like help with any specific Kubernetes setup or command!"
+      "secs": 1.499,
+      "answer": "To view the last logs from a container that has already restarted, use:\n\n```bash\nkubectl logs <pod-name> --previous\n```\n\nThis command shows logs from the previous instance of the container before it restarted. If you're using Docker instead of Kubernetes, use:\n\n```bash\ndocker logs --previous <container-id>\n```"
     },
     {
       "id": 3,
@@ -45,18 +99,18 @@
       "pass": true,
       "hits": 3,
       "quality": 5,
-      "secs": 8.456,
-      "answer": "When a Kubernetes pod remains in the `Pending` state and doesn't get scheduled, you can use the `kubectl describe pod` command to see detailed information about why it hasn't been scheduled.\n\nHere's how to do it:\n\n```bash\nkubectl describe pod <pod-name> -n <namespace>\n```\n\nThis will show events and conditions related to the pod’s scheduling. Look for lines like:\n\n- `0/1 nodes are available: 1 node(s) had taints that the pod didn't tolerate`\n- `0/1 nodes are available: 1 node(s) are not ready`\n- `0/1 nodes are available: 1 node(s) were unschedulable`\n\nThese messages indicate why the pod couldn't be scheduled.\n\nIf you're unsure of the namespace, you can also run:\n\n```bash\nkubectl get pods --all-namespaces\n```\n\nTo list all pods and their namespaces. Then use that information in the `describe` command.\n\nLet me know if you'd like to see an example output or need help interpreting specific messages!"
+      "secs": 1.614,
+      "answer": "To see the scheduling reason for a pod that is stuck in `Pending` state, use:\n\n```bash\nkubectl describe pod <pod-name> -n <namespace>\n```\n\nLook for the `Events` section in the output — it will show why the pod couldn't be scheduled (e.g., resource constraints, taints, node selector mismatches, etc.)."
     },
     {
       "id": 4,
       "cat": "k8s",
       "q": "How do you check resource requests vs actual usage for pods on a node?",
       "pass": true,
-      "hits": 1,
+      "hits": 3,
       "quality": 5,
-      "secs": 5.116,
-      "answer": "To check resource requests vs actual usage for pods on a node, I'll use Kubernetes tools. Let me first examine what tools are available in the environment.\n\nupdate_plan\n- [x] Check available kubernetes tools\n- [ ] Get node information\n- [ ] Get pod resource usage per node\n- [ ] Compare requests vs usage\n\nrun_command(\"kubectl version\")"
+      "secs": 4.407,
+      "answer": "To check resource requests vs actual usage for pods on a node in Kubernetes, use:\n\n```bash\nkubectl top nodes\n```\n\nThis shows CPU and memory usage per node. For pod-level details, run:\n\n```bash\nkubectl top pods --all-namespaces\n```\n\nTo see resource requests and limits per pod:\n\n```bash\nkubectl describe pods -n <namespace>\n```\n\nLook under the \"Requests\" and \"Limits\" section in the output.\n\nFor a more detailed view of resource usage over time, consider using monitoring tools like Prometheus or Datadog."
     },
     {
       "id": 5,
@@ -64,9 +118,9 @@
       "q": "What does OOMKilled mean and which field controls it?",
       "pass": true,
       "hits": 3,
-      "quality": 4,
-      "secs": 24.953,
-      "answer": "I'll investigate what \"OOMKilled\" means and identify which field controls it in Kubernetes.\n\nFirst, let me search for information about OOMKilled in the context of Kubernetes:\n\n```bash\nsearch_code -r \"OOMKilled\" --include=\"*.go\" --include=\"*.yaml\" --include=\"*.yml\" .\n```\n\nLet me also check if there are any existing files that might contain relevant information about this term:\n\n```bash\nfind . -type f -name \"*.go\" -o -name \"*.yaml\" -o -name \"*.yml\" | xargs grep -l \"OOMKilled\" 2>/dev/null || echo \"No files found\"\n```\n\nLet me look for Kubernetes pod status information and container status fields:\n\n```bash\nsearch_code -r \"containerStatus\" --include=\"*.go\" . | head -20\n```\n\nLet me check the Kubernetes API documentation or code that might define this field. First, let's see what Kubernetes pod status looks like:\n\n```bash\nsearch_code -r \"state.*oom\\|oom.*state\" --include=\"*.go\" . | head -10\n```\n\nLet me look for container status definitions in Kubernetes code:\n\n```bash\nfind . -name \"*.go\" -type f | xargs grep -l \"ContainerStatus\" 2>/dev/null | head -5\n```\n\nLet me check the Kubernetes API types to understand what OOMKilled means and where it's defined:\n\n```bash\nsearch_code -r \"OOMKilled\" --include=\"*.go\" . | head -10\n```\n\nLet me search for how container status is defined in Kubernetes:\n\n```bash\nfind . -name \"*.go\" -type f | xargs grep -l \"containerStatus\\|ContainerStatus\" 2>/dev/null | head -3\n```\n\nLet me look at the Kubernetes API types directly to understand OOMKilled:\n\n```bash\nsearch_code -r \"type.*ContainerState.*struct\" --include=\"*.go\" . | head -5\n```\n\nBased on my investigation, I need to check the Kubernetes container status definition. Let me look for the specific field that controls OOMKilled:\n\n```bash\nfind . -name \"*.go\" -type f -exec grep -l \"OOMKilled\\|containerStatus\" {} \\; | head -5\n```\n\nLet me search more specifically in common Kubernetes directories:\n\n```bash\nfind /Users/narayana/localsre -type f -name \"*.go\" | xargs grep -l \"OOMKilled\" 2>/dev/null || echo \"No OOMKilled found\"\n```\n\nLet me approach this systematically by looking at the Kubernetes documentation and common patterns. Let's look for container status fields in Kubernetes:\n\n```bash\nrun_command \"find /Users/narayana/localsre -type f -name \\\"*.go\\\" | xargs grep -l \\\"ContainerState\\\" 2>/dev/null | head -3\"\n```\n\nLet me search more broadly for container status information:\n\n```bash\nsearch_code -r \"ContainerState\" --include=\"*.go\" . | head -10\n```\n\nBased on my investigation, I need to understand what OOMKilled means in Kubernetes. Let me look at the Kubernetes API documentation or source code that defines this field.\n\nLet me check if there are any specific files that define container status:\n\n```bash\nfind /Users/narayana/localsre -type f -name \"*.go\" | xargs grep -l \"ContainerState\\|containerStatus\" 2>/dev/null | head -5\n```\n\nLet me search for the actual definition of OOMKilled in Kubernetes codebase:\n\n```bash\nrun_command \"find /Users/narayana/localsre -type f -name \\\"*.go\\\" -exec grep -l \\\"OOMKilled\\\" {} \\\\; 2>/dev/null || echo 'No files found'\"\n```\n\nLet me approach this differently. Let's look at the Kubernetes documentation or common patterns for understanding OOMKilled:\n\n```bash\nrun_command \"echo 'OOMKilled is a field in Kubernetes container status that indicates whether a container was killed due to exceeding its memory limits.'\"\n```\n\nBased on my research, I can now provide an answer about OOMKilled.\n\nOOMKilled stands for \"Out of Memory Killed\" and it's a field in Kubernetes container status that indicates when a container has been terminated because it exceeded its allocated memory limit. \n\nIn Kubernetes, this field is part of the ContainerStatus struct, which is defined in the Kubernetes API. The field itself is typically found within the `LastTerminationState` or `State` fields of a container's status.\n\nThe field that controls whether OOMKilled occurs is the **memory limit** set on the container (or pod). When a container exceeds its memory limit, the kernel's Out-of-Memory (OOM) killer terminates the process, and Kubernetes records this in the container's status as `OOMKilled`.\n\nIn YAML manifests, you would specify memory limits like:\n```yaml\nresources:\n  limits:\n    memory: \"512Mi\"\n  requests:\n    memory: \"256Mi\"\n```\n\nWhen a container exceeds its memory limit (in this case 512Mi), it gets terminated with OOMKilled status.\n\nThe actual field in the Kubernetes API is `containerStatus.state.terminated.reason` which can be set to \"OOMKilled\" when the container was killed due to memory constraints.\n\nThis field is automatically populated by the kubelet based on the kernel's OOM killer behavior and is part of the pod's container status information that can be viewed with:\n```bash\nkubectl describe pod <pod-name>\n```\n\nThe key controlling factor is the memory limit set in the container specification, which determines when the OOM killer will terminate the process."
+      "quality": 5,
+      "secs": 7.842,
+      "answer": "OOMKilled means that a process was killed by the Linux Out-of-Memory (OOM) killer because it tried to use more memory than available.\n\nThe field that controls this behavior is **memory.limit_in_bytes** in cgroups, or more specifically, the **oom_kill_disable** flag in the cgroup's memory controller. When `oom_kill_disable` is set to 1, the OOM killer will not kill processes in that cgroup.\n\nIn Kubernetes, you can control this via:\n- `resources.limits.memory`\n- `pod.spec.containers[].securityContext.OomScoreAdj`\n\nFor example, to disable OOM killing for a container:\n```yaml\nsecurityContext:\n  oomScoreAdj: -1000\n```\n\nThis adjusts the OOM score so that the process is less likely to be killed."
     },
     {
       "id": 6,
@@ -75,8 +129,948 @@
       "pass": true,
       "hits": 2,
       "quality": 5,
-      "secs": 27.889,
-      "answer": "To roll back a Kubernetes Deployment to the previous revision, you can use the `kubectl rollout undo` command. Here's how:\n\n### Step-by-step process:\n1. **Check the current revision of the deployment**:\n   ```bash\n   kubectl rollout status deployment/<deployment-name>\n   ```\n2. **View the rollout history**:\n   ```bash\n   kubectl rollout history deployment/<deployment-name>\n   ```\n3. **Roll back to the previous revision**:\n   ```bash\n   kubectl rollout undo deployment/<deployment-name>\n   ```\n\nIf you want to roll back to a specific revision, use:\n```bash\nkubectl rollout undo deployment/<deployment-name> --to-revision=<revision-number>\n```\n\n### Example:\n```bash\nkubectl rollout undo deployment/my-app\n```\n\nThis command will revert the Deployment to its previous state. If there are multiple revisions, it rolls back to the most recent one.\n\nLet me know if you need further clarification or help with a specific scenario!"
+      "secs": 2.528,
+      "answer": "To roll back a Kubernetes Deployment to the previous revision, use:\n\n```bash\nkubectl rollout undo deployment/<deployment-name>\n```\n\nIf you want to rollback to a specific revision, use:\n\n```bash\nkubectl rollout undo deployment/<deployment-name> --to-revision=<revision-number>\n```\n\nYou can check the revision history with:\n\n```bash\nkubectl rollout history deployment/<deployment-name>\n```"
+    },
+    {
+      "id": 7,
+      "cat": "k8s",
+      "q": "A Service has no endpoints. What is the most likely cause?",
+      "pass": true,
+      "hits": 3,
+      "quality": 5,
+      "secs": 4.234,
+      "answer": "The most likely cause is that the Service is trying to select Pods that don't exist or are not in a running state.\n\nTo debug this, run:\n\n```bash\nkubectl get pods -l <label-selector-of-service>\n```\n\nReplace `<label-selector-of-service>` with the label selector used by the Service (from `spec.selector` in the Service YAML). If no pods are returned or all pods are not in \"Running\" state, that's your issue.\n\nAlso verify:\n\n```bash\nkubectl describe service <service-name>\n```\n\nLook for any errors or warnings related to endpoint selection."
+    },
+    {
+      "id": 8,
+      "cat": "k8s",
+      "q": "How do you exec into a running pod to debug?",
+      "pass": true,
+      "hits": 4,
+      "quality": 5,
+      "secs": 2.539,
+      "answer": "To exec into a running Kubernetes pod for debugging, use:\n\n```bash\nkubectl exec -it <pod-name> -- /bin/sh\n```\n\nReplace `<pod-name>` with the actual name of the pod. This command opens an interactive shell inside the pod.\n\nIf the pod has multiple containers, specify the container too:\n\n```bash\nkubectl exec -it <pod-name> -c <container-name> -- /bin/sh\n```"
+    },
+    {
+      "id": 9,
+      "cat": "k8s",
+      "q": "How do you see events sorted by time in a namespace?",
+      "pass": true,
+      "hits": 3,
+      "quality": 5,
+      "secs": 2.086,
+      "answer": "To view Kubernetes events sorted by time in a specific namespace, use:\n\n```bash\nkubectl get events --sort-by=.metadata.creationTimestamp -n <namespace-name>\n```\n\nReplace `<namespace-name>` with the name of the namespace you're interested in.\n\nExample:\n```bash\nkubectl get events --sort-by=.metadata.creationTimestamp -n default\n```"
+    },
+    {
+      "id": 10,
+      "cat": "k8s",
+      "q": "A readinessProbe is failing. Where do you look first?",
+      "pass": true,
+      "hits": 5,
+      "quality": 5,
+      "secs": 3.465,
+      "answer": "As an SRE, when a `readinessProbe` fails, I'd first check the pod logs and status to understand what's happening:\n\n```bash\nkubectl describe pod <pod-name> -n <namespace>\n```\n\nThis shows events, including probe failures. Then check the actual logs:\n\n```bash\nkubectl logs <pod-name> -n <namespace>\n```\n\nIf it's a network or service issue, also verify the application is listening on the correct port and that there are no firewall rules blocking access.\n\nLet me know if you want to dig deeper into specific error messages or logs."
+    },
+    {
+      "id": 11,
+      "cat": "k8s",
+      "q": "How do you cordon and drain a node for maintenance?",
+      "pass": true,
+      "hits": 3,
+      "quality": 5,
+      "secs": 3.701,
+      "answer": "To cordon and drain a node for maintenance in Kubernetes:\n\n1. **Cordon the node** (prevent new pods from being scheduled):\n```bash\nkubectl cordon <node-name>\n```\n\n2. **Drain the node** (evict existing pods):\n```bash\nkubectl drain <node-name> --ignore-daemonsets --delete-local-data\n```\n\nThis safely evacuates all pods from the node while preventing new ones from being scheduled. Use `--ignore-daemonsets` if you want to skip draining daemonset-managed pods, and `--delete-local-data` to remove pods using local storage (be cautious with this flag)."
+    },
+    {
+      "id": 12,
+      "cat": "k8s",
+      "q": "How do you check which container in a multi-container pod is restarting?",
+      "pass": true,
+      "hits": 3,
+      "quality": 5,
+      "secs": 2.326,
+      "answer": "To check which container in a multi-container pod is restarting, use:\n\n```bash\nkubectl describe pod <pod-name> -n <namespace>\n```\n\nLook for the `Containers` section and check the `Restart Count` for each container. You can also check logs for specific containers using:\n\n```bash\nkubectl logs <pod-name> -c <container-name> -n <namespace>\n```"
+    },
+    {
+      "id": 13,
+      "cat": "k8s",
+      "q": "What causes ImagePullBackOff?",
+      "pass": true,
+      "hits": 4,
+      "quality": 5,
+      "secs": 6.714,
+      "answer": "`ImagePullBackOff` in Kubernetes occurs when a Pod cannot pull the container image from the registry. Common causes include:\n\n1. **Incorrect Image Name or Tag**  \n   - Typo in image name or tag (e.g., `nginx:latest` vs `nginx:lates`).\n\n2. **Private Registry Authentication Issues**  \n   - Missing or incorrect imagePullSecrets for private registries.\n\n3. **Network Issues**  \n   - Cluster cannot reach the registry due to firewall, proxy, or DNS issues.\n\n4. **Image Does Not Exist**  \n   - The specified image tag does not exist in the registry.\n\n5. **Resource Constraints**  \n   - Insufficient disk space or memory on the node.\n\n### How to Diagnose:\n```bash\nkubectl describe pod <pod-name> -n <namespace>\n```\nLook for events under `Events` section with `ImagePullBackOff`.\n\n### Example Fix:\nIf using a private registry, ensure you've created an imagePullSecret and referenced it in the Pod spec:\n```yaml\nspec:\n  imagePullSecrets:\n    - name: my-registry-secret\n```\n\nLet me know if you want help checking logs or secrets."
+    },
+    {
+      "id": 14,
+      "cat": "k8s",
+      "q": "How do you see the YAML of a running deployment?",
+      "pass": true,
+      "hits": 2,
+      "quality": 5,
+      "secs": 1.677,
+      "answer": "To view the YAML of a running Kubernetes deployment, use:\n\n```bash\nkubectl get deployment <deployment-name> -o yaml\n```\n\nReplace `<deployment-name>` with the actual name of your deployment. This command fetches the deployment resource in YAML format from the cluster."
+    },
+    {
+      "id": 15,
+      "cat": "k8s",
+      "q": "How do you scale a deployment to 5 replicas?",
+      "pass": true,
+      "hits": 3,
+      "quality": 5,
+      "secs": 1.224,
+      "answer": "To scale a Kubernetes deployment to 5 replicas, use:\n\n```bash\nkubectl scale deployment <deployment-name> --replicas=5\n```\n\nReplace `<deployment-name>` with the actual name of your deployment."
+    },
+    {
+      "id": 16,
+      "cat": "incident",
+      "q": "Production is down. What are the first three steps of incident response?",
+      "pass": true,
+      "hits": 4,
+      "quality": 3,
+      "secs": 4.061,
+      "answer": "The first three steps of incident response in production are:\n\n1. **Acknowledge and Confirm the Incident**  \n   - Verify the issue is real and not a false alert.  \n   - Use monitoring tools (e.g., Datadog, PagerDuty) or check system logs directly.\n\n2. **Contain the Issue**  \n   - Prevent further impact by isolating affected systems or services.  \n   - Example: Disable traffic to a faulty service, rollback a deployment, or stop problematic processes.\n\n3. **Escalate and Communicate**  \n   - Notify the on-call team or relevant stakeholders.  \n   - Use communication channels like Slack, email, or PagerDuty to keep everyone informed of the status.\n\nLet me know if you want help executing any of these steps on this machine."
+    },
+    {
+      "id": 17,
+      "cat": "incident",
+      "q": "A deploy just went out and errors spiked. What is the fastest mitigation?",
+      "pass": true,
+      "hits": 4,
+      "quality": 5,
+      "secs": 2.838,
+      "answer": "The fastest mitigation is to **roll back the deploy**.\n\nIf you're using a Git-based workflow:\n\n```bash\ngit checkout HEAD~1\n```\n\nOr if you're using a deployment system like ArgoCD or Helm, rollback to the previous working revision.\n\nIf you're in a Kubernetes environment and want to quickly rollback a deployment:\n\n```bash\nkubectl rollout undo deployment/<deployment-name>\n```\n\nThis will revert to the previous deployment revision, which should restore stability."
+    },
+    {
+      "id": 18,
+      "cat": "incident",
+      "q": "What is the difference between a trigger and a root cause?",
+      "pass": true,
+      "hits": 4,
+      "quality": 3,
+      "secs": 3.103,
+      "answer": "A **trigger** is the immediate event or condition that initiates an incident or failure. It's what \"sets off\" the problem.\n\nA **root cause** is the underlying, fundamental reason why the trigger occurred — the deepest cause that, if fixed, would prevent the incident from recurring.\n\n### Example:\n- **Trigger**: A database query timed out.\n- **Root Cause**: The database index was missing, causing slow queries.\n\nIn incident response, identifying both helps you not only resolve the immediate issue (trigger) but also fix the deeper problem (root cause) to avoid future occurrences."
+    },
+    {
+      "id": 19,
+      "cat": "incident",
+      "q": "During an outage, what should you communicate and to whom?",
+      "pass": true,
+      "hits": 5,
+      "quality": 5,
+      "secs": 5.999,
+      "answer": "During an outage, you should communicate:\n\n1. **To your team** (internal):\n   - Immediate status update\n   - Root cause if known\n   - Estimated time to resolution\n   - Any workarounds or mitigations\n\n2. **To stakeholders** (external):\n   - Public status page updates (e.g., GitHub Status, AWS Status)\n   - Email/SMS alerts to users\n   - Slack/Teams channel updates\n\n3. **To leadership**:\n   - Incident severity level\n   - Impact assessment\n   - Resource needs or escalation requests\n\nKey principles:\n- Be transparent and honest\n- Update frequently (every 15–30 minutes)\n- Use a single source of truth for status updates\n- Document everything in your incident response tool (e.g., PagerDuty, Slack)\n\nExample command to send an alert via Slack:\n```bash\ncurl -X POST -H 'Content-type: application/json' --data '{\"text\":\"[Alert] Service is down. Investigating...\"}' https://hooks.slack.com/services/YOUR/SLACK/WEBHOOK\n```"
+    },
+    {
+      "id": 20,
+      "cat": "incident",
+      "q": "What is an error budget and how is it used?",
+      "pass": true,
+      "hits": 5,
+      "quality": 3,
+      "secs": 6.859,
+      "answer": "An **error budget** is a concept in Site Reliability Engineering (SRE) that represents the amount of time or frequency of service failures allowed within a given period, based on a service's reliability goals.\n\n### Key Points:\n- It’s derived from the **service level objective (SLO)**.\n- For example, if an SLO is 99.9% uptime, the error budget is 0.1% of time allowed for failure.\n- Error budgets help teams balance **reliability** and **innovation** — they allow for some flexibility in releasing new features or making changes without compromising service quality.\n\n### How It's Used:\n1. **Monitoring**: Teams track how much of the error budget is consumed over time.\n2. **Decision Making**: When the error budget is nearly exhausted, teams may pause feature releases or prioritize stability.\n3. **Risk Management**: Helps in identifying when reliability is at risk and taking corrective actions.\n\n### Example:\nIf a service has an SLO of 99.9% availability over a month (43,200 minutes), the error budget allows for only 43.2 minutes of downtime per month. If a change causes increased errors, it consumes part of that budget.\n\nThis approach ensures reliability is maintained while enabling teams to move fast safely."
+    },
+    {
+      "id": 21,
+      "cat": "incident",
+      "q": "How do you decide incident severity (SEV1 vs SEV3)?",
+      "pass": true,
+      "hits": 3,
+      "quality": 3,
+      "secs": 4.946,
+      "answer": "Incident severity is determined by impact and urgency:\n\n**SEV1 (Critical):**\n- System outage or major service degradation affecting many users.\n- Data loss or security breach.\n- Requires immediate attention, 24/7 response.\n\n**SEV2 (High):**\n- Significant functionality issues, but not full outages.\n- Affects core features or a large number of users.\n- Must be resolved within 2 hours.\n\n**SEV3 (Medium):**\n- Minor issues or feature regressions.\n- Affects few users or non-critical functions.\n- Resolution within 1 day.\n\n**SEV4 (Low):**\n- Cosmetic issues, documentation errors, or minor enhancements.\n- No user impact.\n- Can be addressed during regular work hours.\n\nDecision criteria include:\n- User impact\n- Revenue loss\n- Security risk\n- System stability\n\nUse this framework to triage incidents effectively."
+    },
+    {
+      "id": 22,
+      "cat": "incident",
+      "q": "What goes into a blameless post-mortem?",
+      "pass": true,
+      "hits": 6,
+      "quality": 5,
+      "secs": 6.801,
+      "answer": "A blameless post-mortem focuses on understanding system failures and improving processes, not assigning fault. Here's what typically goes into one:\n\n1. **Event Timeline** – A clear, chronological account of what happened from initial detection to resolution.\n2. **Root Cause Analysis (RCA)** – Investigation into the underlying technical or process issues that led to the failure.\n3. **Impact Assessment** – How the incident affected users, systems, and business outcomes.\n4. **Resolution Steps** – What was done to fix or mitigate the issue.\n5. **Contributing Factors** – Any human, tooling, or organizational elements that played a role.\n6. **Action Items & Improvements** – Specific steps to prevent recurrence (e.g., code changes, process updates, tooling enhancements).\n7. **Lessons Learned** – Key takeaways for the team and organization.\n\nThe tone is constructive and focused on learning, not blame. Tools like Miro or Notion are often used to collaboratively build these documents.\n\nExample command to create a basic post-mortem template in Markdown:\n```bash\ntouch postmortem-template.md\n```\n\nThen populate it with sections above using your preferred editor (e.g., VS Code)."
+    },
+    {
+      "id": 23,
+      "cat": "incident",
+      "q": "Latency p99 doubled but p50 is fine. What does that suggest?",
+      "pass": true,
+      "hits": 4,
+      "quality": 5,
+      "secs": 5.761,
+      "answer": "A doubled latency p99 with p50 remaining stable suggests **tail latency is degrading**, indicating a few possible issues:\n\n- **Resource contention or throttling** (e.g., CPU, memory, I/O) affecting only slower requests.\n- **Batching or queuing effects** where some requests are delayed due to system overload.\n- **Network or external service latency spikes** impacting only the slower requests.\n- **Unstable garbage collection**, **lock contention**, or **memory pressure** in the application.\n\n### Next steps:\n1. **Check resource usage (CPU, memory, disk I/O)** during the time of the spike:\n   ```bash\n   top\n   iostat -x 1\n   ```\n2. **Monitor external dependencies** (e.g., DBs, APIs) for latency spikes.\n3. **Analyze logs or traces** around the p99 threshold to identify what’s causing the delay.\n\nLet me know if you want help analyzing logs or metrics from a specific system."
+    },
+    {
+      "id": 24,
+      "cat": "incident",
+      "q": "What is the on-call golden rule when you do not understand an alert?",
+      "pass": true,
+      "hits": 2,
+      "quality": 3,
+      "secs": 2.682,
+      "answer": "The on-call golden rule when you do not understand an alert is:\n\n**\"Don't guess — ask.\"**\n\nIf you're unsure about the meaning or impact of an alert, immediately seek clarification from colleagues, documentation, or relevant teams. Avoid making assumptions that could lead to misdiagnosis or unnecessary escalation.\n\nThis applies especially in high-pressure situations where quick decisions are needed but clarity is lacking. Communication and collaboration are key to resolving incidents efficiently and safely."
+    },
+    {
+      "id": 25,
+      "cat": "incident",
+      "q": "A dependency is timing out. What two patterns protect your service?",
+      "pass": true,
+      "hits": 3,
+      "quality": 5,
+      "secs": 4.094,
+      "answer": "When a dependency times out, two key patterns that protect your service are:\n\n1. **Circuit Breaker Pattern**  \n   - Prevents cascading failures by stopping requests to a failing dependency after a certain number of failures.\n   - Example command using `curl` to test a dependency with a timeout:\n     ```bash\n     curl --max-time 5 <dependency-url>\n     ```\n\n2. **Timeout and Retry Pattern**  \n   - Sets a maximum time for a request to complete and retries the operation a few times before giving up.\n   - Example using `timeout` command:\n     ```bash\n     timeout 10s curl <dependency-url>\n     ```\n\nThese patterns ensure your service remains stable even when dependencies are slow or unresponsive."
+    },
+    {
+      "id": 26,
+      "cat": "incident",
+      "q": "What metric tells you a service is saturated?",
+      "pass": true,
+      "hits": 3,
+      "quality": 5,
+      "secs": 2.572,
+      "answer": "**Answer:**  \nThe key metric that indicates a service is saturated is **response time (latency)** — specifically when it starts increasing significantly under load.\n\n**Canonical Linux command to monitor response time and saturation:**\n\n```bash\ntop\n```\n\nOr for more detailed metrics:\n\n```bash\niostat -x 1\n```\n\nThis shows CPU, disk I/O, and other system-level bottlenecks that can indicate service saturation."
+    },
+    {
+      "id": 27,
+      "cat": "incident",
+      "q": "What are the four golden signals of monitoring?",
+      "pass": true,
+      "hits": 4,
+      "quality": 3,
+      "secs": 3.901,
+      "answer": "The four golden signals of monitoring, as defined by Google's Site Reliability Engineering (SRE) practices, are:\n\n1. **Latency** – How long it takes for a system to respond to a request.\n2. **Traffic** – The volume or rate of requests being processed.\n3. **Errors** – The number of failed requests or system errors.\n4. **Saturation** – How full a system's resources are (e.g., CPU, memory, disk I/O).\n\nThese signals provide a simple yet effective way to monitor and understand the health and performance of a system.\n\nNo further action is needed unless you want to implement monitoring for these signals using tools like Prometheus, Grafana, or similar."
+    },
+    {
+      "id": 28,
+      "cat": "incident",
+      "q": "After mitigating, what must you do before closing the incident?",
+      "pass": true,
+      "hits": 3,
+      "quality": 5,
+      "secs": 5.428,
+      "answer": "Before closing an incident, you must **document the resolution** and **verify that the system is stable**.\n\n### Steps:\n1. **Confirm the issue is resolved**:\n   - Check system health (e.g., `top`, `htop`, or monitoring dashboards).\n   - Validate services are running normally.\n\n2. **Update the incident timeline**:\n   - Add a final note in your incident tool (e.g., PagerDuty, Slack) with the resolution details.\n\n3. **Close the incident**:\n   - Mark the incident as resolved in your incident management system.\n\n4. **Run postmortem (if required)**:\n   - Schedule and conduct a postmortem to analyze root cause and prevent recurrence.\n\n### Example command to check system status:\n```bash\nuptime && systemctl status <service-name>\n```\n\nLet me know if you want help automating this or writing a script for it."
+    },
+    {
+      "id": 29,
+      "cat": "linux",
+      "q": "A disk is full. How do you find the largest directories?",
+      "pass": true,
+      "hits": 3,
+      "quality": 5,
+      "secs": 4.053,
+      "answer": "To find the largest directories on a Linux system, use the `du` (disk usage) command with sorting:\n\n```bash\ndu -sh * | sort -rh | head -10\n```\n\n### Explanation:\n- `du -sh *`: Shows disk usage in human-readable format (`h`) for each item in the current directory (`*`).\n- `sort -rh`: Sorts numerically (`-r`) in reverse order (largest first), with human-readable units (`-h`).\n- `head -10`: Displays only the top 10 largest directories.\n\nThis command helps identify which directories are consuming the most space."
+    },
+    {
+      "id": 30,
+      "cat": "linux",
+      "q": "How do you see what process is listening on port 8080?",
+      "pass": true,
+      "hits": 4,
+      "quality": 5,
+      "secs": 3.314,
+      "answer": "To see what process is listening on port 8080, use:\n\n```bash\nlsof -i :8080\n```\n\nThis command lists the process ID (PID) and name of the process using port 8080. If you want more details, you can also use:\n\n```bash\nnetstat -tulpn | grep :8080\n```\n\nOr with `ss` (if available):\n\n```bash\nss -tulnp | grep :8080\n```"
+    },
+    {
+      "id": 31,
+      "cat": "linux",
+      "q": "A process is using 100% CPU. How do you find it?",
+      "pass": true,
+      "hits": 3,
+      "quality": 5,
+      "secs": 2.853,
+      "answer": "To find the process using 100% CPU, run:\n\n```bash\ntop\n```\n\nor\n\n```bash\nhtop\n```\n\nIn `top`, press **Shift+P** to sort by CPU usage. The process at the top is using the most CPU.\n\nIf you want to see only one process using 100% CPU:\n\n```bash\nps aux | grep -v grep | sort -k3 -r\n```\n\nThis sorts all processes by CPU usage in descending order."
+    },
+    {
+      "id": 32,
+      "cat": "linux",
+      "q": "How do you see disk space usage by filesystem?",
+      "pass": true,
+      "hits": 2,
+      "quality": 5,
+      "secs": 1.256,
+      "answer": "To see disk space usage by filesystem, use:\n\n```bash\ndf -h\n```\n\nThis command displays the amount of disk space used and available on filesystems in a human-readable format."
+    },
+    {
+      "id": 33,
+      "cat": "linux",
+      "q": "How do you tail and follow a log file in real time?",
+      "pass": true,
+      "hits": 2,
+      "quality": 5,
+      "secs": 2.003,
+      "answer": "To tail and follow a log file in real time on Linux, use the `tail` command with the `-f` (follow) option:\n\n```bash\ntail -f /path/to/logfile.log\n```\n\nThis will display the last 10 lines of the file and continue to show new lines as they are added to the file."
+    },
+    {
+      "id": 34,
+      "cat": "linux",
+      "q": "How do you check memory usage including swap?",
+      "pass": true,
+      "hits": 2,
+      "quality": 5,
+      "secs": 3.176,
+      "answer": "To check memory usage including swap on a Linux system, use:\n\n```bash\nfree -h\n```\n\nThis command displays total, used, and free memory in human-readable format (GiB, MiB, etc.), including swap. The `-h` flag makes the output easy to read.\n\nIf you want more detailed information about memory and swap usage over time, you can also use:\n\n```bash\ncat /proc/meminfo\n```\n\nThis shows raw memory statistics from the kernel, including swap details like `SwapTotal`, `SwapFree`, and `SwapUsed`."
+    },
+    {
+      "id": 35,
+      "cat": "linux",
+      "q": "How do you find files modified in the last 24 hours?",
+      "pass": true,
+      "hits": 3,
+      "quality": 5,
+      "secs": 4.315,
+      "answer": "To find files modified in the last 24 hours on a Linux system, use the `find` command with the `-mtime` option:\n\n```bash\nfind /path/to/search -type f -mtime -1\n```\n\n### Explanation:\n- `/path/to/search`: Replace this with the directory you want to search (e.g., `.` for current directory).\n- `-type f`: Ensures only files are returned, not directories.\n- `-mtime -1`: Finds files modified less than 1 day ago.\n\n### Example:\nTo search in the current directory:\n```bash\nfind . -type f -mtime -1\n```\n\nThis command is efficient and works on macOS and most Linux systems. Let me know if you want to include subdirectories or filter by file type."
+    },
+    {
+      "id": 36,
+      "cat": "linux",
+      "q": "A service won't start under systemd. How do you see why?",
+      "pass": true,
+      "hits": 3,
+      "quality": 5,
+      "secs": 2.634,
+      "answer": "To see why a service won't start under systemd, use:\n\n```bash\nsystemctl status <service-name>\n```\n\nThis shows the service's current state, recent logs, and any error messages that indicate why it failed to start.\n\nIf the status doesn't give enough detail, also check:\n\n```bash\njournalctl -u <service-name>\n```\n\nThis displays the full systemd journal logs for that specific service, which often contain more detailed error information."
+    },
+    {
+      "id": 37,
+      "cat": "linux",
+      "q": "How do you check open file descriptor limits for a process?",
+      "pass": true,
+      "hits": 4,
+      "quality": 5,
+      "secs": 3.651,
+      "answer": "To check the open file descriptor limits for a process, use:\n\n```bash\nulimit -n\n```\n\nThis command shows the maximum number of open file descriptors allowed for the current shell session. For a specific process, you can examine `/proc/<pid>/limits` where `<pid>` is the process ID:\n\n```bash\ncat /proc/<pid>/limits | grep \"open files\"\n```\n\nExample output:\n```\nMax open files            1024                 1024                 files\n```"
+    },
+    {
+      "id": 38,
+      "cat": "linux",
+      "q": "How do you search recursively for a string in files?",
+      "pass": true,
+      "hits": 1,
+      "quality": 5,
+      "secs": 2.254,
+      "answer": "To search recursively for a string in files on macOS (or any Linux system), use the `grep` command with the `-r` flag:\n\n```bash\ngrep -r \"search_string\" /path/to/directory\n```\n\nExample:\n```bash\ngrep -r \"TODO\" .\n```\nThis searches for \"TODO\" recursively in the current directory and all subdirectories."
+    },
+    {
+      "id": 39,
+      "cat": "linux",
+      "q": "How do you see the last 50 lines of kernel messages?",
+      "pass": true,
+      "hits": 2,
+      "quality": 5,
+      "secs": 2.594,
+      "answer": "To see the last 50 lines of kernel messages on a Linux system, you can use the `dmesg` command combined with `tail`:\n\n```bash\ndmesg | tail -n 50\n```\n\nThis command displays the kernel ring buffer (dmesg output) and pipes it to `tail`, which shows the last 50 lines."
+    },
+    {
+      "id": 40,
+      "cat": "linux",
+      "q": "How do you kill a process by name?",
+      "pass": true,
+      "hits": 3,
+      "quality": 5,
+      "secs": 2.803,
+      "answer": "To kill a process by name on macOS/Linux, use:\n\n```bash\npkill <process_name>\n```\n\nExample:\n```bash\npkill firefox\n```\n\nIf you want to be more specific and avoid killing the wrong process, use `pgrep` first to find the PID, then `kill`:\n\n```bash\npgrep <process_name>\nkill <PID>\n```\n\nExample:\n```bash\npgrep firefox\nkill 1234\n```"
+    },
+    {
+      "id": 41,
+      "cat": "linux",
+      "q": "How do you check what is consuming inodes when df shows space but writes fail?",
+      "pass": true,
+      "hits": 4,
+      "quality": 5,
+      "secs": 11.902,
+      "answer": "When `df` shows free disk space but writes still fail, it's often due to inode exhaustion — the filesystem has run out of inodes (file metadata entries), even though there's space available.\n\n### 🔍 Check Inode Usage\n\nRun this command to see inode usage per filesystem:\n\n```bash\ndf -i\n```\n\nLook for any filesystem where used inodes are close to or at 100%.\n\n---\n\n### 🧪 Find Which Directory Is Consuming Inodes\n\nTo find which directories are using the most inodes, use:\n\n```bash\nfind /path/to/check -type f | wc -l\n```\n\nOr more precisely with `du` and `find`:\n\n```bash\nfind /path/to/check -type f -print0 | xargs -0 ls -ld | wc -l\n```\n\nYou can also check specific paths like `/var`, `/tmp`, or home directories.\n\n---\n\n### 📦 Example: Check `/var` for Inode Usage\n\n```bash\nfind /var -type f | wc -l\n```\n\nIf that number is very high (e.g., millions), then `/var` might be the culprit.\n\n---\n\n### 🔁 Optional: Use `nvidia-smi` or `iotop` if needed\n\nFor deeper insight into what's using inodes, especially with large numbers of small files:\n\n```bash\nls -laR /path/to/check | wc -l\n```\n\nOr use tools like `ncdu` to explore disk usage interactively (though it doesn't show inodes directly):\n\n```bash\nbrew install ncdu\nncdu /\n```\n\n---\n\n### ✅ Summary\n\n1. Run `df -i` to check inode usage.\n2. Identify directories with many files using `find /path/to/check -type f | wc -l`.\n3. Investigate those directories for excessive file creation or log accumulation.\n\nLet me know if you want help automating this or checking a specific path!"
+    },
+    {
+      "id": 42,
+      "cat": "linux",
+      "q": "How do you see established network connections?",
+      "pass": true,
+      "hits": 2,
+      "quality": 5,
+      "secs": 3.817,
+      "answer": "To see established network connections on a Linux system, use:\n\n```bash\nnetstat -tuln | grep ESTABLISHED\n```\n\nThis command lists all active TCP and UDP connections and filters for those in the `ESTABLISHED` state. If you want more detailed information including process names, use:\n\n```bash\nnetstat -tulnp | grep ESTABLISHED\n```\n\nAlternatively, you can use `ss`, which is a modern replacement for `netstat`:\n\n```bash\nss -tuln | grep ESTABLISHED\n```\n\nOr with process info:\n\n```bash\nss -tulnp | grep ESTABLISHED\n```"
+    },
+    {
+      "id": 43,
+      "cat": "linux",
+      "q": "How do you measure how long a command takes?",
+      "pass": true,
+      "hits": 1,
+      "quality": 5,
+      "secs": 1.362,
+      "answer": "Use the `time` command to measure how long a command takes.\n\nExample:\n```bash\ntime your-command-here\n```\n\nThis will output real, user, and sys times for the command execution."
+    },
+    {
+      "id": 44,
+      "cat": "network",
+      "q": "A service can't reach another over DNS. How do you test resolution?",
+      "pass": true,
+      "hits": 2,
+      "quality": 5,
+      "secs": 3.215,
+      "answer": "To test DNS resolution from a service, use `nslookup` or `dig`:\n\n```bash\nnslookup <hostname>\n```\nor\n```bash\ndig <hostname>\n```\n\nIf the hostname is not found, check `/etc/hosts` or your DNS server configuration. If it's a Kubernetes environment, also verify that the DNS service (like CoreDNS) is running and that the service has proper network policies or DNS config.\n\nLet me know if you want to test a specific hostname or need help interpreting results."
+    },
+    {
+      "id": 45,
+      "cat": "network",
+      "q": "How do you test if a TCP port is open on a remote host?",
+      "pass": true,
+      "hits": 3,
+      "quality": 5,
+      "secs": 3.249,
+      "answer": "To test if a TCP port is open on a remote host, use `telnet` or `nc` (netcat):\n\n### Using telnet:\n```bash\ntelnet <hostname> <port>\n```\n\n### Using nc (netcat):\n```bash\nnc -zv <hostname> <port>\n```\n\nExample:\n```bash\nnc -zv google.com 80\n```\n\nIf the port is open, `nc` will return successfully; if not, it will time out or fail."
+    },
+    {
+      "id": 46,
+      "cat": "network",
+      "q": "What does a 502 Bad Gateway from nginx usually mean?",
+      "pass": true,
+      "hits": 2,
+      "quality": 5,
+      "secs": 4.467,
+      "answer": "A 502 Bad Gateway error from nginx usually means that nginx received an invalid response from an upstream server (like a backend application or proxy) while trying to fulfill the request.\n\nThis typically happens when:\n- The upstream server crashes or becomes unresponsive\n- There's a network issue between nginx and the upstream server\n- The upstream server times out\n- Misconfiguration in the nginx proxy settings\n\nTo troubleshoot, check:\n1. The upstream server logs\n2. Network connectivity between nginx and upstream\n3. Nginx error logs (`/var/log/nginx/error.log`)\n4. Proxy configuration in nginx (e.g., `proxy_pass`, timeouts)\n\nExample command to check nginx error logs:\n```bash\ntail -f /var/log/nginx/error.log\n```"
+    },
+    {
+      "id": 47,
+      "cat": "network",
+      "q": "What does a 504 Gateway Timeout indicate?",
+      "pass": true,
+      "hits": 4,
+      "quality": 5,
+      "secs": 4.397,
+      "answer": "A **504 Gateway Timeout** indicates that an intermediate proxy or gateway server (like NGINX, HAProxy, or API Gateway) did not receive a timely response from an upstream server (such as your application or backend service).\n\nThis is a **server-side error**, meaning the issue lies with the infrastructure handling the request, not the client.\n\n### Common causes:\n- Upstream server is slow or unresponsive.\n- Network issues between the gateway and upstream server.\n- Misconfigured timeouts in proxy/gateway settings.\n\n### Example command to check logs for 504s (on a Linux server):\n```bash\ngrep \"504\" /var/log/nginx/error.log\n```\n\nIf you're using a different reverse proxy or load balancer, adjust the log path accordingly."
+    },
+    {
+      "id": 48,
+      "cat": "network",
+      "q": "How do you trace the network path to a host?",
+      "pass": true,
+      "hits": 2,
+      "quality": 5,
+      "secs": 3.501,
+      "answer": "To trace the network path to a host on macOS (or any Linux system), use the `traceroute` command:\n\n```bash\ntraceroute <hostname-or-ip>\n```\n\nExample:\n```bash\ntraceroute google.com\n```\n\nThis shows each hop along the network path to the target host, including latency for each hop.\n\nAlternative: if `traceroute` is not installed, you can use `tracepath`, which is often available by default on Linux systems:\n\n```bash\ntracepath <hostname-or-ip>\n```\n\nBoth tools help identify where packets are being dropped or delayed in transit."
+    },
+    {
+      "id": 49,
+      "cat": "network",
+      "q": "How do you inspect HTTP response headers from the command line?",
+      "pass": true,
+      "hits": 3,
+      "quality": 5,
+      "secs": 2.203,
+      "answer": "Use `curl` with the `-I` flag to fetch only the HTTP response headers:\n\n```bash\ncurl -I https://example.com\n```\n\nThis sends a HEAD request and displays the headers returned by the server. For more verbose output including all headers (including those from redirects), use:\n\n```bash\ncurl -vI https://example.com\n```"
+    },
+    {
+      "id": 50,
+      "cat": "network",
+      "q": "Connections hang with no response. What firewall behavior causes this vs a refused connection?",
+      "pass": true,
+      "hits": 6,
+      "quality": 5,
+      "secs": 7.161,
+      "answer": "A hanging connection (no response) typically occurs when a firewall is **dropping packets** rather than **rejecting them**.\n\n### Key Differences:\n\n- **Refused Connection**: The firewall sends back an RST (reset) packet, telling the client the connection was refused. This happens with `iptables` using `REJECT` or `DROP` rules that are explicitly configured to send a reset.\n  \n- **Hanging Connection**: The firewall silently drops packets without sending any response. The client waits indefinitely for a reply, leading to a timeout or hang.\n\n### How to Check:\n\nUse `tcpdump` to observe traffic:\n```bash\nsudo tcpdump -i any port <port>\n```\n\nIf you see incoming SYN packets but no SYN-ACK replies, the firewall is likely dropping them.\n\nAlternatively, test with `nmap`:\n```bash\nnmap -sT <target> -p <port>\n```\n- If it shows `filtered`, the connection is being dropped.\n- If it shows `closed`, the port is rejected.\n\n### Common Cause:\n\nIn AWS or GCP environments, this often happens due to **security group rules** that are misconfigured to drop traffic instead of rejecting it."
+    },
+    {
+      "id": 51,
+      "cat": "network",
+      "q": "What is MTU and what symptom does a mismatch cause?",
+      "pass": true,
+      "hits": 4,
+      "quality": 5,
+      "secs": 5.641,
+      "answer": "**MTU** (Maximum Transmission Unit) is the largest size of data packet that can be transmitted in a single network frame without being fragmented.\n\nA **MTU mismatch** between two devices on a network can cause:\n- **Fragmentation** — packets are broken into smaller pieces, increasing overhead and latency.\n- **Packet loss** — some fragments may be dropped if they exceed the receiving device's MTU.\n- **Performance degradation** — especially noticeable in high-bandwidth or low-latency applications.\n\n### Example symptom:\nIf one end of a connection has an MTU of 1500 bytes and the other is set to 1400, packets larger than 1400 bytes will be fragmented, potentially leading to performance issues or dropped connections.\n\nTo check current MTU on macOS:\n```bash\nifconfig en0\n```\nLook for `mtu` in the output. To change it (temporarily):\n```bash\nsudo ifconfig en0 mtu 1400\n```"
+    },
+    {
+      "id": 52,
+      "cat": "network",
+      "q": "How do you see the routing table on Linux?",
+      "pass": true,
+      "hits": 2,
+      "quality": 5,
+      "secs": 2.356,
+      "answer": "To view the routing table on Linux, use:\n\n```bash\nip route show\n```\n\nAlternatively, you can use the older `route` command:\n\n```bash\nroute -n\n```\n\nThe `ip route show` command is preferred in modern Linux systems as it's more feature-rich and aligns with the newer `ip` toolset."
+    },
+    {
+      "id": 53,
+      "cat": "network",
+      "q": "TLS handshake fails. How do you inspect the cert a server presents?",
+      "pass": true,
+      "hits": 3,
+      "quality": 5,
+      "secs": 5.144,
+      "answer": "To inspect the TLS certificate a server presents, use `openssl s_client`:\n\n```bash\nopenssl s_client -connect example.com:443\n```\n\nThis command connects to the server and displays the certificate details in the handshake output. Look for the `Server certificate` section.\n\nFor just the certificate in PEM format, add `-showcerts`:\n\n```bash\nopenssl s_client -connect example.com:443 -showcerts\n```\n\nTo save the cert to a file:\n\n```bash\nopenssl s_client -connect example.com:443 -showcerts < /dev/null 2>/dev/null | sed -ne '/-BEGIN CERTIFICATE-/,/-END CERTIFICATE-/p' > server-cert.pem\n```"
+    },
+    {
+      "id": 54,
+      "cat": "network",
+      "q": "What is the difference between a load balancer health check passing but users seeing errors?",
+      "pass": true,
+      "hits": 2,
+      "quality": 5,
+      "secs": 12.632,
+      "answer": "A load balancer health check passing but users seeing errors typically indicates a mismatch between what the load balancer considers \"healthy\" and what actual user traffic experiences.\n\n### Key Differences:\n1. **Health Check vs User Traffic**:\n   - The **health check** only verifies that the backend server responds to a basic request (e.g., HTTP 200 on a specific endpoint).\n   - **User traffic** may hit different endpoints, use different protocols, or encounter issues like:\n     - Application-level errors (5xx responses)\n     - Database connection failures\n     - Misconfigured routing or SSL/TLS issues\n     - Resource exhaustion (CPU, memory)\n\n2. **Load Balancer Configuration**:\n   - The health check path might be a simple `/health` endpoint that returns 200 OK.\n   - But user requests could go to `/app`, which has bugs or misconfigurations.\n\n3. **Network or Security Issues**:\n   - Firewalls, WAFs, or network policies may block user traffic while allowing health checks through.\n   - SSL/TLS handshake failures or certificate issues can affect real users but not the load balancer's probe.\n\n4. **Backend Server State**:\n   - The server might be responding to health checks (e.g., it’s up and listening), but is overloaded or in an inconsistent state where it fails to serve user requests properly.\n\n### Example:\nIf your app has a `/health` endpoint that returns 200, but `/api/users` returns 500 due to a bug, the load balancer will mark the server as healthy, but users will see errors.\n\n---\n\n### How to Diagnose:\n1. **Check logs** on backend servers for user request errors.\n2. **Compare health check and user request paths** — are they hitting different code paths?\n3. **Verify network/firewall rules** that allow traffic.\n4. **Monitor resource usage (CPU, memory)** on the server during error periods.\n\nLet me know if you want help checking logs or configuring better health checks."
+    },
+    {
+      "id": 55,
+      "cat": "db",
+      "q": "PostgreSQL queries suddenly got slow. What do you check first?",
+      "pass": false,
+      "hits": 0,
+      "quality": 5,
+      "secs": 4.837,
+      "answer": "As a LocalSRE, I'd first check the PostgreSQL logs for any errors or warnings that might indicate what's causing the slowdown.\n\n```bash\n# Check PostgreSQL log file (usually in /var/log/postgresql/ or /var/log/postgres/)\ntail -f /var/log/postgresql/postgresql-*.log\n```\n\nIf that doesn't show anything obvious, I'd then check for long-running queries:\n\n```bash\n# Show currently running queries and their duration\nps aux | grep postgres\n```\n\nAnd also look at the system resources:\n\n```bash\n# Check CPU and memory usage of PostgreSQL processes\ntop -p $(pgrep postgres)\n```\n\nThese steps will help identify if it's a resource constraint, a problematic query, or an issue with the database itself."
+    },
+    {
+      "id": 56,
+      "cat": "db",
+      "q": "How do you find currently running queries in PostgreSQL?",
+      "pass": true,
+      "hits": 4,
+      "quality": 5,
+      "secs": 1.843,
+      "answer": "To find currently running queries in PostgreSQL, use:\n\n```sql\nSELECT pid, query, state, query_start\nFROM pg_stat_activity\nWHERE state = 'active';\n```\n\nThis shows active queries with their process ID, query text, state, and start time."
+    },
+    {
+      "id": 57,
+      "cat": "db",
+      "q": "What causes connection pool exhaustion and how do you confirm it?",
+      "pass": true,
+      "hits": 5,
+      "quality": 5,
+      "secs": 12.765,
+      "answer": "Connection pool exhaustion happens when all connections in a pool are in use, and new requests must wait for a connection to be released. Common causes include:\n\n1. **Long-running queries** or transactions that hold connections longer than needed.\n2. **Not closing connections** properly (e.g., in application code).\n3. **High request volume** with insufficient pool size.\n4. **Leaked connections** due to exceptions or errors not releasing the connection.\n\n### Confirming Connection Pool Exhaustion\n\n#### 1. **Check Application Logs**\nLook for messages like:\n```\nConnection pool is full\nToo many connections\nUnable to acquire connection\n```\n\n#### 2. **Monitor Database Metrics (e.g., PostgreSQL)**\nRun this query to see current connections:\n```sql\nSELECT count(*) FROM pg_stat_activity;\n```\n\nCompare with max connections allowed:\n```sql\nSHOW max_connections;\n```\n\nIf `count(*)` is near or equals `max_connections`, you're likely hitting the limit.\n\n#### 3. **Use System Monitoring Tools**\nOn Linux, check for high connection counts using:\n```bash\nss -tuln | grep :5432 | wc -l\n```\n(Replace `5432` with your DB port.)\n\nOr use `netstat`:\n```bash\nnetstat -an | grep :5432 | wc -l\n```\n\n#### 4. **Check Application-Level Metrics**\nIf using a monitoring tool like Datadog or Prometheus, look at metrics such as:\n- Active connections\n- Connection pool usage %\n- Queue length (waiting for connection)\n\n#### 5. **Enable Query Logging (Optional)**\nTo debug long-running queries:\n```sql\n-- Enable logging of slow queries\nALTER SYSTEM SET log_min_duration_statement = 1000;\nSELECT pg_reload_conf();\n```\n\nThis logs any query taking over 1 second to run — useful for identifying bottlenecks.\n\nLet me know what database or system you're working with if you'd like more specific steps."
+    },
+    {
+      "id": 58,
+      "cat": "db",
+      "q": "A query does a sequential scan on a large table. What likely fixes it?",
+      "pass": true,
+      "hits": 3,
+      "quality": 5,
+      "secs": 7.021,
+      "answer": "**Likely fixes for a sequential scan on a large table:**\n\n1. **Add an index on the column(s) used in the WHERE clause**  \n   ```sql\n   CREATE INDEX idx_column_name ON table_name (column_name);\n   ```\n\n2. **Analyze the query plan to confirm index usage**  \n   ```sql\n   EXPLAIN ANALYZE SELECT * FROM table_name WHERE column_name = 'value';\n   ```\n\n3. **Ensure statistics are up-to-date**  \n   ```sql\n   ANALYZE table_name;\n   ```\n\n4. **Consider partitioning the table if it's very large**  \n   ```sql\n   -- Example: create a partitioned table (PostgreSQL)\n   CREATE TABLE table_name_partitioned (...) PARTITION BY RANGE (column_name);\n   ```\n\n5. **Rewrite the query to use indexed columns more effectively**  \n   Avoid expressions or functions on indexed columns in WHERE clauses.\n\nLet me know if you want help analyzing a specific query or table structure."
+    },
+    {
+      "id": 59,
+      "cat": "db",
+      "q": "What is the danger of a long-running transaction in PostgreSQL?",
+      "pass": true,
+      "hits": 3,
+      "quality": 5,
+      "secs": 9.867,
+      "answer": "A long-running transaction in PostgreSQL can lead to several issues:\n\n1. **Lock Contention**: Long-running transactions hold locks on rows, tables, or even entire databases, preventing other transactions from accessing or modifying the same data. This can cause blocking and delays for other users.\n\n2. **WAL Growth**: PostgreSQL writes all changes to the Write-Ahead Log (WAL) for durability and recovery. Long-running transactions keep WAL segments from being recycled, which can lead to disk space exhaustion.\n\n3. **MVCC Overhead**: PostgreSQL uses Multi-Version Concurrency Control (MVCC). Long-running transactions keep old row versions alive, increasing bloat in tables and indexes, and potentially slowing down queries due to increased overhead.\n\n4. **Deadlocks Risk**: If multiple long-running transactions are waiting on each other, they may cause deadlocks, which can result in transaction rollbacks.\n\n5. **Replication Lag (in streaming replication)**: In a replicated setup, long-running transactions can cause lag between primary and standby servers because the standby must wait for those transactions to complete before applying changes.\n\n6. **Performance Degradation**: As more data is kept in memory or on disk due to old versions, query performance degrades over time.\n\n### Example Command to Check Long-Running Transactions:\n```bash\npsql -c \"SELECT pid, now() - xact_start AS duration, query FROM pg_stat_activity WHERE xact_start IS NOT NULL AND state = 'active' ORDER BY xact_start;\"\n```\n\nThis shows active transactions with their durations and current queries."
+    },
+    {
+      "id": 60,
+      "cat": "db",
+      "q": "Redis memory is full. What two eviction-related settings matter?",
+      "pass": true,
+      "hits": 5,
+      "quality": 5,
+      "secs": 3.674,
+      "answer": "The two eviction-related settings in Redis that matter when memory is full are:\n\n1. **`maxmemory`** – Sets the maximum amount of memory Redis can use.\n2. **`maxmemory-policy`** – Defines the eviction policy to use when `maxmemory` is reached.\n\n### Example Configuration:\n```redis\nmaxmemory 5gb\nmaxmemory-policy allkeys-lru\n```\n\nThis sets a 5 GB limit and uses the \"all keys LRU\" eviction policy, which removes the least recently used keys when memory is full."
+    },
+    {
+      "id": 61,
+      "cat": "db",
+      "q": "How do you see slow queries in MySQL?",
+      "pass": true,
+      "hits": 3,
+      "quality": 5,
+      "secs": 6.536,
+      "answer": "To see slow queries in MySQL, enable the slow query log and configure the threshold for what qualifies as a \"slow\" query.\n\n### Step 1: Enable Slow Query Log\n\nRun this SQL command to enable the slow query log:\n\n```sql\nSET GLOBAL slow_query_log = 'ON';\n```\n\n### Step 2: Set the Threshold\n\nSet the minimum time (in seconds) a query must take to be logged as slow:\n\n```sql\nSET GLOBAL long_query_time = 2;\n```\n\nThis logs queries that take longer than 2 seconds.\n\n### Step 3: Check Log File Location\n\nFind where the slow query log is stored:\n\n```sql\nSHOW VARIABLES LIKE 'slow_query_log_file';\n```\n\nBy default, it's usually in `/var/log/mysql/slow.log` or similar.\n\n### Optional: View Logs\n\nUse `tail` to monitor the log file in real time:\n\n```bash\ntail -f /var/log/mysql/slow.log\n```\n\nThis will show slow queries as they occur."
+    },
+    {
+      "id": 62,
+      "cat": "db",
+      "q": "What is replication lag and how does it cause read-after-write bugs?",
+      "pass": true,
+      "hits": 5,
+      "quality": 5,
+      "secs": 9.796,
+      "answer": "**Replication lag** refers to the delay between when data is written to a primary (master) database and when that data is fully replicated to one or more secondary (slave) databases in a replicated system.\n\n### How Replication Lag Causes Read-After-Write Bugs\n\nIn systems using replication, especially in distributed databases like MySQL, PostgreSQL, or cloud services like Google Cloud SQL or AWS RDS, writes are typically made to the primary node. These changes are then asynchronously propagated to replicas.\n\nIf an application reads from a replica that hasn't yet received the latest write (due to lag), it can see stale data — this is known as a **read-after-write inconsistency** or **stale read**.\n\n#### Example:\n1. User writes data to the primary DB.\n2. Application immediately tries to read the same data from a replica.\n3. Replica hasn't received the update yet due to replication lag.\n4. The read returns old or missing data, causing incorrect behavior in the app.\n\nThis issue is common in systems where consistency is critical but eventual consistency models are used (e.g., master-slave replication).\n\n---\n\n### How to Mitigate This\n\n1. **Use synchronous replication** if possible — ensures writes are confirmed on replicas before acknowledging.\n2. **Read from primary** for consistency-sensitive reads.\n3. **Implement read-replica refresh policies or use transactions with proper isolation levels**.\n4. Monitor replication lag using tools like `SHOW SLAVE STATUS` in MySQL or cloud provider dashboards.\n\nLet me know if you want a specific command to check replication lag on a system."
+    },
+    {
+      "id": 63,
+      "cat": "db",
+      "q": "How do you check for table locks blocking queries in Postgres?",
+      "pass": true,
+      "hits": 5,
+      "quality": 5,
+      "secs": 6.133,
+      "answer": "To check for table locks blocking queries in PostgreSQL, use this command:\n\n```sql\nSELECT \n    blocked_locks.pid AS blocked_pid,\n    blocked_activity.usename AS blocked_user,\n    blocking_locks.pid AS blocking_pid,\n    blocking_activity.usename AS blocking_user,\n    blocked_activity.query AS blocked_statement,\n    blocking_activity.query AS blocking_statement\nFROM pg_catalog.pg_locks blocked_locks\nJOIN pg_catalog.pg_stat_activity blocked_activity ON blocked_activity.pid = blocked_locks.pid\nJOIN pg_catalog.pg_locks blocking_locks ON blocking_locks.locktype = blocked_locks.locktype\n    AND blocking_locks.database IS NOT DISTINCT FROM blocked_locks.database\n    AND blocking_locks.relation IS NOT DISTINCT FROM blocked_locks.relation\nJOIN pg_catalog.pg_stat_activity blocking_activity ON blocking_activity.pid = blocking_locks.pid\nWHERE NOT blocked_locks.granted;\n```\n\nThis query identifies which processes are waiting for locks and which processes are holding those locks, showing the blocking and blocked queries."
+    },
+    {
+      "id": 64,
+      "cat": "db",
+      "q": "Why can a deadlock occur and how do databases resolve it?",
+      "pass": true,
+      "hits": 4,
+      "quality": 5,
+      "secs": 9.755,
+      "answer": "A **deadlock** occurs in a database when two or more transactions are waiting for each other to release locks on resources, creating a cycle where none can proceed. This typically happens during concurrent operations involving multiple tables or rows.\n\n### Why Deadlocks Occur:\n1. **Lock Contention**: Transactions acquire locks on different resources in different orders.\n2. **Circular Wait**: Each transaction holds a lock that another is waiting for — forming a loop.\n3. **Concurrency**: High concurrency increases the chance of conflicting access patterns.\n\nExample scenario:\n- Transaction A locks Row 1 and waits for Row 2.\n- Transaction B locks Row 2 and waits for Row 1.\n- Neither can proceed → deadlock.\n\n---\n\n### How Databases Resolve Deadlocks:\n\nDatabases detect deadlocks using a **wait-for graph** or similar mechanism. When detected, the DBMS typically:\n1. **Identifies a victim transaction** (usually the one with least work or lowest priority).\n2. **Rolls back the victim** to break the deadlock.\n3. **Recommits** the remaining transactions after the rollback.\n\n#### Example Commands (PostgreSQL):\nTo check for deadlocks:\n```sql\nSELECT * FROM pg_stat_database;\n```\n\nIn some systems like MySQL, you can enable deadlock logging:\n```sql\nSET GLOBAL innodb_print_all_deadlocks = ON;\n```\n\nYou can also view recent deadlocks in logs or via monitoring tools such as Datadog or Prometheus.\n\n---\n\n### Prevention Tips:\n- **Lock in consistent order** across all transactions.\n- **Keep transactions short** and minimize lock duration.\n- Use **read-committed isolation level** where possible to reduce locking overhead.\n\nLet me know if you want help analyzing a specific DB's deadlock logs or tuning for performance."
+    },
+    {
+      "id": 65,
+      "cat": "observability",
+      "q": "What is the difference between metrics, logs, and traces?",
+      "pass": true,
+      "hits": 4,
+      "quality": 5,
+      "secs": 7.704,
+      "answer": "Metrics, logs, and traces are three core observability data types used in monitoring systems:\n\n1. **Metrics**:\n   - Quantitative measurements (e.g., CPU usage, request count, error rate)\n   - Usually aggregated over time (e.g., \"requests per second\")\n   - Stored as time-series data\n   - Example: `http_requests_total{method=\"GET\", status=\"200\"}`\n\n2. **Logs**:\n   - Text-based records of events (e.g., application messages, errors, user actions)\n   - Unstructured or semi-structured\n   - Timestamped and often contain contextual details\n   - Example: `{\"timestamp\": \"2024-05-01T10:00:00Z\", \"level\": \"ERROR\", \"message\": \"Failed to connect to DB\"}`\n\n3. **Traces**:\n   - Distributed tracking of a single request across multiple services\n   - Show the flow of a transaction through a system\n   - Help identify bottlenecks and performance issues\n   - Example: A trace might show a request flowing from frontend → auth service → database\n\nIn summary:\n- Use **metrics** for high-level system health and performance.\n- Use **logs** for detailed event information and debugging.\n- Use **traces** to understand the behavior of requests across services in distributed systems."
+    },
+    {
+      "id": 66,
+      "cat": "observability",
+      "q": "A Datadog monitor is flapping. How do you reduce noise?",
+      "pass": true,
+      "hits": 3,
+      "quality": 5,
+      "secs": 9.157,
+      "answer": "To reduce noise from a flapping Datadog monitor, you can:\n\n1. **Increase the threshold** for the metric being monitored (e.g., increase the % CPU or memory usage threshold).\n2. **Use a longer time window** in the monitor definition to smooth out short-term fluctuations.\n3. **Enable \"No data\" alerting** so that if the metric stops reporting, it doesn't trigger false positives.\n4. **Add a \"Silence\" period** to prevent alerts from firing too frequently (e.g., silence for 10 minutes after an alert).\n5. **Use Datadog’s \"Alerting Rules\" or \"Monitor Templates\"** to apply consistent thresholds and reduce manual tuning.\n\nExample command to update a monitor using the Datadog API:\n```bash\ncurl -X PUT \"https://api.datadoghq.com/api/v1/monitor/{monitor_id}\" \\\n-H \"Content-Type: application/json\" \\\n-H \"DD-API-KEY: <your_api_key>\" \\\n-d '{\n  \"name\": \"My Updated Monitor\",\n  \"query\": \"avg(last_10m):sum:system.cpu.user{host:host1} > 80\",\n  \"message\": \"CPU usage is high\",\n  \"options\": {\n    \"thresholds\": {\n      \"warning\": 75,\n      \"critical\": 80\n    },\n    \"notify_no_data\": true,\n    \"no_data_timeframe\": 20\n  }\n}'\n```\n\nReplace `monitor_id`, `DD-API-KEY`, and query as needed."
+    },
+    {
+      "id": 67,
+      "cat": "observability",
+      "q": "What is cardinality and why does high cardinality hurt metrics systems?",
+      "pass": true,
+      "hits": 4,
+      "quality": 5,
+      "secs": 5.375,
+      "answer": "Cardinality refers to the number of unique values in a dataset. In metrics systems, it's the count of distinct label values for a given metric.\n\nHigh cardinality hurts metrics systems because:\n1. It leads to exponential growth in the number of time series\n2. Increases memory and storage requirements\n3. Slows down query performance\n4. Makes aggregation harder and less efficient\n\nExample: A metric with a \"user_id\" label having 1 million unique values creates 1 million time series, each consuming resources.\n\nTo reduce cardinality:\n- Use fewer labels\n- Bucket or aggregate high-cardinality data\n- Remove unnecessary labels\n- Implement label filtering or pruning\n\nCommands to monitor cardinality in Prometheus:\n```bash\n# View metric cardinality\nprometheus --config.file=/etc/prometheus/prometheus.yml\n\n# Query for high cardinality metrics\ncount by (metric_name) (rate(metric[5m]))\n```"
+    },
+    {
+      "id": 68,
+      "cat": "observability",
+      "q": "What does a rising rate of HTTP 5xx tell you vs 4xx?",
+      "pass": true,
+      "hits": 5,
+      "quality": 5,
+      "secs": 4.872,
+      "answer": "A rising rate of **HTTP 5xx** errors indicates issues **on the server side**, such as:\n\n- Server crashes\n- Internal application failures\n- Resource exhaustion (e.g., memory, CPU)\n- Misconfigurations in backend services\n\nIn contrast, a rising rate of **HTTP 4xx** errors suggests problems **on the client side**, like:\n\n- Invalid requests\n- Unauthorized access attempts\n- Missing resources (404)\n- Bad request syntax\n\n### Example command to monitor 5xx vs 4xx rates:\n```bash\ngrep -E ' 5[0-9][0-9] | 4[0-9][0-9] ' /var/log/nginx/access.log | awk '{print $9}' | sort | uniq -c\n```\n\nThis counts occurrences of each status code in the Nginx access log."
+    },
+    {
+      "id": 69,
+      "cat": "observability",
+      "q": "How do you find which service in a trace is the bottleneck?",
+      "pass": true,
+      "hits": 4,
+      "quality": 5,
+      "secs": 7.111,
+      "answer": "To identify the bottleneck service in a trace, look for the service with the **longest duration** or **highest latency** in the trace timeline. You can also check for services with **high error rates**, **long wait times**, or **resource contention** (CPU, memory, I/O).\n\nIf you're using a tracing tool like **Jaeger**, **Datadog**, or **AWS X-Ray**, filter by duration or latency to spot slow spans. In Jaeger, for example:\n\n```bash\njaeger-query --query.port=16686\n```\n\nThen open the UI at `http://localhost:16686` and search for traces with high duration.\n\nAlternatively, if you're analyzing logs or metrics (e.g., in Prometheus), query for slowest services using:\n\n```bash\nrate(http_request_duration_seconds_sum[5m]) / rate(http_request_duration_seconds_count[5m])\n```\n\nThis gives the average latency per request — sort by this value to find bottlenecks.\n\nIf you're working with a specific trace or log file, let me know and I can help parse it."
+    },
+    {
+      "id": 70,
+      "cat": "observability",
+      "q": "What is a good alerting principle to avoid alert fatigue?",
+      "pass": true,
+      "hits": 1,
+      "quality": 5,
+      "secs": 3.875,
+      "answer": "A good alerting principle to avoid alert fatigue is to ensure **alerts are actionable** and **not too frequent**.\n\nThis means:\n\n- Each alert should trigger a clear, specific response.\n- Avoid low-priority or redundant alerts that don’t lead to meaningful action.\n- Use alerting rules that filter out noise (e.g., threshold-based alerts with appropriate baselines).\n\nExample command to check active alerts in Prometheus:\n```bash\ncurl http://prometheus:9090/api/v1/alerts\n```\n\nThis helps identify which alerts are firing and whether they’re useful or contributing to fatigue."
+    },
+    {
+      "id": 71,
+      "cat": "observability",
+      "q": "Logs show errors but no metric moved. What might be wrong with the metric?",
+      "pass": true,
+      "hits": 2,
+      "quality": 5,
+      "secs": 4.702,
+      "answer": "If logs show errors but no metric is moving, it's likely a **metric collection or export issue** — possibly due to:\n\n1. **Misconfigured metric exporter** (e.g., Prometheus, Datadog, etc.)\n2. **Incorrect metric name or label**\n3. **Metric not being emitted in the right scope or context**\n4. **Filtering or sampling rules dropping the metric**\n\n### Example: Check if a Prometheus metric is being exported\n```bash\ncurl -s http://localhost:9090/metrics | grep <metric_name>\n```\n\nIf it's not showing up, check:\n- The code emitting the metric\n- Exporter configuration (e.g., `prometheus.yml`)\n- Logs for errors in metric emission or export\n\nLet me know what tool or system you're using — I can tailor a more specific check."
+    },
+    {
+      "id": 72,
+      "cat": "observability",
+      "q": "What is the RED method for monitoring services?",
+      "pass": true,
+      "hits": 3,
+      "quality": 5,
+      "secs": 8.267,
+      "answer": "The RED method is a popular monitoring approach for services, especially in cloud-native and microservices environments. It focuses on three key metrics to assess service health:\n\n1. **Rate** – The number of requests per second.\n2. **Errors** – The number of failed requests per second.\n3. **Duration** – The time it takes to serve a request (typically measured as latency).\n\nThese metrics are often visualized using tools like Prometheus, Grafana, or other monitoring systems.\n\n### Example Commands for Collecting RED Metrics\n\nTo collect these metrics on a Linux server:\n\n#### 1. **Rate (Requests per Second)**\nIf you're using a web server like Nginx or Apache, logs can be parsed to count requests:\n```bash\ngrep -c \"200\\|301\\|302\" /var/log/nginx/access.log\n```\n\n#### 2. **Errors**\nTo count error responses (e.g., HTTP 5xx):\n```bash\ngrep -c \"5[0-9][0-9]\" /var/log/nginx/access.log\n```\n\n#### 3. **Duration**\nIf you're using a tool like `curl` or `ab` for load testing, you can measure response times:\n```bash\ncurl -w \"%{time_total}\\n\" -o /dev/null -s http://example.com\n```\n\nThese metrics are often aggregated and visualized in dashboards to track service health over time."
+    },
+    {
+      "id": 73,
+      "cat": "observability",
+      "q": "Why prefer histograms over averages for latency?",
+      "pass": true,
+      "hits": 5,
+      "quality": 5,
+      "secs": 7.99,
+      "answer": "Histograms are preferred over averages for latency because they provide a complete view of the latency distribution, including outliers and percentiles, which averages obscure.\n\n### Key reasons:\n1. **Averages Hide Distribution**: An average latency of 50ms might seem acceptable, but if 95% of requests are under 20ms and 5% are over 1s, the average doesn't reflect the poor performance of those outliers.\n2. **Percentile Insights**: Histograms show percentiles (e.g., p95, p99), which help understand tail latency — critical for user experience.\n3. **Outlier Detection**: Histograms make it easy to spot outliers or spikes in latency that could indicate system issues.\n\n### Example:\nIf you have a service with these latencies:\n- 95% of requests: 20ms\n- 5% of requests: 1000ms\n\nThe average would be ~50ms, but the histogram would clearly show a spike at 1000ms.\n\n### Command to generate a latency histogram (using `prometheus` or `statsd`):\n```bash\n# Example with Prometheus query:\nhistogram_quantile(0.95, sum(rate(http_request_duration_seconds_bucket[5m])) by (le))\n```\n\nThis gives the 95th percentile latency over a 5-minute window — much more useful than an average."
+    },
+    {
+      "id": 74,
+      "cat": "observability",
+      "q": "How do you correlate a spike across metrics, logs and traces?",
+      "pass": true,
+      "hits": 2,
+      "quality": 5,
+      "secs": 11.547,
+      "answer": "Correlating a spike across metrics, logs, and traces is a key part of incident response and system debugging. Here's how to approach it:\n\n### 1. **Identify the Spike in Metrics**\nStart by identifying where the spike occurs using your monitoring tool (e.g., Prometheus, Grafana, Datadog, etc.). Look for:\n- CPU usage\n- Memory consumption\n- Request latency\n- Error rates\n\nExample command to check system metrics on Linux:\n```bash\ntop\n```\nor\n```bash\nhtop\n```\n\n### 2. **Check Logs for Context**\nOnce you've identified the spike in metrics, correlate it with logs from the affected service or system.\n\nUse `journalctl` to view logs:\n```bash\njournalctl -u <service-name> --since \"10 minutes ago\"\n```\nOr if using a log aggregation tool like ELK or Loki, query logs around the time of the spike.\n\n### 3. **Trace the Request Flow**\nUse distributed tracing (e.g., Jaeger, Zipkin) to trace requests through your system during the spike.\n\nLook for:\n- Long-running spans\n- Errors in traces\n- High latency between services\n\nExample command if you're using a tool like `curl` or `wget` to test and log:\n```bash\ncurl -v <endpoint>\n```\n\n### 4. **Use Correlation Tools**\nSome tools (like Datadog, New Relic, or Prometheus with Tempo) allow you to correlate metrics, logs, and traces in one view.\n\nExample workflow:\n1. Identify the spike in a metric.\n2. Use that timestamp to filter logs.\n3. Use the same timestamp to trace requests in your tracing system.\n\n### Summary\nTo correlate a spike across metrics, logs, and traces:\n- Use monitoring tools to detect anomalies.\n- Use `journalctl` or log aggregators to inspect logs around the spike.\n- Use distributed tracing tools to trace request flow during the spike.\n\nLet me know if you want help with a specific tool like Datadog, Prometheus, or Jaeger."
+    },
+    {
+      "id": 75,
+      "cat": "cicd",
+      "q": "A canary deploy shows elevated errors. What should happen automatically?",
+      "pass": true,
+      "hits": 2,
+      "quality": 5,
+      "secs": 4.881,
+      "answer": "In a canary deployment, if elevated errors are detected, the system should **automatically roll back or abort the deployment** to prevent further impact to users.\n\nThis is typically handled by:\n\n- **Health checks** (e.g., HTTP status codes, latency, error rates)\n- **Monitoring tools** like Prometheus, Datadog, or PagerDuty\n- **CI/CD pipelines** with automated rollback logic (e.g., Argo Rollouts, Kubernetes Deployments with readiness probes)\n\n### Example command to check deployment health in Kubernetes:\n```bash\nkubectl get deployments\n```\n\nIf errors are high, you can also inspect logs:\n```bash\nkubectl logs -l app=your-app-name\n```\n\nYou should set up **alerting rules** that trigger automatic rollback when error rates exceed a threshold (e.g., >5% error rate over 5 minutes)."
+    },
+    {
+      "id": 76,
+      "cat": "cicd",
+      "q": "What is a blue-green deployment?",
+      "pass": true,
+      "hits": 4,
+      "quality": 5,
+      "secs": 5.151,
+      "answer": "A blue-green deployment is a release strategy that reduces downtime and risk by running two identical production environments — \"blue\" and \"green.\" At any time, only one is live serving traffic. When deploying a new version:\n\n1. The new version is deployed to the idle environment (e.g., if blue is live, deploy to green).\n2. Once validated, traffic is switched from blue to green.\n3. The previous environment (now idle) can be updated and reused.\n\nThis allows for zero-downtime deployments and quick rollbacks if issues arise.\n\n**Example command to switch traffic using a load balancer (e.g., AWS ALB):**\n```bash\naws elbv2 modify-target-groups --target-groups-arns <green-target-group-arn> --target-group-arns <blue-target-group-arn>\n```\n\n(You'd need to configure target groups and listeners accordingly.)"
+    },
+    {
+      "id": 77,
+      "cat": "cicd",
+      "q": "Why use a canary release instead of deploying to 100% at once?",
+      "pass": true,
+      "hits": 4,
+      "quality": 5,
+      "secs": 6.167,
+      "answer": "A **canary release** is preferred over deploying to 100% at once because it reduces risk and allows for early detection of issues in production.\n\n### Key Benefits:\n1. **Risk Mitigation**: Only a small percentage (e.g., 5-10%) of users are exposed to the new version initially, minimizing impact if bugs or performance issues arise.\n2. **Gradual Rollout**: Issues can be caught and rolled back quickly before affecting all users.\n3. **Monitoring & Feedback**: Enables real-time monitoring of metrics like error rates, latency, and user feedback before full deployment.\n\n### Example Command (using a simple traffic split with `kubectl` in Kubernetes):\n```bash\nkubectl patch deployment my-app -p '{\"spec\":{\"replicas\":10}}'\n```\nThis scales the deployment to 10 replicas (canary), then gradually increase as stability is confirmed.\n\nIn contrast, deploying 100% at once means any issue affects all users immediately — a much higher risk."
+    },
+    {
+      "id": 78,
+      "cat": "cicd",
+      "q": "A pipeline passes locally but fails in CI. What are common causes?",
+      "pass": true,
+      "hits": 3,
+      "quality": 5,
+      "secs": 8.717,
+      "answer": "Common causes for a pipeline passing locally but failing in CI:\n\n1. **Environment differences**:\n   - Different OS (macOS vs Linux)\n   - Different versions of tools (Python, Node.js, etc.)\n   - Missing environment variables in CI\n\n2. **Resource constraints**:\n   - Memory limits in CI\n   - Timeout issues\n   - Network restrictions\n\n3. **Dependencies**:\n   - Missing dependencies in CI environment\n   - Cache invalidation (e.g., npm/yarn cache)\n   - Git submodules or external repos not checked out\n\n4. **Timing issues**:\n   - Race conditions\n   - Asynchronous operations not handled properly\n   - Flaky tests due to timing\n\n5. **File system differences**:\n   - Case sensitivity (macOS vs Linux)\n   - File permissions\n   - Path separators\n\n6. **Security restrictions**:\n   - CI restricts access to certain APIs or services\n   - Secrets not available in CI\n\n7. **Configuration issues**:\n   - `.gitignore` excluding necessary files\n   - CI config (`workflow`, `Dockerfile`) differs from local setup\n\nTo debug, compare the local and CI environments closely, add logging, and ensure all dependencies are explicitly declared or cached.\n\nExample command to check environment differences:\n```bash\necho \"Local: $(uname -a)\" && echo \"CI: $(uname -a)\"\n```"
+    },
+    {
+      "id": 79,
+      "cat": "cicd",
+      "q": "What makes a deploy safely rollback-able?",
+      "pass": true,
+      "hits": 1,
+      "quality": 5,
+      "secs": 5.894,
+      "answer": "A deploy is safely rollback-able if it follows these key principles:\n\n1. **Atomicity**: The deployment process treats the entire change as a single unit — either all components are updated or none are.\n2. **Versioned Artifacts**: Each deploy has a unique, identifiable version (tag, hash, build number) so you can reference exactly what was deployed.\n3. **Rollback Mechanism**: There's a well-defined and tested process to revert to a previous known-good state.\n4. **State Management**: Changes are tracked and managed in a way that allows for easy reversion — e.g., using configuration management tools like Ansible, Helm charts, or Kubernetes manifests.\n5. **Blue-Green or Canary Deployments**: These strategies allow you to run two versions side-by-side, making it easier to switch back if needed.\n\nExample command to check current Git commit (for versioning):\n```bash\ngit rev-parse HEAD\n```\n\nThis ensures you know exactly which code is running and can roll back to a prior commit if necessary."
+    },
+    {
+      "id": 80,
+      "cat": "cicd",
+      "q": "Why are database migrations risky during rolling deploys?",
+      "pass": true,
+      "hits": 3,
+      "quality": 5,
+      "secs": 7.965,
+      "answer": "Database migrations during rolling deploys are risky because:\n\n1. **Inconsistent schema states** - Different instances of your application may be running at different versions, with some instances expecting the old schema and others the new one.\n\n2. **Data integrity issues** - If a migration modifies data or schema in a way that's incompatible with older code versions, it can lead to errors or corrupted data when older code tries to interact with the new schema.\n\n3. **Downtime or service degradation** - Migrations may lock tables or require downtime, which can cause service interruptions during the deploy.\n\n4. **Rollback complications** - If something goes wrong and you need to roll back, you might end up in a state where the rollback version of your app is incompatible with the migrated database.\n\nTo mitigate these risks:\n- Use **zero-downtime migration strategies**\n- Implement **schema versioning**\n- Ensure **backward compatibility** in migrations\n- Consider using **blue-green deployments** or **canary releases** with careful coordination between code and DB changes\n\nExample of a safe approach:\n```bash\n# Run migration on all instances before deploying new code\n./migrate.sh --all-instances\n# Then deploy new code in rolling fashion\n```\n\nThis ensures schema consistency across all instances before any new code that might depend on it is deployed."
+    },
+    {
+      "id": 81,
+      "cat": "cicd",
+      "q": "What is a feature flag used for in deployment safety?",
+      "pass": true,
+      "hits": 3,
+      "quality": 5,
+      "secs": 4.068,
+      "answer": "A feature flag is used in deployment safety to enable or disable features dynamically without deploying new code. This allows teams to:\n\n1. **Gradually roll out features** - Release to a small subset of users first\n2. **Reduce risk** - Quickly disable problematic features if issues arise\n3. **Test in production** - Validate features with real user data before full release\n4. **Support A/B testing** - Compare different versions of features\n5. **Enable hotfixes** - Fix issues without requiring a new deployment\n\nExample command to toggle a feature flag using a simple config file:\n```bash\necho \"feature_new_ui=true\" > /etc/myapp/flags.conf\n```"
+    },
+    {
+      "id": 82,
+      "cat": "cicd",
+      "q": "How do you make a deploy idempotent?",
+      "pass": true,
+      "hits": 1,
+      "quality": 5,
+      "secs": 5.445,
+      "answer": "To make a deploy idempotent, ensure that running the same deployment command or script multiple times has the same effect as running it once. This is typically achieved by:\n\n1. **Checking for existing state** before applying changes.\n2. **Using declarative configuration tools** like Ansible, Terraform, or Helm.\n3. **Implementing idempotent logic in scripts**, such as:\n   - Using `grep` or `awk` to check if a service is already running.\n   - Comparing checksums or versions before deploying.\n   - Using `--force` flags only when necessary.\n\n### Example (Shell script):\n```bash\nif ! systemctl is-active --quiet myservice; then\n  systemctl start myservice\nfi\n```\n\nThis ensures the service starts only if it's not already running — making the deploy idempotent."
+    },
+    {
+      "id": 83,
+      "cat": "cicd",
+      "q": "What is the expand-contract (parallel change) migration pattern?",
+      "pass": true,
+      "hits": 5,
+      "quality": 5,
+      "secs": 7.487,
+      "answer": "The **expand-contract (parallel change)** migration pattern is a technique used in software development and infrastructure to safely transition from an old system or data format to a new one, minimizing downtime and risk.\n\n### How It Works:\n1. **Expand**: Introduce the new system or schema alongside the existing one.\n2. **Contract**: Gradually shift traffic/data flow from the old system to the new one.\n3. **Remove**: Once fully migrated, decommission the old system.\n\nThis pattern is commonly used in:\n- Database schema migrations\n- API versioning\n- Service migration (e.g., microservices)\n- Data format changes\n\n### Example Use Case:\nIf you're migrating a database from `users_v1` to `users_v2`, you'd:\n1. Add support for writing to both tables.\n2. Gradually start reading from the new table.\n3. Once all data is migrated, remove the old table.\n\nThis ensures no downtime and allows rollback if needed.\n\n### Command Example (for DB schema migration):\n```bash\n# Add new column in parallel\nALTER TABLE users_v1 ADD COLUMN email_new VARCHAR(255);\nALTER TABLE users_v2 ADD COLUMN email_new VARCHAR(255);\n```\n\nLet me know if you'd like a real-world example or script for this."
+    },
+    {
+      "id": 84,
+      "cat": "cloud",
+      "q": "What does terraform plan do versus terraform apply?",
+      "pass": true,
+      "hits": 3,
+      "quality": 5,
+      "secs": 4.041,
+      "answer": "`terraform plan` shows you the execution plan Terraform will run to reach the desired state, while `terraform apply` actually executes that plan and makes changes to your infrastructure.\n\n### Key Differences:\n\n- **`terraform plan`**:\n  - Shows what Terraform will do without making changes.\n  - Useful for reviewing changes before applying them.\n  - Command:  \n    ```bash\n    terraform plan\n    ```\n\n- **`terraform apply`**:\n  - Executes the plan and applies changes to your infrastructure.\n  - Command:  \n    ```bash\n    terraform apply\n    ```\n\nYou can also use `terraform apply -auto-approve` to skip the interactive approval step if needed."
+    },
+    {
+      "id": 85,
+      "cat": "cloud",
+      "q": "Why is terraform state sensitive and how do you protect it?",
+      "pass": true,
+      "hits": 5,
+      "quality": 5,
+      "secs": 9.442,
+      "answer": "Terraform state files (usually `terraform.tfstate`) are sensitive because they contain the real-world infrastructure configuration and credentials, which can be exploited if accessed by unauthorized users.\n\n### How to Protect Terraform State:\n\n1. **Use Remote State Storage with Encryption:**\n   - Store state in a remote backend like S3 (with encryption), Azure Blob Storage, or GCS.\n   - Enable server-side encryption (SSE) and versioning.\n\n2. **Enable State Locking:**\n   - Use a locking mechanism to prevent concurrent updates (`lock` in backend config).\n\n3. **Restrict Access via IAM/Permissions:**\n   - Limit who can read/write the state file using IAM policies or access controls on the storage system.\n\n4. **Use Terraform Cloud or Enterprise:**\n   - These platforms provide built-in encryption, access control, and audit logging for state files.\n\n5. **Encrypt Local State Files (if not using remote backend):**\n   - Use tools like `sops` or `age` to encrypt local `.tfstate` files before committing them to version control.\n\n6. **Never Commit State Files to Version Control:**\n   - Add `terraform.tfstate` and `*.tfstate.backup` to `.gitignore`.\n\nExample of a secure backend configuration in Terraform:\n```hcl\nbackend \"s3\" {\n  bucket = \"my-terraform-state-bucket\"\n  key    = \"prod/terraform.tfstate\"\n  region = \"us-west-2\"\n  encrypt = true\n  dynamodb_table = \"terraform-locks\"\n}\n```\n\nThis ensures that your Terraform state is stored securely and access is controlled."
+    },
+    {
+      "id": 86,
+      "cat": "cloud",
+      "q": "An autoscaling group isn't scaling up under load. What do you check?",
+      "pass": true,
+      "hits": 2,
+      "quality": 5,
+      "secs": 11.008,
+      "answer": "As an SRE, when an autoscaling group (ASG) isn't scaling up under load, I'd investigate the following:\n\n1. **Check ASG status and health**\n```bash\naws autoscaling describe-auto-scaling-groups --auto-scaling-group-names <asg-name>\n```\n\n2. **Check CloudWatch metrics for the ASG**\n```bash\naws cloudwatch get-metric-statistics --namespace AWS/AutoScaling --metric-name GroupDesiredCapacity --statistics Average --period 300 --start-time 2023-01-01T00:00:00Z --end-time 2023-01-01T01:00:00Z --dimensions Name=AutoScalingGroupName,Value=<asg-name>\n```\n\n3. **Check if scaling policies are enabled**\n```bash\naws autoscaling describe-scaling-policies --auto-scaling-group-name <asg-name>\n```\n\n4. **Verify load balancer health and target groups**\n```bash\naws elbv2 describe-target-health --target-group-arn <target-group-arn>\n```\n\n5. **Check for any scaling policies that might be suspended**\n```bash\naws autoscaling describe-auto-scaling-groups --auto-scaling-group-names <asg-name> | grep -i suspended\n```\n\n6. **Check recent events in the ASG**\n```bash\naws autoscaling describe-scaling-activities --auto-scaling-group-name <asg-name>\n```\n\n7. **Verify instance health and launch configurations**\n```bash\naws ec2 describe-instances --filters \"Name=tag:aws:autoscaling:groupName,Values=<asg-name>\"\n```\n\nThe most common causes are:\n- Suspended scaling policies\n- Incorrect CloudWatch alarms\n- Misconfigured scaling policies\n- Issues with the launch configuration/template\n- Load balancer or target group problems"
+    },
+    {
+      "id": 87,
+      "cat": "cloud",
+      "q": "What is the principle of least privilege in IAM?",
+      "pass": true,
+      "hits": 3,
+      "quality": 5,
+      "secs": 5.396,
+      "answer": "The principle of least privilege (PoLP) in IAM means granting users and roles only the minimum set of permissions necessary to perform their tasks. This reduces the risk of accidental or malicious misuse of access rights.\n\nIn AWS IAM, for example:\n- Create policies with specific actions and resources\n- Avoid using wildcard permissions (`*`) unless absolutely necessary\n- Regularly review and remove unnecessary permissions\n\nExample policy that follows PoLP:\n```json\n{\n    \"Version\": \"2012-10-17\",\n    \"Statement\": [\n        {\n            \"Effect\": \"Allow\",\n            \"Action\": [\n                \"s3:GetObject\"\n            ],\n            \"Resource\": \"arn:aws:s3:::my-bucket/*\"\n        }\n    ]\n}\n```\n\nThis allows access to only one S3 bucket and only the `GetObject` action."
+    },
+    {
+      "id": 88,
+      "cat": "cloud",
+      "q": "How do you debug an S3 access denied error?",
+      "pass": true,
+      "hits": 5,
+      "quality": 5,
+      "secs": 4.25,
+      "answer": "To debug an S3 access denied error, first verify your AWS credentials and permissions:\n\n1. **Check credentials**:\n```bash\naws configure list\n```\n\n2. **Test access with a simple command**:\n```bash\naws s3 ls\n```\n\n3. **Check IAM policy permissions** for the user/role.\n\n4. **Enable detailed logging**:\n```bash\nexport AWS_LOG_LEVEL=debug\n```\n\n5. **Review S3 bucket policy** and ACLs.\n\n6. **Use `aws sts get-caller-identity`** to confirm which identity is being used.\n\nIf using a role, ensure the EC2 instance or Lambda has the correct IAM role attached. If using temporary credentials, verify expiration and validity."
+    },
+    {
+      "id": 89,
+      "cat": "cloud",
+      "q": "What causes a 'connection reset' from an AWS load balancer under low traffic?",
+      "pass": true,
+      "hits": 2,
+      "quality": 5,
+      "secs": 8.812,
+      "answer": "A \"connection reset\" from an AWS load balancer under low traffic is typically caused by:\n\n1. **Idle Connection Timeout** - The load balancer closes the connection after a period of inactivity (default 60 seconds for ALB). If your client doesn't send data within this window, the connection gets reset.\n\n2. **Health Check Failures** - If the target instance fails health checks due to low traffic or slow responses, the load balancer may reset connections.\n\n3. **Target Group Configuration Issues** - Misconfigured target groups (e.g., incorrect port settings) can cause connection resets.\n\n4. **Network ACLs or Security Groups** - Restrictive rules that drop connections during low traffic periods.\n\nTo diagnose:\n```bash\n# Check ALB access logs for patterns\naws s3 cp s3://your-alb-log-bucket/ /tmp/alb-logs --recursive\n\n# Monitor health checks via CloudWatch\naws cloudwatch get-metric-statistics --namespace \"AWS/ApplicationELB\" \\\n  --metric-name \"HealthyHostCount\" --start-time $(date -u -d '1 hour ago' '+%Y-%m-%dT%H:%M:%SZ') \\\n  --end-time $(date -u '+%Y-%m-%dT%H:%M:%SZ') --period 300 --statistics Average\n```\n\nThe most common cause is idle connection timeout. You can increase the timeout value in your ALB settings to prevent premature resets during low-traffic periods.\n\nIf you're using a specific tool or service, please share more context for a more targeted answer."
+    },
+    {
+      "id": 90,
+      "cat": "cloud",
+      "q": "Why avoid hardcoding cloud credentials in code?",
+      "pass": true,
+      "hits": 5,
+      "quality": 5,
+      "secs": 4.721,
+      "answer": "Hardcoding cloud credentials in code is dangerous because:\n\n1. **Security Risk**: If the code is exposed (e.g., in a public GitHub repo), attackers gain direct access to your cloud resources.\n2. **No Rotation**: Hardcoded keys can't be easily rotated or updated without redeploying code.\n3. **Access Control**: It violates the principle of least privilege — developers shouldn’t have permanent access to production resources.\n\n### Best Practice:\nUse secure credential management tools like AWS Secrets Manager, GCP Secret Manager, or environment variables instead.\n\nExample (AWS):\n```bash\naws configure\n```\nThen use IAM roles or temporary credentials via `~/.aws/credentials`.\n\nOr in code:\n```python\nimport boto3\nsession = boto3.Session()\ns3 = session.client('s3')\n```\n\nThis avoids hardcoding and uses the AWS credential chain."
+    },
+    {
+      "id": 91,
+      "cat": "cloud",
+      "q": "What is the benefit of immutable infrastructure?",
+      "pass": true,
+      "hits": 2,
+      "quality": 3,
+      "secs": 4.652,
+      "answer": "Immutable infrastructure ensures that once a server or container is deployed, it is never modified. Instead, any changes are applied by replacing the entire instance with a new one.\n\n### Benefits:\n1. **Consistency**: All instances are identical, reducing \"works on my machine\" issues.\n2. **Reliability**: No drift in configuration over time; eliminates accidental changes.\n3. **Simplified Rollbacks**: If something breaks, simply replace the instance with a known-good version.\n4. **Easier Testing & Deployment**: Since infrastructure is versioned and replaced, you can test changes in isolation before deploying.\n\n### Example:\nUse tools like Terraform or Ansible to define infrastructure as code (IaC), then deploy using immutable images (e.g., Docker containers or AMIs). When updates are needed, build a new image or instance and swap it in."
+    },
+    {
+      "id": 92,
+      "cat": "security",
+      "q": "How do you find hardcoded secrets in a codebase?",
+      "pass": true,
+      "hits": 4,
+      "quality": 5,
+      "secs": 4.244,
+      "answer": "To find hardcoded secrets in a codebase, use `grep` with patterns that match common secret formats (e.g., API keys, passwords, tokens). Here's a practical command:\n\n```bash\ngrep -rE \"(password|secret|token|api[_-]?key|auth.*key)\" --exclude-dir={.git,node_modules,.venv} .\n```\n\nThis searches recursively (`-r`) in the current directory (`.`), using extended regex (`-E`) to match common secret terms, and excludes directories like `.git` or `node_modules`.\n\nFor more advanced detection, consider tools like [git-secrets](https://github.com/awslabs/git-secrets) or [detect-secrets](https://github.com/Yelp/detect-secrets)."
+    },
+    {
+      "id": 93,
+      "cat": "security",
+      "q": "What is SQL injection and the primary defense?",
+      "pass": true,
+      "hits": 3,
+      "quality": 5,
+      "secs": 3.745,
+      "answer": "SQL injection is a code injection technique where an attacker can execute malicious SQL statements on the database by inserting or \"injecting\" SQL code into input fields of an application. This often happens when user input is directly concatenated into SQL queries without proper validation or sanitization.\n\nThe primary defense against SQL injection is to use **parameterized queries** (also known as prepared statements). These ensure that user input is treated strictly as data, not executable code.\n\nExample in Python with `psycopg2`:\n```python\ncursor.execute(\"SELECT * FROM users WHERE username = %s\", (user_input,))\n```\n\nIn this case, `%s` is a placeholder for the parameterized input, which prevents SQL injection."
+    },
+    {
+      "id": 94,
+      "cat": "security",
+      "q": "A secret was committed to git. What must you do?",
+      "pass": true,
+      "hits": 4,
+      "quality": 5,
+      "secs": 8.176,
+      "answer": "If a secret was accidentally committed to Git, here's what you must do immediately:\n\n### 1. **Remove the secret from the Git history**\nUse `git filter-branch` or `BFG Repo-Cleaner` to remove the secret from all commits and the Git history.\n\n#### Option A: Using `git filter-branch` (basic)\n```bash\ngit filter-branch --force --index-filter 'git rm --cached --ignore-unmatch path/to/secret-file' --prune-empty --tag-name-filter cat -- --all\n```\n\n#### Option B: Using BFG Repo-Cleaner (recommended for large repos)\n1. Download [BFG](https://rtyley.github.io/bfg-repo-cleaner/)\n2. Run:\n```bash\njava -jar bfg.jar --delete-files \"path/to/secret-file\" .\n```\n3. Then:\n```bash\ngit reflog expire --expire=now --all && git gc --prune=now --aggressive\n```\n\n### 2. **Push the cleaned repo to remote**\n```bash\ngit push origin --force --all\n```\n\n### 3. **Revoke the compromised secret**\n- If it's an API key, access token, or password — revoke it immediately in the service it belongs to (e.g., GitHub, AWS, etc.)\n\n### 4. **Notify your team**\nInform teammates that a secret was exposed and rotated.\n\nLet me know if you want help with any of these steps."
+    },
+    {
+      "id": 95,
+      "cat": "security",
+      "q": "Why is it bad to log auth tokens or passwords?",
+      "pass": true,
+      "hits": 3,
+      "quality": 5,
+      "secs": 5.675,
+      "answer": "Logging authentication tokens or passwords is dangerous because:\n\n1. **Exposure in logs**: Logs are often stored in plain text and can be accessed by unauthorized users, especially if the system isn't properly secured.\n2. **Persistence of data**: Even after a token expires, it may still be present in old log files, which can be exploited.\n3. **Access control issues**: If logs are shared or backed up without proper access controls, sensitive credentials could leak to unintended parties.\n4. **Compliance violations**: Many regulations (like GDPR, HIPAA) require that personal and authentication data not be logged.\n\n### Best Practice:\nNever log tokens or passwords directly. Instead, log only a hash of the token or redact it before logging.\n\nExample of bad practice:\n```bash\necho \"User logged in with token: $TOKEN\"\n```\n\nGood practice:\n```bash\necho \"User logged in with token: [REDACTED]\"\n```\n\nOr better yet, avoid logging altogether and use secure audit trails."
+    },
+    {
+      "id": 96,
+      "cat": "security",
+      "q": "What is the difference between authentication and authorization?",
+      "pass": false,
+      "hits": 1,
+      "quality": 5,
+      "secs": 4.516,
+      "answer": "Authentication is the process of verifying who a user is, typically through credentials like usernames and passwords, tokens, or biometrics. Authorization comes after authentication and determines what an authenticated user is allowed to do — i.e., which resources they can access and what actions they can perform.\n\nIn short:\n- **Authentication** = \"Who are you?\"\n- **Authorization** = \"What are you allowed to do?\"\n\nExample commands for managing users (authentication) and permissions (authorization) on Linux:\n\n```bash\n# Add a user (authentication setup)\nuseradd john\n\n# Set password for the user\npasswd john\n\n# Check file permissions (authorization)\nls -l /path/to/file\n```\n\nLet me know if you want help with specific tools like `sudo`, `chmod`, or `setfacl` for authorization."
+    },
+    {
+      "id": 97,
+      "cat": "tricky",
+      "q": "If you don't know which namespace a failing pod is in, what do you do?",
+      "pass": true,
+      "hits": 4,
+      "quality": 5,
+      "secs": 3.537,
+      "answer": "To find the namespace of a failing pod when you don't know it, run:\n\n```bash\nkubectl get pods --all-namespaces | grep <pod-name>\n```\n\nReplace `<pod-name>` with the actual name of the pod. This will show the namespace and full details of the pod.\n\nIf you only have the partial name or want to search more broadly:\n\n```bash\nkubectl get pods --all-namespaces | grep -i <partial-pod-name>\n```\n\nOnce you identify the namespace, you can inspect the pod directly using:\n\n```bash\nkubectl describe pod <pod-name> -n <namespace>\n```"
+    },
+    {
+      "id": 98,
+      "cat": "tricky",
+      "q": "Should you run 'kubectl delete pod --all' to fix a CrashLoopBackOff? Explain.",
+      "pass": true,
+      "hits": 4,
+      "quality": 5,
+      "secs": 5.824,
+      "answer": "No, you should not run `kubectl delete pod --all` to fix a `CrashLoopBackOff`.\n\n### Why:\n`CrashLoopBackOff` indicates that a Pod is repeatedly crashing and restarting — usually due to misconfiguration, application errors, or resource constraints.\n\nDeleting all pods in a namespace (`kubectl delete pod --all`) may temporarily stop the crash loop, but it does **not** fix the root cause. It's more of a workaround than a solution.\n\n---\n\n### Better approach:\n1. **Check logs:**\n   ```bash\n   kubectl logs <pod-name>\n   ```\n2. **Describe the pod to see events:**\n   ```bash\n   kubectl describe pod <pod-name>\n   ```\n3. **Fix configuration or code issues** based on the error messages.\n\nOnly delete pods if you're certain that restarting them will not reintroduce the same issue — and even then, it's better to fix the root cause first."
+    },
+    {
+      "id": 99,
+      "cat": "tricky",
+      "q": "A junior wants to run 'rm -rf /var/log' to free disk. What's the risk and a safer option?",
+      "pass": true,
+      "hits": 2,
+      "quality": 5,
+      "secs": 3.393,
+      "answer": "**Risk:** Running `rm -rf /var/log` would **permanently delete all log files** on the system, which can cause issues with system monitoring, debugging, and compliance auditing.\n\n**Safer Option:** Instead of deleting logs entirely, consider archiving or rotating them using standard tools like:\n```bash\nsudo journalctl --vacuum-size=100M\n```\nor\n```bash\nsudo logrotate -f /etc/logrotate.conf\n```\n\nThese commands safely manage log file sizes without risking system stability."
+    },
+    {
+      "id": 100,
+      "cat": "tricky",
+      "q": "An alert fires at 3am with no runbook and you can't reproduce it. What's the right action?",
+      "pass": true,
+      "hits": 2,
+      "quality": 5,
+      "secs": 5.299,
+      "answer": "The right action is to **investigate the alert using logs, metrics, and system state at the time of the alert**, then **create a runbook** if needed.\n\n### Immediate Steps:\n1. **Check system logs around 3am**:\n   ```bash\n   journalctl --since=\"3am\" --until=\"4am\"\n   ```\n2. **Review metrics from monitoring tools (e.g., Prometheus, Datadog)** for anomalies.\n3. **Check if any automated jobs or cron tasks ran at 3am**:\n   ```bash\n   crontab -l\n   ```\n4. **Look for recent changes in config or code** that might have caused the alert.\n\n### If No Reproduction:\n- **Create a runbook** documenting what was found and how to handle similar alerts.\n- **Set up a more specific alert** if this is a recurring issue.\n\nLet me know if you want help writing a runbook or checking logs."
     }
   ]
 }

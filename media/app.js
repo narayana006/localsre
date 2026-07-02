@@ -7,7 +7,7 @@
   const init = { msgs: [], plan: [], status: "", streaming: false, t0: null, busy: false };
   function reducer(s, m) {
     switch (m.type) {
-      case "_user": return { ...s, msgs: [...s.msgs, { role: "user", text: m.text, atts: m.atts || [] }], status: "thinking…", t0: Date.now(), busy: true };
+      case "_user": return { ...s, msgs: [...s.msgs, { role: "user", text: m.text, atts: m.atts || [] }], status: "thinking…", t0: s.busy && s.t0 ? s.t0 : Date.now(), busy: true };
       case "status": return { ...s, status: m.text };
       case "assistantDelta": {
         const msgs = s.msgs.slice();
@@ -147,18 +147,32 @@
     const logRef = useRef(); const fileRef = useRef();
 
     useEffect(() => {
-      const h = (ev) => dispatch(ev.data);
+      // Batch streaming deltas (~40ms) — dispatching per token forces a full re-render per token,
+      // which visibly lags long streams. Non-delta events flush the buffer first (order preserved).
+      let deltaBuf = "", flushTimer = null;
+      const flush = () => { flushTimer = null; if (deltaBuf) { const t = deltaBuf; deltaBuf = ""; dispatch({ type: "assistantDelta", text: t }); } };
+      const h = (ev) => {
+        const d = ev.data;
+        if (d && d.type === "assistantDelta") {
+          deltaBuf += d.text;
+          if (!flushTimer) flushTimer = setTimeout(flush, 40);
+          return;
+        }
+        if (flushTimer) { clearTimeout(flushTimer); flush(); }
+        dispatch(d);
+      };
       window.addEventListener("message", h);
       vscode.postMessage({ type: "ready" });
-      return () => window.removeEventListener("message", h);
+      return () => { window.removeEventListener("message", h); if (flushTimer) clearTimeout(flushTimer); };
     }, []);
     useEffect(() => { if (logRef.current) logRef.current.scrollTop = logRef.current.scrollHeight; }, [s.msgs, s.status, s.plan]);
 
     // Live ticking elapsed seconds while busy → an obvious "it's working" sign.
+    // 1s tick (the display is whole seconds — a 250ms tick just re-rendered 4x for nothing).
     const [tick, setTick] = useState(0);
     useEffect(() => {
       if (!s.busy) return;
-      const id = setInterval(() => setTick((x) => x + 1), 250);
+      const id = setInterval(() => setTick((x) => x + 1), 1000);
       return () => clearInterval(id);
     }, [s.busy]);
     const elapsed = s.busy && s.t0 ? ((Date.now() - s.t0) / 1000).toFixed(0) : null;
