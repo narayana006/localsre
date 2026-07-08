@@ -18,10 +18,18 @@ const T = require("../extension.js")._test;
 T.loadSkills(path.join(__dirname, ".."));
 const SYSTEM = T.SYSTEM();
 
+const API_KEY = process.env.API_KEY || "";          // set to test cloud OpenAI-compat endpoints (e.g. Gemini)
+const THROTTLE_MS = Number(process.env.THROTTLE_MS || 0); // e.g. 4500 to stay under a 15 RPM free tier
 async function gen(prompt) {
+  if (THROTTLE_MS) await new Promise((r) => setTimeout(r, THROTTLE_MS));
   const t0 = Date.now();
-  const r = await fetch(ENDPOINT + "/chat/completions", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ model: MODEL, messages: [{ role: "system", content: SYSTEM }, { role: "user", content: prompt }], temperature: 0.2, stream: false, max_tokens: 2048, keep_alive: "10m" }) });
+  const body = { model: MODEL, messages: [{ role: "system", content: SYSTEM }, { role: "user", content: prompt }], temperature: 0.2, stream: false, max_tokens: 2048 };
+  if (!API_KEY) body.keep_alive = "10m"; // Ollama-only field — cloud endpoints may reject it
+  const headers = { "Content-Type": "application/json" };
+  if (API_KEY) headers.Authorization = "Bearer " + API_KEY;
+  const r = await fetch(ENDPOINT + "/chat/completions", { method: "POST", headers, body: JSON.stringify(body) });
   const d = await r.json();
+  if (d.error) throw new Error(String(d.error.message || d.error).slice(0, 120));
   return { text: (d.choices?.[0]?.message?.content || "").replace(/<think>[\s\S]*?<\/think>/gi, "").trim(), secs: (Date.now() - t0) / 1000 };
 }
 function block(text, lang) { const m = text.match(new RegExp("```(?:" + (lang || "[a-z]*") + ")?\\s*\\n([\\s\\S]*?)```", "i")); return m ? m[1].trim() : null; }

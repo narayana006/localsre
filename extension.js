@@ -317,7 +317,8 @@ function _projectMemory() {
 
 // DeepSeek-R1 emits chain-of-thought in <think>…</think>. Strip it for display + context.
 function stripThink(t) {
-  return (t || "").replace(/<think>[\s\S]*?<\/think>/gi, "").replace(/<think>[\s\S]*$/i, "").trim();
+  // Qwen/DeepSeek emit <think>…</think>; Gemma 4 emits <thought>…</thought>. Strip both (and unclosed tails).
+  return (t || "").replace(/<(think|thought)>[\s\S]*?<\/\1>/gi, "").replace(/<(think|thought)>[\s\S]*$/i, "").trim();
 }
 // ---------- tool schemas ----------
 const TOOLS = [
